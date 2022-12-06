@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>FPS3 Prototype</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      html, body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .ui .crosshair {
+        position: fixed;
+        width: 40px;
+        height: 40px;
+        margin: 0;
+        left: 50%;
+        top: 50%;
+        margin-left: -20px;
+        margin-top: -25px;
+      }
+      .ui-centering, .center {
+        margin: 0;
+        padding: 0;
+      }
+      .ui img, .ui .drop-shadow {
+        filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .3));
+      }
+    </style>
+	<script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
+  </head>
+  <body>
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/loaders/GLTFLoader.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/libs/fflate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/math/Capsule.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/math/Octree.min.js"></script>
+    <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
+    <script src="js/PointerLockControls.min.js"></script>
+    <div class="ui">
+      <div class="ui ui-centering center">
+        <img src="crosshair.png" class="crosshair drop-shadow">
+      </div>
+    </div>
+    <script>
+	  // Game asset variables
+	  otherPlayer = new THREE.Mesh();
+
+	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}) {
+	    typeof camera.getObjectByProperty("type", "AudioListener") == "undefined" && camera.add(new THREE.AudioListener());
+		  let sound = new THREE.PositionalAudio(camera.getObjectByProperty("type", "AudioListener"));
+		  new THREE.AudioLoader().load(source, (buffer) => {
+		    sound.setBuffer(buffer);
+		    sound.setRefDistance(10);
+		    callback(sound);
+		    sound.play();
+		  });
+		  object.add(sound);
+	  }
+	  utils = {
+	    weapons: {
+		  switch: function() {
+		  	let newWeapon;
+		  	let oldWeapon = sandbox.currentWeapon;
+		      if (sandbox.currentWeapon == sandbox.primaryWeapon)
+		  	    newWeapon = sandbox.secondaryWeapon;
+		  	  else newWeapon = sandbox.primaryWeapon;
+		  	  weaponScene.remove(oldWeapon);
+		  	  sandbox.currentWeapon = newWeapon;
+		  	  sandbox.weapons.forEach(x => {
+		  	    if (!(x.object == sandbox.currentWeapon)) return;
+		  	    x.mixer.clipAction(x.animations[0]).reset();
+		  	    x.mixer.clipAction(x.animations[0]).loop = THREE.LoopOnce;
+		  	    x.mixer.clipAction(x.animations[0]).play();
+		  	  });
+		  	  weaponScene.add(sandbox.currentWeapon);
+		    },
+		    reload: function() {},
+		    fire: function() {},
+        grenades: {
+          throw: function() {
+            const sphere = spheres[sphereIdx];
+            camera.getWorldDirection(playerDirection);
+            sphere.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
+            const impulse = 15 + 30 * (1 - Math.exp((mouseTime - performance.now()) * 0.001));
+            sphere.velocity.copy(playerDirection).multiplyScalar(impulse);
+            sphere.velocity.addScaledVector(playerVelocity, 2);
+            sphereIdx = (sphereIdx + 1) % spheres.length;
+            !(scene.children.indexOf(sphere.mesh) > -1) && scene.add(sphere.mesh);
+            let collided = setInterval(() => {
+              if (worldOctree.sphereIntersect(sphere.collider)) {
+                setTimeout(() => {
+                  utils.explosion(sphere.mesh);
+                  scene.remove(sphere.mesh);
+                }, 1000);
+                clearInterval(collided);
+              }
+            });
+          }
+        }
+		  },
+      explosion: function(obj) {
+        let explosion = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ color: 0xffffff, map: new THREE.TextureLoader().load("explosion.png"), transparent: true, opacity: .1, depthWrite: false }));
+        let light = new THREE.PointLight(0xbb3905, 1);
+        let lightClone = light.clone();
+        scene.add(explosion);
+        explosion.position.copy(obj.position);
+        explosion.scale.set(.2, .2, .2);
+        let fadeIn1 = setInterval(() => {
+          if (explosion.material.opacity >= 1) {
+            clearInterval(fadeIn1);
+          } else {
+            explosion.material.opacity += .15;
+            light.intensity += .5;
+            lightClone.intensity += .5;
+          }
+          explosion.lookAt(camera.position);
+        });
+        let fadeIn = setInterval(() => {
+          if (explosion.scale.x >= 3) {
+            clearInterval(fadeIn);
+          } else {
+            let increment = .05;
+            explosion.scale.set(explosion.scale.x + increment, explosion.scale.y + increment, explosion.scale.z + increment);
+          }
+          explosion.lookAt(camera.position);
+        });
+        let spin = setInterval(() => { explosion.rotateZ(.1) });
+        setTimeout(() => {
+          let fadeOut = setInterval(() => {
+            if (explosion.material.opacity <= 0) {
+              scene.remove(light);
+              weaponScene.remove(lightClone);
+              scene.remove(explosion);
+              clearInterval(fadeOut);
+              clearInterval(spin);
+            } else {
+              explosion.material.opacity += -.08;
+              light.intensity <= 0 ? light.intensity = 0 : light.intensity += -.8;
+              lightClone.intensity <= 0 ? lightClone.intensity = 0 : lightClone.intensity += -.8;
+            }
+            explosion.lookAt(camera.position);
+          });
+        }, 500);
+        scene.add(light);
+        light.position.copy(obj.position);
+        weaponScene.add(lightClone);
+      }
+	  };
+      sandbox = {
+        loadout: ["Assault_Rifle", "Glock_19"],
+        weapons: [
+          {
+            name: "Assault_Rifle",
+            rounds: 36,
+            maxRounds: 36,
+            minRounds: 0,
+            clips: 3,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 1500
+              },
+              full: {
+                sound: null,
+                time: 2000
+              }
+            }
+          },
+          {
+            name: "Glock_19",
+            rounds: 12,
+            maxRounds: 12,
+            minRounds: 0,
+            clips: 3,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 1000
+              },
+              full: {
+                sound: null,
+                time: 1250
+              }
+            }
+          }
+        ],
+        currentWeapon: null,
+        primaryWeapon: null,
+        secondaryWeapon: null,
+        models: {
+          "grenade": {
+            srcPath: "models/weapons/grenades/hand.glb",
+            object: null
+          }
+        }
+      };
+      const clock = new THREE.Clock();
+      const scene = new THREE.Scene();
+      const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 200, 200), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("clouds.png") }));
+      sky.material.side = THREE.BackSide;
+      scene.add(sky);
+      scene.fog = new THREE.Fog(0x88ccee, 0, 80);
+      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.rotation.order = "YXZ";
+      const fillLight1 = new THREE.HemisphereLight(0x4488bb, 0x002244, 0.5);
+      fillLight1.position.set(2, 1, 1);
+      scene.add(fillLight1);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(-5, 25, -1);
+      directionalLight.castShadow = true;
+      directionalLight.shadow.camera.near = 0.01;
+      directionalLight.shadow.camera.far = 500;
+      directionalLight.shadow.camera.right = 30;
+      directionalLight.shadow.camera.left = -30;
+      directionalLight.shadow.camera.top = 30;
+      directionalLight.shadow.camera.bottom = -30;
+      directionalLight.shadow.mapSize.width = 1024;
+      directionalLight.shadow.mapSize.height = 1024;
+      directionalLight.shadow.radius = 4;
+      directionalLight.shadow.bias = -0.00006;
+      scene.add(directionalLight);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.VSMShadowMap;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      document.body.appendChild(renderer.domElement);
+      const GRAVITY = 85;
+      const NUM_SPHERES = 10;
+      const SPHERE_RADIUS = 0.2;
+      const STEPS_PER_FRAME = 10;
+      const sphereGeometry = new THREE.IcosahedronGeometry(SPHERE_RADIUS, 5);
+      const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xbbbb44 });
+      const spheres = [];
+      let sphereIdx = 0;
+      for (let i = 0; i < NUM_SPHERES; i++) {
+        let loader = setInterval(() => {
+          if (sandbox.models["grenade"].object != null && spheres.length < 2) {
+            const sphere = sandbox.models["grenade"].object.clone();
+            if (sphere) {
+              sphere.traverse(x => (x.castShadow = true, x.receiveShadow = true));
+              (function() {
+                setTimeout(() => renderer.shadowMap.needsUpdate = true, 1000);
+              })();
+              scene.add(sphere);
+              spheres.push({
+                mesh: sphere,
+                collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), SPHERE_RADIUS),
+                velocity: new THREE.Vector3()
+              });
+            }
+            clearInterval(loader);
+          }
+        });
+      }
+      const worldOctree = new THREE.Octree();
+      const playerCollider = new THREE.Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1, 0), 0.35);
+      const playerVelocity = new THREE.Vector3();
+      const playerDirection = new THREE.Vector3();
+      let playerOnFloor = false;
+      let mouseTime = 0;
+      const keyStates = {};
+      const vector1 = new THREE.Vector3();
+      const vector2 = new THREE.Vector3();
+      const vector3 = new THREE.Vector3();
+      document.addEventListener("keydown", (event) => {
+        keyStates[event.code] = true;
+        if (keyStates["KeyY"] && !event.repeat) {
+          utils.weapons.switch();
+        }
+        if (keyStates["KeyM"] && !event.repeat) {
+          utils.weapons.grenades.throw();
+        }
+      });
+      document.addEventListener("keyup", (event) => {
+        keyStates[event.code] = false;
+      });
+      renderer.domElement.addEventListener("mousedown", () => {
+        document.body.requestPointerLock();
+        PointerControls.lock();
+        mouseTime = performance.now();
+      });
+      document.addEventListener("mouseup", () => {
+        PointerControls.lock();
+      });
+      document.body.addEventListener("mousemove", (event) => { });
+      window.addEventListener("resize", onWindowResize);
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        weaponCamera.aspect = window.innerWidth / window.innerHeight;
+        weaponCamera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        weaponRenderer.setSize(window.innerWidth, window.innerHeight);
+      }
+      function playerCollisions() {
+        const result = worldOctree.capsuleIntersect(playerCollider);
+        playerOnFloor = false;
+        if (result) {
+          playerOnFloor = result.normal.y > 0;
+          if (!playerOnFloor) {
+            playerVelocity.addScaledVector(result.normal, - result.normal.dot(playerVelocity));
+          }
+          playerCollider.translate(result.normal.multiplyScalar(result.depth));
+        }
+      }
+      function updatePlayer(deltaTime) {
+        let damping = Math.exp(- 4 * deltaTime) - 1;
+        if (!playerOnFloor) {
+          playerVelocity.y -= GRAVITY * deltaTime;
+          damping *= 0.1;
+        }
+        playerVelocity.addScaledVector(playerVelocity, damping);
+        const deltaPosition = playerVelocity.clone().multiplyScalar(deltaTime);
+        playerCollider.translate(deltaPosition);
+        playerCollisions();
+        camera.position.copy(playerCollider.end);
+      }
+      function playerSphereCollision(sphere) {
+        const center = vector1.addVectors(playerCollider.start, playerCollider.end).multiplyScalar(0.5);
+        const sphere_center = sphere.collider.center;
+        const r = playerCollider.radius + sphere.collider.radius;
+        const r2 = r * r;
+        for (const point of [playerCollider.start, playerCollider.end, center]) {
+          const d2 = point.distanceToSquared(sphere_center);
+          if (d2 < r2) {
+            const normal = vector1.subVectors(point, sphere_center).normalize();
+            const v1 = vector2.copy(normal).multiplyScalar(normal.dot(playerVelocity));
+            const v2 = vector3.copy(normal).multiplyScalar(normal.dot(sphere.velocity));
+            playerVelocity.add(v2).sub(v1);
+            sphere.velocity.add(v1).sub(v2);
+            const d = (r - Math.sqrt(d2)) / 2;
+            sphere_center.addScaledVector(normal, - d);
+          }
+        }
+      }
+      function spheresCollisions() {
+        for (let i = 0, length = spheres.length; i < length; i++) {
+          const s1 = spheres[i];
+          for (let j = i + 1; j < length; j++) {
+            const s2 = spheres[j];
+            const d2 = s1.collider.center.distanceToSquared(s2.collider.center);
+            const r = s1.collider.radius + s2.collider.radius;
+            const r2 = r * r;
+            if (d2 < r2) {
+              const normal = vector1.subVectors(s1.collider.center, s2.collider.center).normalize();
+              const v1 = vector2.copy(normal).multiplyScalar(normal.dot(s1.velocity));
+              const v2 = vector3.copy(normal).multiplyScalar(normal.dot(s2.velocity));
+              s1.velocity.add(v2).sub(v1);
+              s2.velocity.add(v1).sub(v2);
+              const d = (r - Math.sqrt(d2)) / 2;
+              s1.collider.center.addScaledVector(normal, d);
+              s2.collider.center.addScaledVector(normal, - d);
+            }
+          }
+        }
+      }
+      function updateSpheres(deltaTime) {
+        spheres.forEach(sphere => {
+          sphere.collider.center.addScaledVector(sphere.velocity, deltaTime);
+          const result = worldOctree.sphereIntersect(sphere.collider);
+          if (result) {
+            sphere.velocity.addScaledVector(result.normal, - result.normal.dot(sphere.velocity) * 1.5);
+            sphere.collider.center.add(result.normal.multiplyScalar(result.depth));
+          } else {
+            sphere.velocity.y -= GRAVITY * deltaTime;
+          }
+          const damping = Math.exp(- 1.5 * deltaTime) - 1;
+          sphere.velocity.addScaledVector(sphere.velocity, damping);
+          playerSphereCollision(sphere);
+        });
+        spheresCollisions();
+        for (const sphere of spheres) {
+          sphere.mesh.position.copy(sphere.collider.center);
+        }
+      }
+      function getForwardVector() {
+        camera.getWorldDirection(playerDirection);
+        playerDirection.y = 0;
+        playerDirection.normalize();
+        return playerDirection;
+      }
+      function getSideVector() {
+        camera.getWorldDirection(playerDirection);
+        playerDirection.y = 0;
+        playerDirection.normalize();
+        playerDirection.cross(camera.up);
+        return playerDirection;
+      }
+      const loader = new THREE.GLTFLoader();
+      loader.load("models/maps/Cargo.glb", (gltf) => {
+        worldOctree.fromGraphNode(gltf.scene);
+        scene.add(gltf.scene);
+        gltf.scene.traverse(child => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            if (child.material.map) {
+              child.material.map.anisotropy = 4;
+            }
+          }
+        });
+        animate();
+        updateShadows();
+      });
+      function updateShadows() {
+        renderer.shadowMap.needsUpdate = true;
+      }
+      function teleportPlayerIfOob() {
+        if (camera.position.y <= - 25) {
+          playerCollider.start.set(0, 0.35, 0);
+          playerCollider.end.set(0, 1, 0);
+          playerCollider.radius = 0.35;
+          camera.position.copy(playerCollider.end);
+          camera.rotation.set(0, 0, 0);
+        }
+      }
+      function controls(deltaTime) {
+        const speedDelta = deltaTime * (playerOnFloor ? 25 : 8);
+		    if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
+          playerVelocity.add(getForwardVector().multiplyScalar(speedDelta));
+        }
+        if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
+          playerVelocity.add(getForwardVector().multiplyScalar(speedDelta));
+        }
+        if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
+          playerVelocity.add(getForwardVector().multiplyScalar(- speedDelta));
+        }
+        if (keyStates["KeyA"] || keyStates["ArrowLeft"]) {
+          playerVelocity.add(getSideVector().multiplyScalar(- speedDelta));
+        }
+        if (keyStates["KeyD"] || keyStates["ArrowRight"]) {
+          playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
+        }
+        if (playerOnFloor) {
+          if (keyStates["Space"]) {
+            playerVelocity.y = 15;
+          }
+        }
+      }
+      function animate() {
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+        if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null) {
+          sandbox.primaryWeapon.position.copy(camera.position);
+          sandbox.primaryWeapon.rotation.copy(camera.rotation);
+          sandbox.primaryWeapon.rotateY(Math.PI);
+          sandbox.primaryWeapon.translateX(-.1);
+          sandbox.primaryWeapon.translateZ(.3);
+          sandbox.primaryWeapon.translateY(-.15);
+          sandbox.secondaryWeapon.position.copy(camera.position);
+          sandbox.secondaryWeapon.rotation.copy(camera.rotation);
+          sandbox.secondaryWeapon.rotateY(Math.PI);
+          sandbox.secondaryWeapon.translateX(-.1);
+          sandbox.secondaryWeapon.translateZ(.3);
+          sandbox.secondaryWeapon.translateY(-.15);
+        }
+        const deltaTime = Math.min(0.05, clock.getDelta()) / STEPS_PER_FRAME;
+        for (let i = 0; i < STEPS_PER_FRAME; i++) {
+          controls(deltaTime);
+          updatePlayer(deltaTime);
+          updateSpheres(deltaTime);
+          teleportPlayerIfOob();
+        }
+      }
+      sandbox.weapons.forEach(x => {
+        new THREE.GLTFLoader().load(`models/weapons/${x.name}.glb`, (model) => {
+          x.object = model.scene;
+          x.object.scale.set(.01, .01, .01);
+          x.animations = model.animations;
+          x.mixer = new THREE.AnimationMixer(model.scene);
+		      x.name != "Assault_Rifle" && (x.mixer.timeScale = 100);
+          if (x.name == sandbox.loadout[0]) {
+            sandbox.primaryWeapon = x.object;
+            sandbox.currentWeapon = x.object;
+            weaponScene.add(sandbox.primaryWeapon);
+          }
+          if (x.name == sandbox.loadout[1]) {
+            sandbox.secondaryWeapon = x.object;
+          }
+        });
+      });
+      Object.keys(sandbox.models).forEach(x => {
+        new THREE.GLTFLoader().load(sandbox.models[x].srcPath, (model) => {
+          sandbox.models[x].object = model.scene;
+        });
+      });
+      const weaponRenderer = new THREE.WebGLRenderer({ antialias: true });
+      weaponRenderer.setPixelRatio(window.devicePixelRatio);
+      weaponRenderer.setSize(window.innerWidth, window.innerHeight);
+      weaponRenderer.outputEncoding = THREE.sRGBEncoding;
+      weaponRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+      document.body.appendChild(weaponRenderer.domElement);
+      const weaponScene = new THREE.Scene();
+      const weaponCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const PointerControls = new PointerLockControls(camera, renderer.domElement);
+      PointerControls.isLocked = true;
+      weaponCamera.rotation.order = "YXZ";
+      function weaponAnimate() {
+        requestAnimationFrame(weaponAnimate);
+        weaponCamera.position.copy(camera.position);
+        weaponCamera.rotation.copy(camera.rotation);
+        if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null) {
+          sandbox.primaryWeapon.position.copy(weaponCamera.position);
+          sandbox.primaryWeapon.rotation.copy(weaponCamera.rotation);
+          sandbox.primaryWeapon.rotateY(Math.PI);
+          sandbox.primaryWeapon.translateX(-.1);
+          sandbox.primaryWeapon.translateZ(.3);
+          sandbox.primaryWeapon.translateY(-.15);
+          sandbox.secondaryWeapon.position.copy(weaponCamera.position);
+          sandbox.secondaryWeapon.rotation.copy(weaponCamera.rotation);
+          sandbox.secondaryWeapon.rotateY(Math.PI);
+          sandbox.secondaryWeapon.translateX(-.1);
+          sandbox.secondaryWeapon.translateZ(.3);
+          sandbox.secondaryWeapon.translateY(-.15);
+          weaponFillLight1.position.copy(fillLight1.position);
+          weaponFillLight1.rotation.copy(fillLight1.rotation);
+          weaponRenderer.render(weaponScene, weaponCamera);
+        }
+        sandbox.weapons.forEach(x => x.mixer && (x.mixer.update(clock.getDelta()), (x.mixer.clipAction(x.animations[1]).play())));
+      }
+      weaponRenderer.domElement.style.position = "absolute";
+      weaponRenderer.domElement.style.left = "0";
+      weaponRenderer.domElement.style.top = "0";
+      weaponRenderer.domElement.style.pointerEvents = "none";
+      weaponRenderer.domElement.style.zIndex = "9999999999";
+      weaponRenderer.setClearAlpha();
+      let weaponFillLight1 = fillLight1.clone();
+      let weaponDirectionalLight = directionalLight.clone();
+      weaponScene.add(weaponFillLight1);
+      weaponScene.add(weaponDirectionalLight);
+      weaponAnimate();
+	    // Performance optimization
+	    renderer.shadowMap.autoUpdate = false;
+	    renderer.setPixelRatio(1.2);
+	    weaponRenderer.setPixelRatio(1.1);
+
+	    // Multiplayer setup
+      gametime.set("key", "pub-c-c44c8fc4-612e-4fc3-b875-4398f01da63c", "sub-c-b6832794-3c08-11ec-b2c1-a25c7fcd9558");
+      gametime.set("channel", new URLSearchParams(location.search).get("lobby"));
+    </script>
+  </body>
+</html>
