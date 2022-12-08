@@ -76,11 +76,12 @@
           });
         },
         shoot: function(rounds = 1) {
+          if (!utils.options.get("CanFire")) return;
           let i = 0;
           let weapon = null;
           utils.weapons.data(sandbox.currentWeapon).then(x => {
             weapon = x;
-          })
+          });
           let shooting = setInterval(() => {
             if (i >= rounds) {
               return clearInterval(shooting);
@@ -128,7 +129,29 @@
 		  	  });
 		  	  weaponScene.add(sandbox.currentWeapon);
 		    },
-		    reload: function() {},
+		    reload: function() {
+          if (utils.options.get("Reloading")) return;
+          utils.options.set("CanFire", false);
+          utils.options.set("Reloading", true);
+          utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+            if (weapon.rounds <= 0) {
+              weapon.mixer.clipAction(weapon.animations[4]).timeScale = 2.5;
+              weapon.mixer.clipAction(weapon.animations[4]).loop = THREE.LoopOnce;
+              weapon.mixer.clipAction(weapon.animations[4]).reset();
+              weapon.mixer.clipAction(weapon.animations[4]).play();
+            } else {
+              weapon.mixer.clipAction(weapon.animations[3]).timeScale = 2.5;
+              weapon.mixer.clipAction(weapon.animations[3]).loop = THREE.LoopOnce;
+              weapon.mixer.clipAction(weapon.animations[3]).reset();
+              weapon.mixer.clipAction(weapon.animations[3]).play();
+            }
+            setTimeout(() => {
+              sandbox.weapons[sandbox.weapons.indexOf(weapon)].rounds = sandbox.weapons[sandbox.weapons.indexOf(weapon)].maxRounds;
+              sandbox.weapons[sandbox.weapons.indexOf(weapon)].clips--;
+              utils.options.set("CanFire", true);
+            }, 3000);
+          });
+        },
         grenades: {
           throw: function() {
             const sphere = spheres[sphereIdx];
@@ -617,6 +640,7 @@
       let rapidFire = setInterval(function() {
         if (utils.options.get("RapidFire")) utils.weapons.shoot();
       }, 75);
+      utils.options.set("CanFire", true);
     </script>
   </body>
 </html>
