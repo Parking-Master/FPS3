@@ -58,10 +58,62 @@
 		  object.add(sound);
 	  }
 	  utils = {
+      cache: {
+        options: {}
+      },
+      options: {
+        set: function(key, value) {
+          utils.cache.options[key] = value;
+        },
+        get: function(key) {
+          return utils.cache.options[key];
+        }
+      },
 	    weapons: {
-		  switch: function() {
-		  	let newWeapon;
-		  	let oldWeapon = sandbox.currentWeapon;
+        data: function(weapon) {
+          return new Promise(function(resolve, reject) {
+            sandbox.weapons.forEach(x => x.object == weapon && resolve(x));
+          });
+        },
+        shoot: function(rounds = 1) {
+          let i = 0;
+          let weapon = null;
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            weapon = x;
+          })
+          let shooting = setInterval(() => {
+            if (i >= rounds) {
+              return clearInterval(shooting);
+            }
+            i++;
+            if (weapon) {
+              let cweapon = sandbox.weapons[sandbox.weapons.indexOf(weapon)];
+              cweapon.rounds <= 0 ? utils.weapons.reload() : cweapon.rounds--;
+            }
+            sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
+            let flash = sandbox.models["flash"].object;
+            flash.children[0].material.opacity = 1;
+            flash.scale.set(.06, .06, .06);
+            flash.position.copy(sandbox.currentWeapon.position);
+            flash.rotation.copy(sandbox.currentWeapon.rotation);
+            flash.translateY(.11);
+            flash.rotateY(Math.PI);
+            flash.translateX(.08);
+            flash.translateZ(-.3);
+            let light = new THREE.PointLight(0xf99c00, 1, 4, 3);
+            light.position.copy(flash.position);
+            light.rotation.copy(flash.rotation);
+            weaponScene.add(flash);
+            scene.add(light);
+            let lightClone = light.clone();
+            weaponScene.add(lightClone);
+            document.querySelector(".crosshair").style.transition = "transform .05s ease-out", document.querySelector(".crosshair").style.transform = "scale(1.15)", setTimeout(() => document.querySelector(".crosshair").style.transform = "", 100);
+            setTimeout(() => (weaponScene.remove(flash), weaponScene.remove(lightClone), scene.remove(light)), 25);
+          }, 60);
+        },
+		    switch: function() {
+		    	let newWeapon;
+		    	let oldWeapon = sandbox.currentWeapon;
 		      if (sandbox.currentWeapon == sandbox.primaryWeapon)
 		  	    newWeapon = sandbox.secondaryWeapon;
 		  	  else newWeapon = sandbox.primaryWeapon;
@@ -76,7 +128,6 @@
 		  	  weaponScene.add(sandbox.currentWeapon);
 		    },
 		    reload: function() {},
-		    fire: function() {},
         grenades: {
           throw: function() {
             const sphere = spheres[sphereIdx];
@@ -192,6 +243,10 @@
           "grenade": {
             srcPath: "models/weapons/grenades/hand.glb",
             object: null
+          },
+          "flash": {
+            srcPath: "models/assets/muzzle_flash.glb",
+            object: null
           }
         }
       };
@@ -231,7 +286,7 @@
       const GRAVITY = 80;
       const NUM_SPHERES = 10;
       const SPHERE_RADIUS = 0.2;
-      const STEPS_PER_FRAME = 5;
+      const STEPS_PER_FRAME = 10;
       const sphereGeometry = new THREE.IcosahedronGeometry(SPHERE_RADIUS, 5);
       const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xbbbb44 });
       const spheres = [];
@@ -275,6 +330,7 @@
         keyStates[event.code] = false;
       });
       renderer.domElement.addEventListener("mousedown", () => {
+        if (document.pointerLockElement != null) return;
         document.body.requestPointerLock();
         PointerControls.lock();
         mouseTime = performance.now();
@@ -306,7 +362,7 @@
       function updatePlayer(deltaTime) {
         let damping = Math.exp(- 4 * deltaTime) - 1;
         if (!playerOnFloor) {
-          playerVelocity.y -= GRAVITY * deltaTime;
+          playerVelocity.y -= GRAVITY * (deltaTime);
           damping *= 0.1;
         }
         playerVelocity.addScaledVector(playerVelocity, damping);
@@ -415,22 +471,22 @@
         }
       }
       function controls(deltaTime) {
-        const speedDelta = deltaTime * (playerOnFloor ? 25 : 8);
+        const speedDelta = .05;
         if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
-          playerVelocity.add(getForwardVector().multiplyScalar(speedDelta + .05));
+          playerVelocity.add(getForwardVector().multiplyScalar(speedDelta));
         }
         if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
-          playerVelocity.add(getForwardVector().multiplyScalar(- (speedDelta + .05)));
+          playerVelocity.add(getForwardVector().multiplyScalar(-speedDelta));
         }
         if (keyStates["KeyA"] || keyStates["ArrowLeft"]) {
-          playerVelocity.add(getSideVector().multiplyScalar(- (speedDelta + .05)));
+          playerVelocity.add(getSideVector().multiplyScalar(-speedDelta));
         }
         if (keyStates["KeyD"] || keyStates["ArrowRight"]) {
-          playerVelocity.add(getSideVector().multiplyScalar(speedDelta + .05));
+          playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
         }
         if (playerOnFloor) {
           if (keyStates["Space"]) {
-            playerVelocity.y = 15;
+            playerVelocity.y = 10;
           }
         }
       }
@@ -451,7 +507,7 @@
           sandbox.secondaryWeapon.translateZ(.3);
           sandbox.secondaryWeapon.translateY(-.15);
         }
-        const deltaTime = Math.min(0.05, clock.getDelta()) / STEPS_PER_FRAME;
+        const deltaTime = clock.getDelta();
         for (let i = 0; i < STEPS_PER_FRAME; i++) {
           controls(deltaTime);
           updatePlayer(deltaTime);
@@ -534,6 +590,24 @@
 	    // Multiplayer setup
       gametime.set("key", "pub-c-c44c8fc4-612e-4fc3-b875-4398f01da63c", "sub-c-b6832794-3c08-11ec-b2c1-a25c7fcd9558");
       gametime.set("channel", new URLSearchParams(location.search).get("lobby"));
+
+      // Game setup
+      document.addEventListener("mousedown", function(event) {
+        utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+          if (weapon.name == "Assault_Rifle") {
+            utils.options.set("RapidFire", true);
+          }
+          if (weapon.name == "Glock_19") {
+            utils.weapons.shoot();
+          }
+        });
+      });
+      document.addEventListener("mouseup", function(event) {
+        utils.options.set("RapidFire", false);
+      });
+      let rapidFire = setInterval(function() {
+        if (utils.options.get("RapidFire")) utils.weapons.shoot();
+      }, 60);
     </script>
   </body>
 </html>
