@@ -5,6 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
+      @font-face {
+        font-family: "Roboto";
+        src: url(fonts/Roboto.ttf);
+      }
       html, body {
         margin: 0;
         overflow: hidden;
@@ -26,6 +30,63 @@
       .ui img, .ui .drop-shadow {
         filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .3));
       }
+      .ui .container {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      .font-size-large {
+        font-size: 30px;
+      }
+      * {
+        font-family: "Roboto", Arial;
+        color: #fff;
+        text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.3);
+      }
+      .ui .primary-holder {
+        position: absolute;
+        left: 2%;
+      }
+      .ui .secondary-holder {
+        position: absolute;
+        left: 2%;
+        bottom: 80px;
+      }
+      .ui .third-holder {
+        position: absolute;
+        left: 2%;
+        bottom: 40px;
+      }
+      .ui .health-display {
+        background: rgba(0, 0, 0, .25);
+        width: 130px;
+        height: 15px;
+        padding: 0;
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      .ui .health, .ui .run-health {
+        position: relative;
+        height: 100%;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: #fff;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      .ui .health span, .ui .run-health span {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
     </style>
 	<script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
   </head>
@@ -38,8 +99,23 @@
     <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
     <div class="ui">
-      <div class="ui ui-centering center">
-        <img src="crosshair.png" class="crosshair drop-shadow">
+      <div class="ui-centering center">
+        <img src="images/icons/ui/crosshair.png" class="crosshair drop-shadow">
+      </div>
+      <div class="ui-holder primary-holder holder">
+        <div class="container">
+          <p class="placeholder font-size-large current-grenades">0</p><img src="images/icons/ui/grenade.png" style="width: 50px"><p class="placeholder font-size-large">|</p>&ThickSpace;&ThickSpace;<p class="placeholder font-size-large current-ammo">0</p><img src="images/icons/ui/bullet.png" style="width: 50px">
+        </div>
+      </div>
+      <div class="ui-holder secondary-holder holder">
+        <div class="health-display">
+          <div class="health"><span style="color: #333; display: inline-block; font-size: 12px; white-space: nowrap; display: inline-flex; text-align: center; align-items: center; justify-content: center"><img src="images/icons/heart.png" style="width: 15px"><span class="health-text" style="color: #333">100</span> %</span></div>
+        </div>
+      </div>
+      <div class="ui-holder third-holder holder">
+        <div class="health-display">
+          <div class="run-health"><span style="color: #333; display: inline-block; font-size: 12px; white-space: nowrap; display: inline-flex; text-align: center; align-items: center; justify-content: center"><img src="images/icons/fast_forward.png" style="width: 20px"><span class="health-text" style="color: #333">100</span> %</span></div>
+        </div>
       </div>
     </div>
     <script>
@@ -93,6 +169,7 @@
                 return utils.weapons.reload();
               }
               cweapon.rounds--;
+              cweapon.roundsUsed++;
             }
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
             let flash = sandbox.models["flash"].object;
@@ -152,11 +229,12 @@
 		    },
 		    reload: function() {
           if (utils.options.get("Reloading")) return;
-          utils.options.set("CanFire", false);
-          utils.options.set("Reloading", true);
-          keyStates["ShiftLeft"] = false;
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
-            if (weapon.clips <= 0) return;
+            if (weapon.clips <= weapon.minClips) return;
+            utils.options.set("CanFire", false);
+            utils.options.set("Reloading", true);
+            weapon.roundsUsed += weapon.rounds;
+            keyStates["ShiftLeft"] = false;
             weapon.mixer.clipAction(weapon.animations[1]).stop();
             weapon.mixer.clipAction(weapon.animations[6]).stop();
             weapon.mixer.clipAction(weapon.animations[7]).stop();
@@ -211,7 +289,7 @@
         }
 		  },
       explosion: function(obj) {
-        let explosion = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ color: 0xffffff, map: new THREE.TextureLoader().load("explosion.png"), transparent: true, opacity: .1, depthWrite: false }));
+        let explosion = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ color: 0xffffff, map: new THREE.TextureLoader().load("images/textures/explosion.png"), transparent: true, opacity: .1, depthWrite: false }));
         let light = new THREE.PointLight(0xbb3905, 1);
         let lightClone = light.clone();
         scene.add(explosion);
@@ -264,8 +342,10 @@
           {
             name: "Assault_Rifle",
             rounds: 36,
-            maxRounds: 36,
             minRounds: 0,
+            maxRounds: 36,
+            minClips: 0,
+            maxClips: 3,
             clips: 3,
             reloads: {
               easy: {
@@ -281,8 +361,10 @@
           {
             name: "Glock_19",
             rounds: 12,
-            maxRounds: 12,
             minRounds: 0,
+            maxRounds: 12,
+            minClips: 0,
+            maxClips: 3,
             clips: 3,
             reloads: {
               easy: {
@@ -322,7 +404,7 @@
       };
       const clock = new THREE.Clock();
       const scene = new THREE.Scene();
-      const sun = new THREE.Mesh(new THREE.CircleGeometry(10), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("sun.png"), transparent: true }));
+      const sun = new THREE.Mesh(new THREE.CircleGeometry(10), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/sun.png"), transparent: true }));
       scene.background = new THREE.Color(0x88ccee);
       sun.position.set(0, 50, 0);
       sun.rotateX(1);
@@ -391,6 +473,11 @@
       const vector3 = new THREE.Vector3();
       document.addEventListener("keydown", (event) => {
         keyStates[event.code] = true;
+        if (keyStates["ShiftLeft"] && ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"]))) {
+          utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+            utils.options.get("RunHealth") <= 0 ? (weapon.mixer.clipAction(weapon.animations[7]).play(), weapon.mixer.clipAction(weapon.animations[7]).reset(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), keyStates["ShiftLeft"] = false) : utils.options.set("RunHealth", utils.options.get("RunHealth") - 2);
+          });
+        }
         if ((keyStates["KeyW"] || keyStates["ArrowUp"]) && !event.repeat) {
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             if (keyStates["ShiftLeft"]) {
@@ -416,7 +503,7 @@
       document.addEventListener("keyup", (event) => {
         keyStates[event.code] = false;
         sandbox.weapons.forEach(weapon => {
-          weapon.mixer.clipAction(weapon.animations[6]).stop(), sandbox.weapons[0].mixer.clipAction(sandbox.weapons[0].animations[6]).crossFadeFrom(sandbox.weapons[0].mixer.clipAction(sandbox.weapons[0].animations[7]), .4), sandbox.weapons[0].mixer.clipAction(sandbox.weapons[0].animations[7]).play();
+          weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).play();
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
             weapon.mixer.clipAction(weapon.animations[6]).play();
           }
@@ -601,6 +688,13 @@
       }
       function animate() {
         requestAnimationFrame(animate);
+        utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
+        document.querySelector(".run-health").style.width = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth")) + "%";
+        document.querySelector(".run-health").querySelector("span").querySelector("span").textContent = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth"));
+        document.querySelector(".current-grenades").textContent = sandbox.grenades.current;
+        sandbox.currentWeapon && utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+          document.querySelector(".current-ammo").textContent = (weapon.maxRounds * (weapon.maxClips + 1)) - weapon.roundsUsed;
+        });
         if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null) {
           sandbox.primaryWeapon.position.copy(camera.position);
           sandbox.primaryWeapon.rotation.copy(camera.rotation);
@@ -631,6 +725,7 @@
           x.animations = model.animations;
           x.mixer = new THREE.AnimationMixer(model.scene);
 		      x.name != "Assault_Rifle" && (x.mixer.timeScale = 100);
+          x.roundsUsed = 0;
           if (x.name == sandbox.loadout[0]) {
             sandbox.primaryWeapon = x.object;
             sandbox.currentWeapon = x.object;
@@ -720,6 +815,7 @@
       }, 75);
       utils.options.set("CanFire", true);
       utils.options.set("Reloading", false);
+      utils.options.set("RunHealth", 100);
     </script>
   </body>
 </html>
