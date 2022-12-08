@@ -92,6 +92,7 @@
             }
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
             let flash = sandbox.models["flash"].object;
+            new THREE.Sound("sounds/guns/Assault_Rifle/fire.mp3", sandbox.currentWeapon);
             flash.children[0].material.opacity = 1;
             flash.scale.set(.06, .06, .06);
             flash.position.copy(sandbox.currentWeapon.position);
@@ -143,6 +144,8 @@
                 setTimeout(() => {
                   utils.explosion(sphere.mesh);
                   scene.remove(sphere.mesh);
+                  new THREE.Sound("sounds/explosion.mp3", sphere.mesh);
+                  sphere.hits = 0;
                 }, 1000);
                 clearInterval(collided);
               }
@@ -415,6 +418,12 @@
           sphere.collider.center.addScaledVector(sphere.velocity, deltaTime);
           const result = worldOctree.sphereIntersect(sphere.collider);
           if (result) {
+            sphere.hits || (sphere.hits = 0);
+            if (scene.children.indexOf(sphere.mesh) > -1 && sphere.hits < 4) {
+              let hits = ["ricochet1", "ricochet2", "ricochet3"];
+              sphere.hits++;
+              new THREE.Sound("sounds/" + hits[Math.floor(Math.random() * hits.length)] + ".mp3", sphere.mesh);
+            }
             sphere.velocity.addScaledVector(result.normal, - result.normal.dot(sphere.velocity) * 1.5);
             sphere.collider.center.add(result.normal.multiplyScalar(result.depth));
           } else {
@@ -607,7 +616,7 @@
       });
       let rapidFire = setInterval(function() {
         if (utils.options.get("RapidFire")) utils.weapons.shoot();
-      }, 60);
+      }, 75);
     </script>
   </body>
 </html>
