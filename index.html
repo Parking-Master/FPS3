@@ -99,6 +99,7 @@
     <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
     <div class="ui">
+      <img src="images/other/blurred_border.png" style="width: 100vw; height: 100vw; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
         <img src="images/icons/ui/crosshair.png" class="crosshair drop-shadow">
       </div>
@@ -143,9 +144,64 @@
         },
         get: function(key) {
           return utils.cache.options[key];
+        },
+        defineWeapon: function(options = {}) {
+          sandbox.weapons.push(options);
+        }
+      },
+      player: {
+        weapon: {
+          set: function(key) {
+            sandbox.weapons.forEach(x => {
+              if (x.name == key) {
+                let gun = x.object.getObjectByName("handR_025").children[x.object.getObjectByName("handR_025").children.length - 1].clone();
+                gun.scale.set(10, 10, 10);
+                gun.rotation.set(0, 0, -Math.PI / 2);
+                gun.translateX(-12);
+                gun.translateY(2);
+                sandbox.models["player"].object.getObjectByName("mixamorigRightHand").add(gun);
+              }
+            });
+          }
+        }
+      },
+      camera: {
+        shake: function(intensity) {
+          let t = 0;
+          let h = setInterval(() => {
+            if (t >= intensity / 20) {
+              return (() => {
+                let t = 0;
+                let h = setInterval(() => {
+                  if (t >= intensity / 20) {
+                    return clearInterval(h);
+                  }
+                  camera.rotateX(-.005);
+                  t += .005;
+                });
+              })(), clearInterval(h);
+            }
+            camera.rotateX(.005);
+            t += .005;
+          });
         }
       },
 	    weapons: {
+        punch: function() {
+          if (utils.options.get("Punching")) return;
+          utils.options.set("Punching", true);
+          utils.camera.shake(1);
+          utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+            setTimeout(() => (utils.options.set("Punching", false), weapon.mixer.clipAction(weapon.animations[11]).stop()), 1500);
+            let clip = weapon.mixer.clipAction(weapon.animations[11]);
+            clip.loop = THREE.LoopOnce;
+            clip.clampWhenFinished = true;
+            clip.reset();
+            clip.setDuration(.5);
+            clip.play();
+            setTimeout(() => (clip.timeScale = -1, clip.paused = false), 500);
+          });
+        },
         data: function(weapon) {
           return new Promise(function(resolve, reject) {
             sandbox.weapons.forEach(x => x.object == weapon && resolve(x));
@@ -390,16 +446,36 @@
         models: {
           "grenade": {
             srcPath: "models/weapons/grenades/hand.glb",
-            object: null
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
           },
           "flash": {
             srcPath: "models/assets/muzzle_flash.glb",
-            object: null
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
           },
           "shell": {
             srcPath: "models/assets/bullet_shell.glb",
-            object: null
-          }
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "player": {
+            srcPath: "models/characters/Steve/scene.gltf",
+            object: null,
+            callback: function(model) {
+              model.scale.set(.8, .8, .8);
+              scene.add(model);
+              model.traverse(x => x.frustumCulled = false);
+            },
+            mixer: null,
+            animations: null
+          },
         }
       };
       const clock = new THREE.Clock();
@@ -489,6 +565,9 @@
         }
         if (keyStates["KeyR"] && !event.repeat) {
           utils.weapons.reload();
+        }
+        if (keyStates["KeyB"] && !event.repeat) {
+          utils.weapons.punch();
         }
         if (keyStates["KeyF"] && !event.repeat) {
           document.dispatchEvent(new MouseEvent("mousedown"));
@@ -739,6 +818,9 @@
       Object.keys(sandbox.models).forEach(x => {
         new THREE.GLTFLoader().load(sandbox.models[x].srcPath, (model) => {
           sandbox.models[x].object = model.scene;
+          sandbox.models[x].mixer = new THREE.AnimationMixer(model.scene);
+          sandbox.models[x].animations = model.animations;
+          sandbox.models[x].callback(model.scene);
         });
       });
       const weaponRenderer = new THREE.WebGLRenderer({ antialias: true });
@@ -775,6 +857,7 @@
           weaponRenderer.render(weaponScene, weaponCamera);
         }
         sandbox.weapons.forEach(x => x.mixer && (x.mixer.update(clock.getDelta()), utils.options.get("Reloading") || (x.mixer.clipAction(x.animations[1]).play())));
+        Object.values(sandbox.models).forEach(x => (x.mixer && void(x.mixer.update(clock.getDelta()))));
       }
       weaponRenderer.domElement.style.position = "absolute";
       weaponRenderer.domElement.style.left = "0";
