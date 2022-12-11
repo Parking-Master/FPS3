@@ -14,6 +14,7 @@
         font-family: "Roboto", Arial;
         overflow: hidden !important;
         user-select: none !important;
+        background-image: linear-gradient(to right, #fff, #ddd);
       }
       .wrapper {
         width: 98%;
@@ -27,6 +28,7 @@
         padding: 0 !important;
         border: 5px solid #333;
         border-image: linear-gradient(to top, #333, #fff) 1 / 20px;
+        background: #fefefe;
       }
       h1 {
         text-align: center;
@@ -43,14 +45,14 @@
         margin: 0;
         color: #fff;
         text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
-        background: #fff;
+        background: #fefefe;
         z-index: 500 !important;
         width: 300px;
         left: 50%;
         margin-left: -150px;
       }
       .main-image {
-        width: 350px;
+        width: 45vh;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -82,7 +84,7 @@
         font-weight: 100;
         font-size: 18px;
         margin-left: 5%;
-        margin-bottom: 200px;
+        margin-bottom: 20vh;
         transition: transform .1s;
         white-space: nowrap;
         text-transform: uppercase;
@@ -140,15 +142,29 @@
       img {
         pointer-events: none !important;
       }
+      .notiflix-confirm-overlay {
+        backdrop-filter: blur(5px);
+      }
+      .notiflix-confirm-head * {
+        color: #333 !important;
+      }
+      .notiflix-confirm-buttons a {
+        background: #333 !important;
+        border-radius: 2px !important;
+      }
+      .notiflix-confirm-content {
+        border-radius: 5px !important;
+      }
+      @media only screen and (max-height: 640px) {
+        h1 {
+          visibility: hidden;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="loader">
       <div class="loader-5"></div>
-      <div class="loader-1"></div>
-      <div class="loader-2"></div>
-      <div class="loader-3"></div>
-      <div class="loader-4"></div>
     </div>
     <div class="wrapper">
       <h2 style="margin-top: 2%">FPS</h2>
@@ -163,17 +179,44 @@
         <button onclick="multiplayer()">store</button>
         <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important">help</button>
       </div>
-      <p class="copyright" style="text-align: center; margin: 0; margin-top: -100px; font-size: 20px">&copy; 2023 Parking-Master</p>
+      <p class="copyright" style="position: absolute; text-align: center; margin: 0; top: 90%; font-size: 20px; width: 300px; left: 50%; margin-left: -150px; padding: 0">&copy; 2023 Parking-Master</p>
     </div>
     <script>
-      window.addEventListener("load", () => {
-        let rate = 200;
+      /* importers */
+      import("https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js");
+
+      function loader(rate = 200) {
+        let loader1 = document.createElement("div");
+        let loader2 = document.createElement("div");
+        let loader3 = document.createElement("div");
+        let loader4 = document.createElement("div");
+        let loader5 = document.createElement("div");
+        loader1.className = "loader-1";
+        document.querySelector(".loader").appendChild(loader1);
+        loader2.className = "loader-2";
+        document.querySelector(".loader").appendChild(loader2);
+        loader3.className = "loader-3";
+        document.querySelector(".loader").appendChild(loader3);
+        loader4.className = "loader-4";
+        document.querySelector(".loader").appendChild(loader4);
+        loader5.className = "loader-5";
+        document.querySelector(".loader-5") == null && document.querySelector(".loader").appendChild(loader5);
+        document.querySelector(".loader-5").style.background = "#111";
+        document.querySelector(".loader-5").style.backdropFilter = "blur(15px)";
+        document.querySelector(".loader-2").style.left = "0";
+        document.querySelector(".loader-1").style.left = "0";
         document.querySelector(".loader-1").style.left = "200%";
         setTimeout(() => {
           document.querySelector(".loader-5").style.background = "transparent";
           document.querySelector(".loader-5").style.backdropFilter = "none";
           document.querySelector(".loader-2").style.left = "200%";
-          setTimeout(() => document.querySelector(".loader-5").remove(), 2100);
+          setTimeout(() => {
+            loader1.remove();
+            loader2.remove();
+            loader3.remove();
+            loader4.remove();
+            document.querySelector(".loader-5").remove();
+          }, 2100);
           setTimeout(() => {
             document.querySelector(".loader-3").style.left = "200%";
           }, rate);
@@ -181,7 +224,13 @@
             document.querySelector(".loader-4").style.left = "200%";
           }, rate);
         }, rate);
-      })
+      }
+      window.addEventListener("load", () => {
+        loader();
+      });
+      function play() {
+        Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel");
+      }
     </script>
   </body>
 </html>

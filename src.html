@@ -835,6 +835,7 @@
       PointerControls.isLocked = true;
       weaponCamera.rotation.order = "YXZ";
       function weaponAnimate() {
+        const delta = clock.getDelta();
         requestAnimationFrame(weaponAnimate);
         sun.position.set(camera.position.x, 50, camera.position.z);
         weaponCamera.position.copy(camera.position);
@@ -856,8 +857,8 @@
           weaponFillLight1.rotation.copy(fillLight1.rotation);
           weaponRenderer.render(weaponScene, weaponCamera);
         }
-        sandbox.weapons.forEach(x => x.mixer && (x.mixer.update(clock.getDelta()), utils.options.get("Reloading") || (x.mixer.clipAction(x.animations[1]).play())));
-        Object.values(sandbox.models).forEach(x => (x.mixer && void(x.mixer.update(clock.getDelta()))));
+        sandbox.weapons.forEach(x => x.mixer && (x.mixer.update(delta), utils.options.get("Reloading") || (x.mixer.clipAction(x.animations[1]).play())));
+        Object.values(sandbox.models).forEach(x => (x.mixer && (x.mixer.update(delta))));
       }
       weaponRenderer.domElement.style.position = "absolute";
       weaponRenderer.domElement.style.left = "0";
