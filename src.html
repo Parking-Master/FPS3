@@ -123,12 +123,18 @@
 	  // Game asset variables
 	  otherPlayer = new THREE.Mesh();
 
-	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}) {
+	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true) {
+      if (!preserve3d) {
+        let sound = document.createElement("audio");
+        sound.src = source;
+        sound.play();
+        return;
+      }
 	    typeof camera.getObjectByProperty("type", "AudioListener") == "undefined" && camera.add(new THREE.AudioListener());
 		  let sound = new THREE.PositionalAudio(camera.getObjectByProperty("type", "AudioListener"));
 		  new THREE.AudioLoader().load(source, (buffer) => {
 		    sound.setBuffer(buffer);
-		    sound.setRefDistance(10);
+		    sound.setRefDistance(5);
 		    callback(sound);
 		    sound.play();
 		  });
@@ -190,7 +196,7 @@
         punch: function() {
           if (utils.options.get("Punching")) return;
           utils.options.set("Punching", true);
-          utils.camera.shake(1);
+          setTimeout(() => utils.camera.shake(1), 200);
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             setTimeout(() => (utils.options.set("Punching", false), weapon.mixer.clipAction(weapon.animations[11]).stop()), 1500);
             let clip = weapon.mixer.clipAction(weapon.animations[11]);
@@ -221,17 +227,20 @@
             i++;
             if (weapon) {
               let cweapon = sandbox.weapons[sandbox.weapons.indexOf(weapon)];
+              if (cweapon.rounds - 1 <= cweapon.minRounds) {
+                utils.weapons.reload();
+              }
               if (cweapon.rounds <= cweapon.minRounds) {
-                return utils.weapons.reload();
+                return;
               }
               cweapon.rounds--;
               cweapon.roundsUsed++;
             }
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
             let flash = sandbox.models["flash"].object;
-            new THREE.Sound("sounds/guns/Assault_Rifle/fire.mp3", sandbox.currentWeapon);
+            new THREE.Sound("sounds/guns/" + weapon.name + "/fire.mp3", sandbox.currentWeapon, () => {}, false);
             flash.children[0].material.opacity = 1;
-            flash.scale.set(.06, .06, .06);
+            flash.scale.set(.1, .1, .1);
             flash.position.copy(sandbox.currentWeapon.position);
             flash.rotation.copy(sandbox.currentWeapon.rotation);
             flash.translateY(.11);
@@ -539,6 +548,11 @@
       }
       const worldOctree = new THREE.Octree();
       const playerCollider = new THREE.Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1, 0), 0.35);
+      playerCollider.start.set(13.5, 0.35, -18.5);
+      playerCollider.end.set(13.5, 1, -18.5);
+      playerCollider.radius = 0.35;
+      camera.position.copy(playerCollider.end);
+      camera.rotation.set(0,Math.PI,0);
       const playerVelocity = new THREE.Vector3();
       const playerDirection = new THREE.Vector3();
       let playerOnFloor = false;
@@ -586,7 +600,9 @@
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
             weapon.mixer.clipAction(weapon.animations[6]).play();
           }
-          document.dispatchEvent(new MouseEvent("mouseup"));
+          if (keyStates["KeyF"]) {
+            document.dispatchEvent(new MouseEvent("mouseup"));
+          }
         });
       });
       renderer.domElement.addEventListener("mousedown", () => {
@@ -684,9 +700,9 @@
             sphere.velocity.addScaledVector(result.normal, - result.normal.dot(sphere.velocity) * 1.5);
             sphere.collider.center.add(result.normal.multiplyScalar(result.depth));
           } else {
-            sphere.velocity.y -= GRAVITY * deltaTime;
+            sphere.velocity.y -= (GRAVITY * deltaTime + .01);
           }
-          const damping = Math.exp(- 1.5 * deltaTime) - 1;
+          const damping = Math.exp(- 1.5 * deltaTime) - 1.003;
           sphere.velocity.addScaledVector(sphere.velocity, damping);
           playerSphereCollision(sphere);
         });
@@ -721,19 +737,34 @@
             }
           }
         });
-        animate();
+        function isSustained() {
+          return new Promise(function(resolve, reject) {
+            let t = camera.position;
+            setTimeout(() => t.y - .02 >= camera.position.y ? resolve(!true) : resolve(!false), 100);
+          });
+        }
+        let animated = false;
+        let checkSustained = setInterval(() => {
+          isSustained().then(sustained => {
+            if (sustained) {
+              !animated && animate();
+              animated = true;
+              clearInterval(checkSustained);
+            }
+          });
+        });
         updateShadows();
       });
       function updateShadows() {
         renderer.shadowMap.needsUpdate = true;
       }
       function teleportPlayerIfOob() {
-        if (camera.position.y <= - 25) {
-          playerCollider.start.set(0, 0.35, 0);
-          playerCollider.end.set(0, 1, 0);
+        if (camera.position.y <= -25) {
+          playerCollider.start.set(13.5, 0.35, -18.5);
+          playerCollider.end.set(13.5, 1, -18.5);
           playerCollider.radius = 0.35;
           camera.position.copy(playerCollider.end);
-          camera.rotation.set(0, 0, 0);
+          camera.rotation.set(0,Math.PI,0);
         }
       }
       function controls(deltaTime) {
@@ -803,7 +834,6 @@
           x.object.scale.set(.01, .01, .01);
           x.animations = model.animations;
           x.mixer = new THREE.AnimationMixer(model.scene);
-		      x.name != "Assault_Rifle" && (x.mixer.timeScale = 100);
           x.roundsUsed = 0;
           if (x.name == sandbox.loadout[0]) {
             sandbox.primaryWeapon = x.object;
