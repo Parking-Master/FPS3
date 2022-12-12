@@ -87,6 +87,9 @@
         align-items: center;
         justify-content: center;
       }
+      img {
+        pointer-events: none !important;
+      }
     </style>
 	<script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
   </head>
@@ -99,7 +102,7 @@
     <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
     <div class="ui">
-      <img src="images/other/blurred_border.png" style="width: 100vw; height: 100vw; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
+      <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vw; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
         <img src="images/icons/ui/crosshair.png" class="crosshair drop-shadow">
       </div>
@@ -123,7 +126,7 @@
 	  // Game asset variables
 	  otherPlayer = new THREE.Mesh();
 
-	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true) {
+	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true, volume = 5) {
       if (!preserve3d) {
         let sound = document.createElement("audio");
         sound.src = source;
@@ -135,6 +138,7 @@
 		  new THREE.AudioLoader().load(source, (buffer) => {
 		    sound.setBuffer(buffer);
 		    sound.setRefDistance(5);
+		    sound.setVolume(volume);
 		    callback(sound);
 		    sound.play();
 		  });
@@ -190,6 +194,34 @@
             camera.rotateX(.005);
             t += .005;
           });
+        },
+        zoomIn: function(o) {
+          if (utils.options.get("Zoomed")) return;
+          utils.options.set("Zoomed", true);
+          const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
+          let t = 0;
+          let transition = setInterval(() => {
+            t >= 26 ? clearInterval(transition) : camera.fov = e - t;
+            t += 2;
+            camera.updateProjectionMatrix();
+          });
+          document.querySelector(".crosshair").src = "images/icons/ui/crosshair_zoomed.png";
+          PointerControls.pointerSpeed = PointerControls.pointerSpeed / 2;
+          document.querySelector(".vignette").style.opacity = 0;
+        },
+        zoomOut: function(o) {
+          if (!utils.options.get("Zoomed")) return;
+          utils.options.set("Zoomed", false);
+          const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
+          let t = 0;
+          let transition = setInterval(() => {
+            t >= 26 ? clearInterval(transition) : camera.fov = e + t;
+            t += 2;
+            camera.updateProjectionMatrix();
+          });
+          document.querySelector(".crosshair").src = "images/icons/ui/crosshair.png";
+          PointerControls.pointerSpeed = PointerControls.pointerSpeed * 2;
+          document.querySelector(".vignette").style.opacity = 1;
         }
       },
 	    weapons: {
@@ -237,6 +269,7 @@
               cweapon.roundsUsed++;
             }
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
+            utils.camera.shake(.2);
             let flash = sandbox.models["flash"].object;
             new THREE.Sound("sounds/guns/" + weapon.name + "/fire.mp3", sandbox.currentWeapon, () => {}, false);
             flash.children[0].material.opacity = 1;
@@ -325,12 +358,31 @@
             }, 3000);
           });
         },
+        unlock: function() {
+          utils.options.set("WeaponLocked", false);
+        },
+        lock: function() {
+          utils.options.set("WeaponLocked", true);
+        },
         grenades: {
           throw: function() {
             if (sandbox.grenades.current <= sandbox.grenades.min) {
               return;
             }
+            if (utils.options.get("Punching")) return;
+            utils.options.set("Punching", true);
+            utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+              setTimeout(() => (utils.options.set("Punching", false), weapon.mixer.clipAction(weapon.animations[10]).stop()), 500);
+              let clip = weapon.mixer.clipAction(weapon.animations[10]);
+              let clipFrom = weapon.mixer.clipAction(weapon.animations[1]);
+              clip.loop = THREE.LoopOnce;
+              clip.reset();
+              clip.setDuration(.5);
+              clip.play();
+              clip.crossFadeFrom(clipFrom);
+            });
             sandbox.grenades.current--;
+            setTimeout(() => utils.camera.shake(.5), 100);
             const sphere = spheres[sphereIdx];
             camera.getWorldDirection(playerDirection);
             sphere.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
@@ -344,7 +396,7 @@
                 setTimeout(() => {
                   utils.explosion(sphere.mesh);
                   scene.remove(sphere.mesh);
-                  new THREE.Sound("sounds/explosion.mp3", sphere.mesh);
+                  new THREE.Sound("sounds/explosion.mp3", sphere.mesh, () => {}, true, 20);
                   sphere.hits = 0;
                 }, 1000);
                 clearInterval(collided);
@@ -481,6 +533,7 @@
               model.scale.set(.8, .8, .8);
               scene.add(model);
               model.traverse(x => x.frustumCulled = false);
+              model.position.set(17, 0, -2.25);
             },
             mixer: null,
             animations: null
@@ -579,6 +632,9 @@
         }
         if (keyStates["KeyR"] && !event.repeat) {
           utils.weapons.reload();
+        }
+        if (keyStates["KeyI"] && !event.repeat) {
+          utils.options.get("Zoomed") ? utils.camera.zoomOut() : utils.camera.zoomIn();
         }
         if (keyStates["KeyB"] && !event.repeat) {
           utils.weapons.punch();
@@ -805,7 +861,7 @@
         sandbox.currentWeapon && utils.weapons.data(sandbox.currentWeapon).then(weapon => {
           document.querySelector(".current-ammo").textContent = (weapon.maxRounds * (weapon.maxClips + 1)) - weapon.roundsUsed;
         });
-        if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null) {
+        if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null && utils.options.get("WeaponLocked")) {
           sandbox.primaryWeapon.position.copy(camera.position);
           sandbox.primaryWeapon.rotation.copy(camera.rotation);
           sandbox.primaryWeapon.rotateY(Math.PI);
@@ -835,6 +891,8 @@
           x.animations = model.animations;
           x.mixer = new THREE.AnimationMixer(model.scene);
           x.roundsUsed = 0;
+          let weapon = x;
+          weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).play();
           if (x.name == sandbox.loadout[0]) {
             sandbox.primaryWeapon = x.object;
             sandbox.currentWeapon = x.object;
@@ -870,7 +928,7 @@
         sun.position.set(camera.position.x, 50, camera.position.z);
         weaponCamera.position.copy(camera.position);
         weaponCamera.rotation.copy(camera.rotation);
-        if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null) {
+        if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null && utils.options.get("WeaponLocked")) {
           sandbox.primaryWeapon.position.copy(weaponCamera.position);
           sandbox.primaryWeapon.rotation.copy(weaponCamera.rotation);
           sandbox.primaryWeapon.rotateY(Math.PI);
@@ -883,10 +941,10 @@
           sandbox.secondaryWeapon.translateX(-.1);
           sandbox.secondaryWeapon.translateZ(.3);
           sandbox.secondaryWeapon.translateY(-.15);
-          weaponFillLight1.position.copy(fillLight1.position);
-          weaponFillLight1.rotation.copy(fillLight1.rotation);
-          weaponRenderer.render(weaponScene, weaponCamera);
         }
+        weaponFillLight1.position.copy(fillLight1.position);
+        weaponFillLight1.rotation.copy(fillLight1.rotation);
+        weaponRenderer.render(weaponScene, weaponCamera);
         sandbox.weapons.forEach(x => x.mixer && (x.mixer.update(delta), utils.options.get("Reloading") || (x.mixer.clipAction(x.animations[1]).play())));
         Object.values(sandbox.models).forEach(x => (x.mixer && (x.mixer.update(delta))));
       }
@@ -930,6 +988,8 @@
       utils.options.set("CanFire", true);
       utils.options.set("Reloading", false);
       utils.options.set("RunHealth", 100);
+      utils.options.set("WeaponLocked", true);
+      utils.options.set("Zoomed", false);
     </script>
   </body>
 </html>
