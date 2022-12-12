@@ -10,6 +10,10 @@
         font-family: "Roboto";
         src: url(fonts/Roboto.ttf);
       }
+      @font-face {
+        font-family: "Game";
+        src: url(fonts/Game.ttf);
+      }
       html, body {
         font-family: "Roboto", Arial;
         overflow: hidden !important;
@@ -32,11 +36,13 @@
       }
       h1 {
         text-align: center;
-        font-size: 10em;
+        font-size: 9em;
         margin: 0;
         color: #fff;
         text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
         z-index: 5;
+        font-family: "Game", Arial, Helvetica, sans-serif !important;
+        padding: 10px 0;
       }
       h2 {
         position: relative;
@@ -50,6 +56,8 @@
         width: 300px;
         left: 50%;
         margin-left: -150px;
+        font-family: "Game", Arial, Helvetica, sans-serif !important;
+        font-style: italic;
       }
       .main-image {
         width: 45vh;
@@ -72,7 +80,7 @@
       .strike.str-right {
         right: 5%;
       }
-      button {
+      button.button {
         position: relative;
         padding: 20px 8px;
         width: 250px;
@@ -92,10 +100,10 @@
         transition: box-shadow 1s;
         cursor: pointer;
       }
-      button:hover {
+      button.button:hover {
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1), 0 1px 12px rgba(0, 0, 0, 0.35);
       }
-      button:active {
+      button.button:active {
         transition: box-shadow .3s;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.2);
       }
@@ -160,8 +168,32 @@
           visibility: hidden;
         }
       }
+      .arrow {
+        border: solid #333;
+        border-width: 0 3px 3px 0;
+        display: inline-block;
+        padding: 3px;
+      }
+      .hidden-list {
+        height: 0;
+        margin-top: 10px;
+        transition: height .2s, box-shadow 1s;
+        visibility: hidden;
+        cursor: default !important;
+      }
+      .mini-button {
+        text-decoration: underline;
+        text-transform: capitalize;
+      }
+      .carousel .arrow-holder:hover {
+        outline: 1px solid currentColor;
+      }
+      a {
+        cursor: pointer;
+      }
     </style>
   </head>
+	<script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
   <body>
     <div class="loader">
       <div class="loader-5"></div>
@@ -173,18 +205,35 @@
       <div class="strike str-right"></div>
       <img src="images/html/mastery.png" class="main-image" style="margin-top: -60px">
       <div style="margin-top: -100px">
-        <button onclick="play()">play</button>
-        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize()">options</button>
+        <button style="position: absolute" class="hidden-list button">
+          <br>
+          <br>
+          <b style="font-family: Arial, Helvetica, sans-serif !important; font-weight: bold; font-size: 12px">Select a mode:</b>
+          <br>
+          <a id="mode" onclick="event.preventDefault()" class="carousel"><span class="arrow-holder" onclick="switchMode(this, 'back')"><i class="arrow" style="transform: rotate(135deg)"></i></span> <span class="holder">Slayer</span> <span class="arrow-holder" onclick="switchMode(this, 'go')"><i class="arrow" style="transform: rotate(-45deg)"></i></span></a>
+          <br>
+          <a class="mini-button" style="margin: 0; font-family: monospace" onclick="start()">Start</a>
+        </button>
+        <button onclick="play(this)" class="button">play</button>
+        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize()" class="button">options</button>
         <br>
-        <button onclick="multiplayer()">store</button>
-        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important">help</button>
+        <button onclick="multiplayer()" class="button">store</button>
+        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" class="button">help</button>
       </div>
       <p class="copyright" style="position: absolute; text-align: center; margin: 0; top: 90%; font-size: 20px; width: 300px; left: 50%; margin-left: -150px; padding: 0">&copy; 2023 Parking-Master</p>
     </div>
     <script>
       /* importers */
       import("https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js");
+      import("./js/SessionSearcher.js");
 
+      gametime.set("key", "pub-c-c44c8fc4-612e-4fc3-b875-4398f01da63c", "sub-c-b6832794-3c08-11ec-b2c1-a25c7fcd9558");
+      gametime.set("channel", "world");
+
+      availableModes = ["Slayer", "Teams", "Fiesta", "Snipers", "Oddball", "Fistfight", "CTF", "KOTH"];
+      availableMaps = ["Cargo", "Storage", "Cubica", "Semiopti", "Vertice", "Lihid", "Aero"];
+      currentMode = availableModes[0];
+      
       function loader(rate = 200) {
         let loader1 = document.createElement("div");
         let loader2 = document.createElement("div");
@@ -228,8 +277,94 @@
       window.addEventListener("load", () => {
         loader();
       });
-      function play() {
+      function play(button) {
+        typeof button.clicked == "undefined" ? button.clicked = false : void(0);
+        if (button.clicked) {
+          button.querySelectorAll(".arrow").forEach(x => {
+            x.style.transform = "rotate(-45deg)";
+            setTimeout(() => {
+              x.remove();
+            }, 250);
+          });
+          document.querySelector(".hidden-list").style.height = "0";
+          document.querySelector(".hidden-list").style.visibility = "hidden";
+          button.style.borderBottom = "";
+          button.style.borderBottomLeftRadius = "";
+          button.style.borderBottomRightRadius = "";
+          button.style.clipPath = "";
+          button.style.boxShadow = "";
+          return button.clicked = false;
+        }
+        let i = document.createElement("i");
+        i.className = "arrow";
+        i.style = "transform: rotate(-45deg); transition: transform .2s; margin-left: 10px";
+        button.appendChild(i);
+        document.querySelector(".hidden-list").style.height = "150px";
+        document.querySelector(".hidden-list").style.visibility = "visible";
+        setTimeout(() => {
+          i.style.transform = "rotate(45deg)";
+        }, 100);
+        button.style.borderBottom = "1px dashed #999";
+        button.style.borderBottomLeftRadius = "0";
+        button.style.borderBottomRightRadius = "0";
+        button.style.clipPath = "inset(-5px -5px 0px -5px)";
+        button.style.boxShadow = "none";
+        button.clicked = true;
+      }
+      function start() {
+        Notiflix.Confirm.hide = function() {
+          document.querySelector("#NXConfirmButtonOk").click();
+        }
+        Session.create({
+          mode: currentMode,
+          map: availableMaps[Math.floor(Math.random() * availableMaps.length)]
+        });
+        let joined = null;
+        gametime.make("joinAlert");
+        gametime.on("joinAlert", function(lobby) {
+          joined = lobby;
+        });
         Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel");
+        let search = setInterval(() => {
+          Session.search().then(x => {
+            x.forEach(object => {
+              if (object.mode == currentMode && (joined == Session.getIds()[Session.getIds().length - 1] ? true : !(Session.getIds().indexOf(object.sessionId) > -1))) {
+                Notiflix.Confirm.hide();
+                gametime.run("joinAlert", [Session.getIds()[Session.getIds().length - 1]]);
+                setTimeout(() => {
+                  Notiflix.Confirm.show("Match found!", "Connecting players... (1/" + object.users + ")", "Cancel");
+                  setTimeout(() => {
+                    location.assign("./src.html?lobby=" + object.sessionId + "&mode=" + object.mode + "&map=" + object.map);
+                  }, 3000);
+                  setTimeout(() => document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = document.querySelector(".notiflix-confirm-head").querySelector("div").textContent.replace(/(\(1\/(.)\))/gi, "(" + document.querySelector(".notiflix-confirm-head").querySelector("div").textContent.split("/")[1].split(")")[0] + "/" + document.querySelector(".notiflix-confirm-head").querySelector("div").textContent.split("/")[1].split(")")[0] + ")"), 1200);
+                }, 500);
+                clearInterval(search);
+              }
+            });
+          });
+        }, 5000);
+        window.onbeforeunload = function(e) {
+          navigator.sendBeacon("https://parseapi.back4app.com/classes/Lobby/" + currentObjectId, JSON.stringify({"_method":"DELETE","_ApplicationId":"NTR81WnvZ9NPy2JNigjx1OQS9BG41TrmSHD6z2ap","_JavaScriptKey":"4xIHZYPRyPpBcBR7bQOY3IKV1VlCFbZRoH6hSrp7","_ClientVersion":"js3.4.4","_InstallationId":"ec732c40-e273-4e15-909f-ba1541651a8c"}));
+          return null;
+        }
+      }
+      function switchMode(element, type) {
+        let index = availableModes.indexOf(currentMode);
+        if (type == "back") {
+          if (index - 1 < 0) {
+            index = availableModes.length - 1;
+          } else {
+            index--;
+          }
+        } else {
+          if (index + 1 > (availableModes.length - 1)) {
+            index = 0;
+          } else {
+            index++;
+          }
+        }
+        currentMode = availableModes[index];
+        element.parentElement.querySelector(".holder").textContent = currentMode;
       }
     </script>
   </body>
