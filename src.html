@@ -125,6 +125,7 @@
     <script>
 	  // Game asset variables
 	  otherPlayer = new THREE.Mesh();
+	  space = new THREE.Mesh();
 	  sun = new THREE.Mesh();
 
 	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true, volume = 5) {
@@ -571,10 +572,10 @@
       renderer.outputEncoding = THREE.sRGBEncoding;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       document.body.appendChild(renderer.domElement);
-      const GRAVITY = 60;
-      const NUM_SPHERES = 2;
-      const SPHERE_RADIUS = 0.2;
-      const STEPS_PER_FRAME = 10;
+      let GRAVITY = 60;
+      let NUM_SPHERES = 2;
+      let SPHERE_RADIUS = 0.2;
+      let STEPS_PER_FRAME = 10;
       const sphereGeometry = new THREE.IcosahedronGeometry(SPHERE_RADIUS, 5);
       const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xbbbb44 });
       const spheres = [];
@@ -850,6 +851,7 @@
       }
       function animate() {
         requestAnimationFrame(animate);
+        sun.position.set(camera.position.x, 50, camera.position.z);
         utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
         document.querySelector(".run-health").style.width = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth")) + "%";
         document.querySelector(".run-health").querySelector("span").querySelector("span").textContent = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth"));
@@ -921,6 +923,9 @@
       function weaponAnimate() {
         const delta = clock.getDelta();
         requestAnimationFrame(weaponAnimate);
+        space.position.copy(camera.position);
+        space.rotateY(.00025);
+        space.rotateX(.0001);
         sun.position.set(camera.position.x, 50, camera.position.z);
         weaponCamera.position.copy(camera.position);
         weaponCamera.rotation.copy(camera.rotation);
@@ -987,6 +992,7 @@
         scene.add(sun);
         scene.fog = new THREE.Fog(0xbbba90, 0, 80);
       } else if (sandbox.map == "Aero") {
+        GRAVITY = 25;
         let sphere = new THREE.SphereGeometry(500, 60, 40);
         space = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/space.png") }));
         space.material.map.generateMipmaps = false;
@@ -994,8 +1000,17 @@
         space.material.map.needsUpdate = true;
         scene.background = null;
         space.material.side = THREE.DoubleSide;
-        space.scale.set(2, 2, 2);
         scene.add(space);
+        scene.fog = null;
+      } else if (sandbox.map == "Complex") {
+        let sphere = new THREE.SphereGeometry(500, 60, 40);
+        sky = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/clouds.png") }));
+        sky.material.map.generateMipmaps = false;
+        sky.material.map.minFilter = THREE.LinearMipMapLinearFilter;
+        sky.material.map.needsUpdate = true;
+        scene.background = null;
+        space.material.side = THREE.DoubleSide;
+        scene.add(sky);
         scene.fog = null;
       }
       document.addEventListener("mousedown", function(event) {
