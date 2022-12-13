@@ -312,30 +312,46 @@
         button.clicked = true;
       }
       function start() {
-        Notiflix.Confirm.hide = function() {
-          document.querySelector("#NXConfirmButtonOk").click();
-        }
         Session.create({
           mode: currentMode,
-          map: availableMaps[Math.floor(Math.random() * availableMaps.length)]
+          map: availableMaps[Math.floor(Math.random() * availableMaps.length)],
+          active: false
         });
-        let joined = null;
-        gametime.make("joinAlert");
-        gametime.on("joinAlert", function(lobby) {
-          joined = lobby;
+        window.joined = false;
+        gametime.make("join");
+        gametime.on("join", function(user) {
+          if (user == gametime.user.position) return;
+          joined = true;
         });
         Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel");
+        document.querySelector("#NXConfirmButtonOk").onclick = () => {
+          clearInterval(search);
+          Session.clearCache();
+          navigator.sendBeacon("https://parseapi.back4app.com/classes/Lobby/" + currentObjectId, JSON.stringify({"_method":"DELETE","_ApplicationId":"NTR81WnvZ9NPy2JNigjx1OQS9BG41TrmSHD6z2ap","_JavaScriptKey":"4xIHZYPRyPpBcBR7bQOY3IKV1VlCFbZRoH6hSrp7","_ClientVersion":"js3.4.4","_InstallationId":"ec732c40-e273-4e15-909f-ba1541651a8c"}));
+        };
         let search = setInterval(() => {
           Session.search().then(x => {
             x.forEach(object => {
-              if (object.mode == currentMode && (joined == Session.getIds()[Session.getIds().length - 1] ? true : !(Session.getIds().indexOf(object.sessionId) > -1))) {
-                Notiflix.Confirm.hide();
-                gametime.run("joinAlert", [Session.getIds()[Session.getIds().length - 1]]);
+              console.log(object)
+              if (object.mode == currentMode && (object.active ? true : !(Session.getIds().indexOf(object.sessionId) > -1))) {
+                let extend = new Parse.Object.extend("Lobby");
+                let lobby = new extend();
+                lobby.set("objectId", currentObjectId);
+                let query = lobby.get("query");
+                query.active = true;
+                lobby.set("query", query);
+                lobby.save();
                 setTimeout(() => {
-                  Notiflix.Confirm.show("Match found!", "Connecting players... (1/" + object.users + ")", "Cancel");
-                  setTimeout(() => {
-                    location.assign("./src.html?lobby=" + object.sessionId + "&mode=" + object.mode + "&map=" + object.map);
-                  }, 3000);
+                  document.querySelector(".notiflix-confirm-head").querySelector("h5").textContent = "Match found!";
+                  document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Connecting players... (1/" + object.users + ")";
+                  gametime.run("join", [gametime.user.position]);
+                  let join = setInterval(() => {
+                    if (window.joined) {
+                      joined = false;
+                      // setTimeout(() => location.assign("./src.html?lobby=" + object.sessionId + "&mode=" + object.mode + "&map=" + object.map), 2000);
+                      clearInterval(join);
+                    }
+                  });
                   setTimeout(() => document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = document.querySelector(".notiflix-confirm-head").querySelector("div").textContent.replace(/(\(1\/(.)\))/gi, "(" + document.querySelector(".notiflix-confirm-head").querySelector("div").textContent.split("/")[1].split(")")[0] + "/" + document.querySelector(".notiflix-confirm-head").querySelector("div").textContent.split("/")[1].split(")")[0] + ")"), 1200);
                 }, 500);
                 clearInterval(search);
