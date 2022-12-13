@@ -29,6 +29,7 @@
               const n = { name: t.get("name"), query: t.get("query"), sessionId: t.get("sessionId") };
               n.query.sessionId = n.sessionId;
               n.query.users = 2;
+              n.query.id = t.id;
               if (e) {
                 lobbies.push(n.query);
               } else {
