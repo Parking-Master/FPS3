@@ -231,7 +231,7 @@
       gametime.set("channel", "world");
 
       availableModes = ["Slayer", "Teams", "Fiesta", "Snipers", "Oddball", "Fistfight", "CTF", "KOTH"];
-      availableMaps = ["Cargo", "Storage", "Cubica", "Semiopti", "Vertice", "Lihid", "Aero"];
+      availableMaps = ["Cargo", "Storage", "Vertice", "Lihid", "Aero"];
       currentMode = availableModes[0];
       
       function loader(rate = 200) {
@@ -339,6 +339,7 @@
           }
         });
         Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel");
+        document.querySelector(".notiflix-confirm-head").querySelector("div").innerHTML += "<br><br><a href='./src.html?freeplay=true&mode=" + currentMode + "&map=" + availableMaps[Math.floor(Math.random() * availableMaps.length)] + "'>Free play</a>";
         document.querySelector("#NXConfirmButtonOk").onclick = () => {
           clearInterval(search);
           Session.clearCache();
