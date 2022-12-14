@@ -1034,6 +1034,21 @@
       utils.options.set("RunHealth", 100);
       utils.options.set("WeaponLocked", true);
       utils.options.set("Zoomed", false);
+
+      /* Multiplayer setup */
+      gametime.make("playerAction");
+      gametime.on("playerAction", function(message) {
+        let data = message.split(",");
+        let user = data[0];
+        let action = data[1];
+        let metadata = JSON.parse(data.splice(2).join(",").replace(/(\')/gi, "\""));
+        let isUser = user == gametime.user.position;
+      });
+      function call(action, metadata) {
+        let parsedMetaData = JSON.stringify(metadata).replace(/(\")/gi, "'");
+        let parameters = gametime.user.position + "," + action.toString() + "," + parsedMetaData;
+        gametime.run("playerAction", [parameters.toString()]);
+      }
     </script>
   </body>
 </html>
