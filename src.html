@@ -102,6 +102,7 @@
     <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
     <script src="js/TouchControls.min.js"></script>
+    <script src="js/UI.js"></script>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
@@ -910,7 +911,7 @@
           sandbox.models[x].callback(model.scene);
         });
       });
-      const weaponRenderer = new THREE.WebGLRenderer({ antialias: true });
+      const weaponRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       weaponRenderer.setPixelRatio(window.devicePixelRatio);
       weaponRenderer.setSize(window.innerWidth, window.innerHeight);
       weaponRenderer.outputEncoding = THREE.sRGBEncoding;
@@ -921,6 +922,7 @@
       const PointerControls = new PointerLockControls(camera, renderer.domElement);
       const TouchControls = new THREE.TouchControls(camera, renderer.domElement);
       PointerControls.isLocked = true;
+      TouchControls.speed = 2;
       weaponCamera.rotation.order = "YXZ";
       function weaponAnimate() {
         const delta = clock.getDelta();
@@ -957,6 +959,7 @@
       weaponRenderer.domElement.style.pointerEvents = "none";
       weaponRenderer.domElement.style.zIndex = "9999999999";
       weaponRenderer.setClearAlpha();
+      weaponRenderer.setClearColor(0x000000, 0);
       let weaponFillLight1 = fillLight1.clone();
       let weaponDirectionalLight = directionalLight.clone();
       weaponScene.add(weaponFillLight1);
@@ -1036,6 +1039,7 @@
       utils.options.set("RunHealth", 100);
       utils.options.set("WeaponLocked", true);
       utils.options.set("Zoomed", false);
+      utils.options.set("TouchDevice", window.matchMedia("(pointer: coarse)").matches);
 
       /* Multiplayer setup */
       gametime.make("playerAction");
@@ -1051,6 +1055,8 @@
         let parameters = gametime.user.position + "," + action.toString() + "," + parsedMetaData;
         gametime.run("playerAction", [parameters.toString()]);
       }
+      const TouchUI = new UI("touch");
+      if (utils.options.get("TouchDevice")) document.body.appendChild(TouchUI.domElement);
     </script>
   </body>
 </html>
