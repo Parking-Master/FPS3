@@ -101,6 +101,7 @@
     <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/math/Octree.min.js"></script>
     <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
+    <script src="js/TouchControls.min.js"></script>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
@@ -918,6 +919,7 @@
       const weaponScene = new THREE.Scene();
       const weaponCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
       const PointerControls = new PointerLockControls(camera, renderer.domElement);
+      const TouchControls = new THREE.TouchControls(camera, renderer.domElement);
       PointerControls.isLocked = true;
       weaponCamera.rotation.order = "YXZ";
       function weaponAnimate() {
