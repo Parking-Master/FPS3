@@ -11,7 +11,14 @@
       }
       html, body {
         margin: 0;
-        overflow: hidden;
+        overflow: hidden !important;
+        touch-action: none !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -khtml-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        -webkit-touch-callout: none !important;
       }
       .ui .crosshair {
         position: fixed;
@@ -922,7 +929,7 @@
       const PointerControls = new PointerLockControls(camera, renderer.domElement);
       const TouchControls = new THREE.TouchControls(camera, renderer.domElement);
       PointerControls.isLocked = true;
-      TouchControls.speed = 2;
+      TouchControls.speed = 3;
       weaponCamera.rotation.order = "YXZ";
       function weaponAnimate() {
         const delta = clock.getDelta();
@@ -1055,7 +1062,72 @@
         let parameters = gametime.user.position + "," + action.toString() + "," + parsedMetaData;
         gametime.run("playerAction", [parameters.toString()]);
       }
-      const TouchUI = new UI("touch");
+      let params = { code: "ShiftLeft", key: "Shift" };
+      const TouchUI = new UI("touch", function(type, parameters) {
+        if (type == "move") {
+          if (parameters.positive) {
+            if (parameters.where == "forward") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW", key: "w" }));
+              if (parameters.run) {
+                !params.repeat && document.dispatchEvent(new KeyboardEvent("keydown", params));
+                params.repeat = true;
+              } else {
+                params.repeat = false;
+                document.dispatchEvent(new KeyboardEvent("keyup", params));
+              }
+            } else if (parameters.where == "forward") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW", key: "w" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyA", key: "a" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyS", key: "s" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD", key: "d" }));
+            } else if (parameters.where == "forward-right") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW", key: "w" })), document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD", key: "d" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyA", key: "a" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyS", key: "s" }));
+            } else if (parameters.where == "right") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD", key: "d" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyW", key: "w" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyA", key: "a" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyS", key: "s" }));
+            } else if (parameters.where == "backward-right") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyS", key: "s" })), document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD", key: "d" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyW", key: "w" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyA", key: "a" }));
+            } else if (parameters.where == "backward") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyS", key: "s" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyW", key: "w" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyA", key: "a" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD", key: "d" }));
+            } else if (parameters.where == "backward-left") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyS", key: "s" })), document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyA", key: "a" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyW", key: "w" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD", key: "d" }));
+            } else if (parameters.where == "left") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyA", key: "a" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyW", key: "w" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyS", key: "s" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD", key: "d" }));
+            } else if (parameters.where == "forward-left") {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW", key: "w" })), document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyA", key: "a" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyS", key: "s" }));
+              document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD", key: "d" }));
+            }
+          } else {
+            params.repeat = false;
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyW", key: "w" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyA", key: "a" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyS", key: "s" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD", key: "d" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "ShiftLeft", key: "Shift" }));
+          }
+        } else if (type == "jump") {
+          if (parameters.positive) {
+            document.dispatchEvent(new KeyboardEvent("keydown", { code: "Space", key: " " }));
+          } else {
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "Space", key: " " }));
+          }
+        }
+      });
       if (utils.options.get("TouchDevice")) document.body.appendChild(TouchUI.domElement);
     </script>
   </body>
