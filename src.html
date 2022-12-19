@@ -656,7 +656,6 @@
         }
       });
       document.addEventListener("keyup", (event) => {
-        keyStates[event.code] = false;
         sandbox.weapons.forEach(weapon => {
           weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).play();
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
@@ -666,6 +665,7 @@
             document.dispatchEvent(new MouseEvent("mouseup"));
           }
         });
+        keyStates[event.code] = false;
       });
       renderer.domElement.addEventListener("mousedown", () => {
         if (document.pointerLockElement != null) return;
@@ -1125,6 +1125,45 @@
             document.dispatchEvent(new KeyboardEvent("keydown", { code: "Space", key: " " }));
           } else {
             document.dispatchEvent(new KeyboardEvent("keyup", { code: "Space", key: " " }));
+          }
+        } else if (type == "shoot") {
+          if (parameters.positive) {
+            utils.options.get("Zoomed") || document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyI", key: "i" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyI", key: "i" }));
+            setTimeout(() => {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyF", key: "f" }));
+            }, 100);
+          } else {
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyF", key: "f" }));
+            document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyI", key: "i" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyI", key: "i" }));
+            keyStates["KeyF"] = false;
+            keyStates["KeyI"] = false;
+          }
+        } else if (type == "fire") {
+          if (parameters.positive) {
+              document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyF", key: "f" }));
+          } else {
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyF", key: "f" }));
+            keyStates["KeyF"] = false;
+          }
+        } else if (type == "zoom") {
+          if (parameters.positive) {
+            document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyI", key: "i" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyI", key: "i" }));
+          }
+        } else if (type == "reload") {
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            let weapon = x;
+            let cweapon = sandbox.weapons[sandbox.weapons.indexOf(weapon)];
+            if (cweapon.rounds < cweapon.maxRounds) {
+              utils.weapons.reload();
+            }
+          });
+        } else if (type == "throw") {
+          if (parameters.positive) {
+            document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyM", key: "m" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyM", key: "m" }));
           }
         }
       });
