@@ -218,6 +218,7 @@
           });
           document.querySelector(".crosshair").src = "images/icons/ui/crosshair_zoomed.png";
           PointerControls.pointerSpeed = PointerControls.pointerSpeed / 2;
+          TouchControls.speed = TouchControls.speed / 2;
           document.querySelector(".vignette").style.opacity = 0;
         },
         zoomOut: function(o) {
@@ -232,6 +233,7 @@
           });
           document.querySelector(".crosshair").src = "images/icons/ui/crosshair.png";
           PointerControls.pointerSpeed = PointerControls.pointerSpeed * 2;
+          TouchControls.speed = TouchControls.speed * 2;
           document.querySelector(".vignette").style.opacity = 1;
         }
       },
@@ -1021,7 +1023,7 @@
         sky.material.map.minFilter = THREE.LinearMipMapLinearFilter;
         sky.material.map.needsUpdate = true;
         scene.background = null;
-        space.material.side = THREE.DoubleSide;
+        sky.material.side = THREE.DoubleSide;
         scene.add(sky);
         scene.fog = null;
       }
@@ -1164,6 +1166,16 @@
           if (parameters.positive) {
             document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyM", key: "m" }));
             document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyM", key: "m" }));
+          }
+        } else if (type == "melee") {
+          if (parameters.positive) {
+            document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyB", key: "b" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyB", key: "b" }));
+          }
+        } else if (type == "swap") {
+          if (parameters.positive) {
+            document.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyY", key: "y" }));
+            document.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyY", key: "y" }));
           }
         }
       });

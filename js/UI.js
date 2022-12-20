@@ -8,7 +8,10 @@ UI = function(type, action) {
     let fireButton = document.createElement("div");
     let zoomButton = document.createElement("div");
     let reloadButton = document.createElement("div");
+    let meleeButton = document.createElement("div");
     let throwButton = document.createElement("div");
+    let swapButton = document.createElement("div");
+    ui.style.zIndex = "99999999999999999999";
     movementStick.style = `
     position: absolute;
     left: 35px;
@@ -120,10 +123,54 @@ UI = function(type, action) {
     margin: 0;
     border: 3px solid #fff;
     border-bottom: none;
-    border-radius: 4px;
+    border-left: 1px solid #fff;
+    border-top-right-radius: 4px;
+    width: 100px;
+    height: 40px;
+    margin-left: 50px;
+    z-index: 9999999999999999999;
+    display: inline-flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
+    `;
+    swapButton.style = `
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    margin: 0;
+    border: 3px solid #fff;
+    border-bottom: none;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #fff;
+    border-top-left-radius: 4px;
     width: 100px;
     height: 40px;
     margin-left: -50px;
+    z-index: 99999999999999999999;
+    display: inline-flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
+    `;
+    meleeButton.style = `
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    margin: 0;
+    border: 3px solid #fff;
+    border-bottom: none;
+    border-right: 1px solid #fff;
+    border-top-left-radius: 4px;
+    width: 100px;
+    height: 40px;
+    margin-left: -150px;
     z-index: 9999999999999999999;
     display: inline-flex;
     text-align: center;
@@ -162,6 +209,12 @@ UI = function(type, action) {
     `;
     throwButton.innerHTML += `
     <img src="images/icons/ui/grenade.png" style="width: 50%">
+    `;
+    meleeButton.innerHTML += `
+    <img src="images/icons/ui/punch.png" style="width: 50%">
+    `;
+    swapButton.innerHTML += `
+    <img src="images/icons/ui/swap.png" style="width: 50%">
     `;
     movementStick.appendChild(movementButton);
     movementStick.addEventListener("touchmove", function(event) {
@@ -220,10 +273,22 @@ UI = function(type, action) {
     reloadButton.addEventListener("touchend", () => ((reloadButton.style.transform = "", reloadButton.querySelector("img").style.transform = ""), typeof action == "function" && action("reload", {
       positive: false
     })));
-    throwButton.addEventListener("touchstart", () => (typeof action == "function" && action("throw", {
+    throwButton.addEventListener("touchstart", () => (throwButton.style.background = "rgba(0, 0, 0, .2)", typeof action == "function" && action("throw", {
       positive: true
     })));
-    throwButton.addEventListener("touchend", () => (typeof action == "function" && action("throw", {
+    throwButton.addEventListener("touchend", () => (throwButton.style.background = "", typeof action == "function" && action("throw", {
+      positive: false
+    })));
+    meleeButton.addEventListener("touchstart", () => (meleeButton.style.background = "rgba(0, 0, 0, .2)", typeof action == "function" && action("melee", {
+      positive: true
+    })));
+    meleeButton.addEventListener("touchend", () => (meleeButton.style.background = "", typeof action == "function" && action("melee", {
+      positive: false
+    })));
+    swapButton.addEventListener("touchstart", () => (swapButton.style.background = "rgba(0, 0, 0, .2)", typeof action == "function" && action("swap", {
+      positive: true
+    })));
+    swapButton.addEventListener("touchend", () => (swapButton.style.background = "", typeof action == "function" && action("swap", {
       positive: false
     })));
     ui.appendChild(movementStick);
@@ -233,6 +298,8 @@ UI = function(type, action) {
     ui.appendChild(fireButton);
     ui.appendChild(reloadButton);
     ui.appendChild(throwButton);
+    ui.appendChild(meleeButton);
+    ui.appendChild(swapButton);
     this.domElement = ui;
   }
 }
