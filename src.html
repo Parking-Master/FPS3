@@ -110,6 +110,7 @@
     <script src="js/PointerLockControls.min.js"></script>
     <script src="js/TouchControls.min.js"></script>
     <script src="js/UI.js"></script>
+    <script src="js/ExplosionConfetti.min.js"></script>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
@@ -136,6 +137,23 @@
 	  otherPlayer = new THREE.Mesh();
 	  space = new THREE.Mesh();
 	  sun = new THREE.Mesh();
+    function confetti(obj) {
+      let confetti = new ExplosionConfetti({
+        rate: 2.5,
+        amount: 20,
+        radius: 100,
+        areaWidth: 5,
+        areaHeight: 0,
+        fallingHeight: 1,
+        fallingSpeed: 1,
+        colors: [0x999999, 0xaaaaaa, 0xcfcfcf]
+      });
+      confetti.object.position.copy(obj.position);
+      scene.add(confetti.object);
+      confetti.object.scale.set(.02, .02, .02);
+      let h = setInterval(() => (confetti.object.traverse((x) => (x.position.y = 0, x.material && (x.material.opacity += -.02))), confetti.update()));
+      setTimeout((() => (confetti.dispose(), clearInterval(h))), 1000);
+    }
 
 	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true, volume = 5) {
       if (!preserve3d) {
@@ -283,6 +301,24 @@
             }
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
             utils.camera.shake(.2);
+            let e = new THREE.Mesh(new THREE.CircleGeometry(.1, 20));
+            e.position.copy(camera.position);
+            e.rotation.copy(camera.rotation);
+            e.updateMatrix();
+            e.translateY(.1);
+            let hole = new THREE.SpotLight(100, 0x999999, 10000);
+            let objects = utils.options.get("TempObjects");
+            objects.push(hole);
+            if (objects.length > 4) (scene.remove(objects[0]), objects.shift());
+            utils.options.set("TempObjects", objects);
+            let h = setInterval(() => {
+              map.traverse((x) => {
+                if (x.isObject3D && ((!x.name.includes("scene") && !x.name.includes("Scene")) && collision(e, x))) {
+                  return confetti(e), setTimeout(() => (scene.remove(hole), delete e, delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.angle = .01, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide }), clearInterval(h);
+                }
+                e.translateZ(-.02);
+              });
+            }, 10);
             let flash = sandbox.models["flash"].object;
             new THREE.Sound("sounds/guns/" + weapon.name + "/fire.mp3", sandbox.currentWeapon, () => {}, false);
             flash.children[0].material.opacity = 1;
@@ -661,7 +697,7 @@
         sandbox.weapons.forEach(weapon => {
           weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).play();
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
-            weapon.mixer.clipAction(weapon.animations[6]).play();
+            weapon.mixer.clipAction(weapon.animations[6]).stop();
           }
           if (keyStates["KeyF"]) {
             document.dispatchEvent(new MouseEvent("mouseup"));
@@ -788,8 +824,14 @@
         playerDirection.cross(camera.up);
         return playerDirection;
       }
+      function collision(e, B) {
+        let firstBB = new THREE.Box3().setFromObject(e);
+        let secondBB = new THREE.Box3().setFromObject(B);
+        return firstBB.intersectsBox(secondBB)
+      }
       const loader = new THREE.GLTFLoader();
       loader.load("models/maps/" + sandbox.map + ".glb", (gltf) => {
+        map = gltf.scene;
         worldOctree.fromGraphNode(gltf.scene);
         scene.add(gltf.scene);
         gltf.scene.traverse(child => {
@@ -1069,6 +1111,7 @@
       utils.options.set("WeaponLocked", true);
       utils.options.set("Zoomed", false);
       utils.options.set("TouchDevice", window.matchMedia("(pointer: coarse)").matches);
+      utils.options.set("TempObjects", []);
 
       /* Multiplayer setup */
       gametime.make("playerAction");
@@ -1083,6 +1126,7 @@
         }
       });
       function call(action, metadata) {
+        return;
         let parsedMetaData = JSON.stringify(metadata).replace(/(\")/gi, "'");
         let parameters = gametime.user.position + "," + action.toString() + "," + parsedMetaData;
         gametime.run("playerAction", [parameters.toString()]);

@@ -359,6 +359,12 @@
         let search = setInterval(() => {
           Session.search().then(x => {
             x.forEach(object => {
+              let y = new Parse.Object.extend("lobby");
+              let current = new y();
+              let other = new y();
+              current.set("objectId", currentObjectId);
+              other.set("objectId", object.id);
+              (object.sessionId != current.get("sessionId") && Session.getIds().indexOf(object.sessionId) > -1 && other.destroy());
               gametime.run("join", [gametime.user.position + "," + object.sessionId + "," + object.id]);
             });
           });
