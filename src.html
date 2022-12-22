@@ -102,10 +102,10 @@
   </head>
   <body>
     <script src="https://threejs.org/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/loaders/GLTFLoader.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/libs/fflate.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/math/Capsule.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/examples/js/math/Octree.min.js"></script>
+    <script src="js/GLTFLoader.min.js"></script>
+    <script src="js/fflate.min.js"></script>
+    <script src="js/Capsule.min.js"></script>
+    <script src="js/Octree.min.js"></script>
     <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
     <script src="js/TouchControls.min.js"></script>
@@ -139,8 +139,8 @@
 	  sun = new THREE.Mesh();
     function confetti(obj) {
       let confetti = new ExplosionConfetti({
-        rate: 2.5,
-        amount: 20,
+        rate: 4,
+        amount: 10,
         radius: 100,
         areaWidth: 5,
         areaHeight: 0,
@@ -205,7 +205,7 @@
         }
       },
       camera: {
-        shake: function(intensity) {
+        shake: function(intensity, rate = 100) {
           let t = 0;
           let h = setInterval(() => {
             if (t >= intensity / 20) {
@@ -222,7 +222,7 @@
             }
             camera.rotateX(.005);
             t += .005;
-          });
+          }, 100 - rate);
         },
         zoomIn: function(o) {
           if (utils.options.get("Zoomed")) return;
@@ -305,16 +305,15 @@
             e.position.copy(camera.position);
             e.rotation.copy(camera.rotation);
             e.updateMatrix();
-            e.translateY(.1);
             let hole = new THREE.SpotLight(100, 0x999999, 10000);
             let objects = utils.options.get("TempObjects");
             objects.push(hole);
-            if (objects.length > 4) (scene.remove(objects[0]), objects.shift());
+            if (objects.length > 10) (scene.remove(objects[0]), objects.shift());
             utils.options.set("TempObjects", objects);
             let h = setInterval(() => {
               map.traverse((x) => {
                 if (x.isObject3D && ((!x.name.includes("scene") && !x.name.includes("Scene")) && collision(e, x))) {
-                  return confetti(e), setTimeout(() => (scene.remove(hole), delete e, delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.angle = .01, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide }), clearInterval(h);
+                  return setTimeout(() => (scene.remove(hole), delete e, delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.penumbra = .1, hole.angle = .01, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide }), clearInterval(h);
                 }
                 e.translateZ(-.02);
               });
@@ -380,17 +379,18 @@
             if (weapon.clips <= weapon.minClips) return;
             utils.options.set("CanFire", false);
             utils.options.set("Reloading", true);
-            weapon.roundsUsed += weapon.rounds;
             keyStates["ShiftLeft"] = false;
             weapon.mixer.clipAction(weapon.animations[1]).stop();
             weapon.mixer.clipAction(weapon.animations[6]).stop();
             weapon.mixer.clipAction(weapon.animations[7]).stop();
             if (weapon.rounds <= 0) {
+              new THREE.Sound("sounds/guns/" + weapon.name + "/full.mp3");
               weapon.mixer.clipAction(weapon.animations[4]).timeScale = 2.5;
               weapon.mixer.clipAction(weapon.animations[4]).loop = THREE.LoopOnce;
               weapon.mixer.clipAction(weapon.animations[4]).reset();
               weapon.mixer.clipAction(weapon.animations[4]).play();
             } else {
+              new THREE.Sound("sounds/guns/" + weapon.name + "/easy.mp3");
               weapon.mixer.clipAction(weapon.animations[3]).timeScale = 2.5;
               weapon.mixer.clipAction(weapon.animations[3]).loop = THREE.LoopOnce;
               weapon.mixer.clipAction(weapon.animations[3]).reset();
@@ -404,7 +404,7 @@
               if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
                 weapon.mixer.clipAction(weapon.animations[6]).play();
               }
-            }, 3000);
+            }, weapon.rounds <= 0 ? weapon.reloads.full.time : weapon.reloads.easy.time);
           });
         },
         unlock: function() {
@@ -508,20 +508,20 @@
         weapons: [
           {
             name: "Assault_Rifle",
-            rounds: 36,
+            rounds: 56,
             minRounds: 0,
-            maxRounds: 36,
+            maxRounds: 56,
             minClips: 0,
             maxClips: 3,
             clips: 3,
             reloads: {
               easy: {
                 sound: null,
-                time: 1500
+                time: 2000
               },
               full: {
                 sound: null,
-                time: 2000
+                time: 2500
               }
             }
           },
@@ -536,11 +536,11 @@
             reloads: {
               easy: {
                 sound: null,
-                time: 1000
+                time: 1500
               },
               full: {
                 sound: null,
-                time: 1250
+                time: 2000
               }
             }
           },
@@ -694,6 +694,8 @@
         }
       });
       document.addEventListener("keyup", (event) => {
+        clearInterval(utils.options.get("Bobbing"));
+        utils.options.set("Bobbing", null);
         sandbox.weapons.forEach(weapon => {
           weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).play();
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
@@ -881,6 +883,7 @@
             y: camera.position.y,
             z: camera.position.z
           });
+          utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getForwardVector().multiplyScalar(keyStates["ShiftLeft"] ? speedDelta + .05 : speedDelta));
         }
         if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
@@ -889,6 +892,7 @@
             y: camera.position.y,
             z: camera.position.z
           });
+          utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getForwardVector().multiplyScalar(-speedDelta));
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             utils.options.get("Reloading") || weapon.mixer.clipAction(weapon.animations[6]).play();
@@ -900,6 +904,7 @@
             y: camera.position.y,
             z: camera.position.z
           });
+          utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getSideVector().multiplyScalar(-speedDelta));
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             utils.options.get("Reloading") || weapon.mixer.clipAction(weapon.animations[6]).play();
@@ -911,6 +916,7 @@
             y: camera.position.y,
             z: camera.position.z
           });
+          utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             utils.options.get("Reloading") || weapon.mixer.clipAction(weapon.animations[6]).play();
@@ -1112,6 +1118,7 @@
       utils.options.set("Zoomed", false);
       utils.options.set("TouchDevice", window.matchMedia("(pointer: coarse)").matches);
       utils.options.set("TempObjects", []);
+      utils.options.set("Bobbing", null);
 
       /* Multiplayer setup */
       gametime.make("playerAction");
