@@ -97,6 +97,27 @@
       img {
         pointer-events: none !important;
       }
+      .ui .info-marker {
+        position: absolute;
+        width: 100%;
+        left: 0;
+        right: 0;
+        bottom: 20px;
+        visibility: hidden;
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      .ui .info-marker > span {
+        position: relative;
+        text-align: center;
+        backdrop-filter: blur(5px);
+        border-radius: 5px;
+        padding: 6px;
+        color: #fff;
+        border: .1px solid #fff;
+      }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
   </head>
@@ -111,6 +132,8 @@
     <script src="js/TouchControls.min.js"></script>
     <script src="js/UI.js"></script>
     <script src="js/ExplosionConfetti.min.js"></script>
+    <script src="https://unpkg.com/@seregpie/three.text-texture"></script>
+    <script src="https://unpkg.com/@seregpie/three.text-sprite"></script>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
@@ -131,12 +154,22 @@
           <div class="run-health"><span style="color: #333; display: inline-block; font-size: 12px; white-space: nowrap; display: inline-flex; text-align: center; align-items: center; justify-content: center"><img src="images/icons/fast_forward.png" style="width: 20px"><span class="health-text" style="color: #333">100</span> %</span></div>
         </div>
       </div>
+      <div class="info-marker"><span></span></div>
     </div>
     <script>
 	  // Game asset variables
 	  otherPlayer = new THREE.Mesh();
 	  space = new THREE.Mesh();
 	  sun = new THREE.Mesh();
+    Array.prototype.count = function() {
+      let counter = 0;
+      for (occurence of this) {
+        if (occurence == arguments[0]) {
+          counter++;
+        }
+      }
+      return counter;
+    }
     function confetti(obj) {
       let confetti = new ExplosionConfetti({
         rate: 4,
@@ -255,6 +288,18 @@
           document.querySelector(".vignette").style.opacity = 1;
         }
       },
+      ui: {
+        infoMarker: {
+          show: function(text) {
+            document.querySelector(".ui").querySelector(".info-marker").querySelector("span").textContent = text;
+            document.querySelector(".ui").querySelector(".info-marker").style.visibility = "visible";
+          },
+          hide: function() {
+            document.querySelector(".ui").querySelector(".info-marker").querySelector("span").textContent = "";
+            document.querySelector(".ui").querySelector(".info-marker").style.visibility = "hidden";
+          }
+        }
+      },
 	    weapons: {
         punch: function() {
           if (utils.options.get("Punching")) return;
@@ -357,6 +402,65 @@
             setTimeout(() => (weaponScene.remove(flash), weaponScene.remove(lightClone), scene.remove(light), clearInterval(sticky)), 25);
           }, 60);
         },
+        pickup: function(weapon) {
+          let weaponBox = utils.options.get("WeaponBoxes")[weapon];
+          scene.remove(weaponBox);
+          weaponBox.position.y = -10000;
+          let newWeapon = null;
+          sandbox.weapons.forEach(x => {
+            if (weapon.includes(x.name)) {
+              newWeapon = x;
+              scene.remove(sandbox.currentWeapon);
+              let position = sandbox.currentWeapon == sandbox.primaryWeapon ? 0 : 1;
+              sandbox.loadout[position] = newWeapon.name;
+              position == 0 ? sandbox.primaryWeapon = newWeapon.object : sandbox.secondaryWeapon = newWeapon.object;
+              utils.weapons.switch();
+              sandbox.currentWeapon != x.object && utils.weapons.switch();
+            }
+          });
+        },
+        create: function(weapon = "", pos = new THREE.Vector3()) {
+          let box = new THREE.Object3D();
+          let boxName = null;
+          new THREE.GLTFLoader().load("models/assets/weapon_box.glb", function(gltf) {
+            box = gltf.scene;
+            box.scale.set(.01, .01, .01);
+            box.position.set(pos.x, pos.y, pos.z);
+            scene.add(box);
+            let boxes = utils.options.get("WeaponBoxes");
+            let clone = boxes;
+            let weaponArray = [];
+            Object.keys(clone).forEach(x => {
+              x = x.replace(/[0-9]/gi, "");
+              weaponArray.push(x);
+            });
+            weaponArray.push(weapon);
+            let id = weaponArray.count(weapon);
+            let newWeapon = weapon + id;
+            boxName = newWeapon;
+            boxes[newWeapon] = box;
+            utils.options.set("WeaponBoxes", boxes);
+          });
+          let h = setInterval(() => {
+            if (camera.position.distanceTo(box.position) <= 2) {
+              utils.options.set("TouchingWeapon", box);
+              utils.ui.infoMarker.show("Hold [T] to pick up " + weapon.replace("_", " "));
+            } else {
+              utils.options.get("TouchingWeapon") == box && utils.options.set("TouchingWeapon", null);
+              !utils.options.get("TouchingWeapon") && utils.ui.infoMarker.hide();
+            }
+          });
+          document.addEventListener("keydown", function(event) {
+            if (event.key == "t" && camera.position.distanceTo(box.position) <= 2) {
+              utils.weapons.pickup(boxName);
+              let boxes = utils.options.get("WeaponBoxes");
+              delete boxes[boxName];
+              utils.options.set("WeaponBoxes", boxes);
+              clearInterval(h);
+              utils.ui.infoMarker.hide();
+            }
+          });
+        },
 		    switch: function() {
 		    	let newWeapon;
 		    	let oldWeapon = sandbox.currentWeapon;
@@ -385,10 +489,11 @@
             weapon.mixer.clipAction(weapon.animations[7]).stop();
             if (weapon.rounds <= 0) {
               new THREE.Sound("sounds/guns/" + weapon.name + "/full.mp3");
-              weapon.mixer.clipAction(weapon.animations[4]).timeScale = 2.5;
-              weapon.mixer.clipAction(weapon.animations[4]).loop = THREE.LoopOnce;
-              weapon.mixer.clipAction(weapon.animations[4]).reset();
-              weapon.mixer.clipAction(weapon.animations[4]).play();
+              let index = weapon.reloads.full.useDefaultAnimation ? 4 : 5;
+              weapon.mixer.clipAction(weapon.animations[index]).timeScale = 2.5;
+              weapon.mixer.clipAction(weapon.animations[index]).loop = THREE.LoopOnce;
+              weapon.mixer.clipAction(weapon.animations[index]).reset();
+              weapon.mixer.clipAction(weapon.animations[index]).play();
             } else {
               new THREE.Sound("sounds/guns/" + weapon.name + "/easy.mp3");
               weapon.mixer.clipAction(weapon.animations[3]).timeScale = 2.5;
@@ -521,7 +626,8 @@
               },
               full: {
                 sound: null,
-                time: 2500
+                time: 2500,
+                useDefaultAnimation: true
               }
             }
           },
@@ -540,7 +646,48 @@
               },
               full: {
                 sound: null,
-                time: 2000
+                time: 2000,
+                useDefaultAnimation: true
+              }
+            }
+          },
+          {
+            name: "Sniper_Rifle",
+            rounds: 6,
+            minRounds: 0,
+            maxRounds: 6,
+            minClips: 0,
+            maxClips: 3,
+            clips: 3,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 2500
+              },
+              full: {
+                sound: null,
+                time: 2750,
+                useDefaultAnimation: false
+              }
+            }
+          },
+          {
+            name: "Micro_Uzi",
+            rounds: 36,
+            minRounds: 0,
+            maxRounds: 6,
+            minClips: 0,
+            maxClips: 3,
+            clips: 3,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 1500
+              },
+              full: {
+                sound: null,
+                time: 1750,
+                useDefaultAnimation: true
               }
             }
           },
@@ -1059,6 +1206,9 @@
         sun.rotateX(1);
         scene.add(sun);
         scene.fog = new THREE.Fog(0x88ccee, 0, 100);
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(10, 0, -8));
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(9.5, 0, -16));
+        utils.weapons.create("Micro_Uzi", new THREE.Vector3(14, 0, 1.5));
       } else if (sandbox.map == "Storage") {
         sun = new THREE.Mesh(new THREE.CircleGeometry(10), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/sun.png"), transparent: true }));
         scene.background = new THREE.Color(0x88ccee);
@@ -1103,6 +1253,12 @@
           if (weapon.name == "Glock_19") {
             utils.weapons.shoot();
           }
+          if (weapon.name == "Sniper_Rifle") {
+            utils.weapons.shoot(1, 100);
+          }
+          if (weapon.name == "Micro_Uzi") {
+            utils.weapons.shoot(3, 3);
+          }
         });
       });
       document.addEventListener("mouseup", function(event) {
@@ -1119,6 +1275,8 @@
       utils.options.set("TouchDevice", window.matchMedia("(pointer: coarse)").matches);
       utils.options.set("TempObjects", []);
       utils.options.set("Bobbing", null);
+      utils.options.set("WeaponBoxes", {});
+      utils.options.set("TouchingWeapon", null);
 
       /* Multiplayer setup */
       gametime.make("playerAction");
