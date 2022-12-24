@@ -108,6 +108,7 @@
         text-align: center;
         align-items: center;
         justify-content: center;
+        z-index: 999999999;
       }
       .ui .info-marker > span {
         position: relative;
@@ -117,6 +118,15 @@
         padding: 6px;
         color: #fff;
         border: .1px solid #fff;
+      }
+      .ui img.scope {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+        visibility: hidden;
+        margin: 0;
       }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
@@ -155,6 +165,7 @@
         </div>
       </div>
       <div class="info-marker"><span></span></div>
+      <img class="scope">
     </div>
     <script>
 	  // Game asset variables
@@ -260,32 +271,53 @@
         zoomIn: function(o) {
           if (utils.options.get("Zoomed")) return;
           utils.options.set("Zoomed", true);
-          const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
-          let t = 0;
-          let transition = setInterval(() => {
-            t >= 26 ? clearInterval(transition) : camera.fov = e - t;
-            t += 2;
-            camera.updateProjectionMatrix();
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            if (x.name == "Sniper_Rifle") {
+              document.querySelector(".crosshair").style.visibility = "hidden";
+              weaponScene.remove(sandbox.currentWeapon);
+              const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
+              let t = 0;
+              let transition = setInterval(() => {
+                t >= 65 ? clearInterval(transition) : camera.fov = e - t;
+                t += 2;
+                camera.updateProjectionMatrix();
+              });
+              document.querySelector(".ui").querySelector(".scope").src = "images/icons/ui/scope.png";
+              document.querySelector(".ui").querySelector(".scope").style.visibility = "visible";
+            }
+            const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
+            let t = 0;
+            let transition = setInterval(() => {
+              t >= 26 ? clearInterval(transition) : camera.fov = e - t;
+              t += 2;
+              camera.updateProjectionMatrix();
+            });
+            document.querySelector(".crosshair").src = "images/icons/ui/crosshair_zoomed.png";
+            PointerControls.pointerSpeed = PointerControls.pointerSpeed / 2;
+            TouchControls.speed = TouchControls.speed / 2;
+            document.querySelector(".vignette").style.opacity = 0;
           });
-          document.querySelector(".crosshair").src = "images/icons/ui/crosshair_zoomed.png";
-          PointerControls.pointerSpeed = PointerControls.pointerSpeed / 2;
-          TouchControls.speed = TouchControls.speed / 2;
-          document.querySelector(".vignette").style.opacity = 0;
         },
         zoomOut: function(o) {
-          if (!utils.options.get("Zoomed")) return;
-          utils.options.set("Zoomed", false);
-          const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
-          let t = 0;
-          let transition = setInterval(() => {
-            t >= 26 ? clearInterval(transition) : camera.fov = e + t;
-            t += 2;
-            camera.updateProjectionMatrix();
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            if (!utils.options.get("Zoomed")) return;
+            utils.options.set("Zoomed", false);
+            if (x.name == "Sniper_Rifle") weaponScene.add(sandbox.currentWeapon);
+            document.querySelector(".crosshair").style.visibility = "visible";
+            const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
+            let t = 0;
+            let transition = setInterval(() => {
+              t >= (x.name == "Sniper_Rifle" ? 65 : 26) ? clearInterval(transition) : camera.fov = e + t;
+              t += 2;
+              camera.updateProjectionMatrix();
+            });
+            document.querySelector(".crosshair").src = "images/icons/ui/crosshair.png";
+            PointerControls.pointerSpeed = PointerControls.pointerSpeed * 2;
+            TouchControls.speed = TouchControls.speed * 2;
+            document.querySelector(".vignette").style.opacity = 1;
+            document.querySelector(".ui").querySelector(".scope").src = "";
+            document.querySelector(".ui").querySelector(".scope").style.visibility = "hidden";
           });
-          document.querySelector(".crosshair").src = "images/icons/ui/crosshair.png";
-          PointerControls.pointerSpeed = PointerControls.pointerSpeed * 2;
-          TouchControls.speed = TouchControls.speed * 2;
-          document.querySelector(".vignette").style.opacity = 1;
         }
       },
       ui: {
@@ -303,6 +335,7 @@
 	    weapons: {
         punch: function() {
           if (utils.options.get("Punching")) return;
+          utils.camera.zoomOut();
           utils.options.set("Punching", true);
           setTimeout(() => utils.camera.shake(1), 200);
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
@@ -363,6 +396,9 @@
                 e.translateZ(-.02);
               });
             }, 10);
+            if (weapon.name == "Sniper_Rifle" && utils.options.get("Zoomed")) {
+              utils.camera.shake(1);
+            }
             let flash = sandbox.models["flash"].object;
             new THREE.Sound("sounds/guns/" + weapon.name + "/fire.mp3", sandbox.currentWeapon, () => {}, false);
             flash.children[0].material.opacity = 1;
@@ -390,7 +426,7 @@
               shell.translateX(-.07);
               shell.position.y += -.03;
             });
-            setTimeout(() => (scene.remove(shell), clearInterval(effect)), 1000);
+            setTimeout(() => (weaponScene.remove(shell), clearInterval(effect)), 1000);
             let light = new THREE.PointLight(0xf99c00, 1, 4, 3);
             light.position.copy(flash.position);
             light.rotation.copy(flash.rotation);
@@ -403,6 +439,43 @@
           }, 60);
         },
         pickup: function(weapon) {
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            let e = sandbox.models[x.name].object.clone();
+            scene.add(e);
+            e.scale.set(.1, .1, .1);
+            e.position.set(camera.position.x, camera.position.y - 1, camera.position.z);
+            let boxes = utils.options.get("WeaponBoxes");
+            let clone = boxes;
+            let weaponArray = [];
+            Object.keys(clone).forEach(x => {
+              x = x.replace(/\-[0-9]/gi, "");
+              weaponArray.push(x);
+            });
+            weaponArray.push(x.name);
+            let id = weaponArray.count(x.name);
+            let newWeapon = x.name + "-" + id;
+            boxes[newWeapon] = e;
+            utils.options.set("WeaponBoxes", boxes);
+            let h = setInterval(() => {
+              if (camera.position.distanceTo(e.position) <= 2) {
+                utils.options.set("TouchingWeapon", e);
+                utils.ui.infoMarker.show("Hold [T] to pick up " + x.name.replace("_", " "));
+              } else {
+                utils.options.get("TouchingWeapon") == e && utils.options.set("TouchingWeapon", null);
+                !utils.options.get("TouchingWeapon") && utils.ui.infoMarker.hide();
+              }
+            });
+            document.addEventListener("keydown", function(event) {
+              if (event.key == "t" && camera.position.distanceTo(e.position) <= 2) {
+                utils.weapons.pickup(newWeapon);
+                let boxes = utils.options.get("WeaponBoxes");
+                delete boxes[newWeapon];
+                utils.options.set("WeaponBoxes", boxes);
+                clearInterval(h);
+                utils.ui.infoMarker.hide();
+              }
+            });
+          });
           let weaponBox = utils.options.get("WeaponBoxes")[weapon];
           scene.remove(weaponBox);
           weaponBox.position.y = -10000;
@@ -410,7 +483,7 @@
           sandbox.weapons.forEach(x => {
             if (weapon.includes(x.name)) {
               newWeapon = x;
-              scene.remove(sandbox.currentWeapon);
+              weaponScene.remove(sandbox.currentWeapon);
               let position = sandbox.currentWeapon == sandbox.primaryWeapon ? 0 : 1;
               sandbox.loadout[position] = newWeapon.name;
               position == 0 ? sandbox.primaryWeapon = newWeapon.object : sandbox.secondaryWeapon = newWeapon.object;
@@ -431,12 +504,12 @@
             let clone = boxes;
             let weaponArray = [];
             Object.keys(clone).forEach(x => {
-              x = x.replace(/[0-9]/gi, "");
+              x = x.replace(/\-[0-9]/gi, "");
               weaponArray.push(x);
             });
             weaponArray.push(weapon);
             let id = weaponArray.count(weapon);
-            let newWeapon = weapon + id;
+            let newWeapon = weapon + "-" + id;
             boxName = newWeapon;
             boxes[newWeapon] = box;
             utils.options.set("WeaponBoxes", boxes);
@@ -462,6 +535,7 @@
           });
         },
 		    switch: function() {
+          utils.camera.zoomOut();
 		    	let newWeapon;
 		    	let oldWeapon = sandbox.currentWeapon;
 		      if (sandbox.currentWeapon == sandbox.primaryWeapon)
@@ -479,6 +553,7 @@
 		    },
 		    reload: function() {
           if (utils.options.get("Reloading")) return;
+          utils.camera.zoomOut();
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             if (weapon.clips <= weapon.minClips) return;
             utils.options.set("CanFire", false);
@@ -525,6 +600,7 @@
             }
             if (utils.options.get("Punching")) return;
             utils.options.set("Punching", true);
+            utils.camera.zoomOut();
             utils.weapons.data(sandbox.currentWeapon).then(weapon => {
               setTimeout(() => (utils.options.set("Punching", false), weapon.mixer.clipAction(weapon.animations[10]).stop()), 500);
               let clip = weapon.mixer.clipAction(weapon.animations[10]);
@@ -735,6 +811,34 @@
             mixer: null,
             animations: null
           },
+          "Assault_Rifle": {
+            srcPath: "models/weapons/dropped/Assault_Rifle.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Glock_19": {
+            srcPath: "models/weapons/dropped/Glock_19.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Sniper_Rifle": {
+            srcPath: "models/weapons/dropped/Sniper_Rifle.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Micro_Uzi": {
+            srcPath: "models/weapons/dropped/Micro_Uzi.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          }
         }
       };
       const clock = new THREE.Clock();
