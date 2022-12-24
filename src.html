@@ -751,7 +751,7 @@
             name: "Micro_Uzi",
             rounds: 36,
             minRounds: 0,
-            maxRounds: 6,
+            maxRounds: 36,
             minClips: 0,
             maxClips: 3,
             clips: 3,
@@ -763,6 +763,26 @@
               full: {
                 sound: null,
                 time: 1750,
+                useDefaultAnimation: true
+              }
+            }
+          },
+          {
+            name: "Auto_Pistol",
+            rounds: 50,
+            minRounds: 0,
+            maxRounds: 50,
+            minClips: 0,
+            maxClips: 2,
+            clips: 2,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 2000
+              },
+              full: {
+                sound: null,
+                time: 2250,
                 useDefaultAnimation: true
               }
             }
@@ -834,6 +854,13 @@
           },
           "Micro_Uzi": {
             srcPath: "models/weapons/dropped/Micro_Uzi.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Auto_Pistol": {
+            srcPath: "models/weapons/dropped/Auto_Pistol.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -1320,6 +1347,13 @@
         sun.rotateX(1);
         scene.add(sun);
         scene.fog = new THREE.Fog(0xffffff, 0, 90);
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(-3.5, 0, 16));
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(-7, 0, -4.5));
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(-7, 3.8, 20));
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(23, 0, 20));
+        utils.weapons.create("Micro_Uzi", new THREE.Vector3(10, 3.8, -34.5));
+        utils.weapons.create("Micro_Uzi", new THREE.Vector3(42, 0,  -12));
+        utils.weapons.create("Micro_Uzi", new THREE.Vector3(18, 0,  -24));
       } else if (sandbox.map == "Lihid") {
         sun = new THREE.Mesh(new THREE.CircleGeometry(10), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/sun.png"), transparent: true }));
         scene.background = new THREE.Color(0x88ccee);
@@ -1327,6 +1361,13 @@
         sun.rotateX(1);
         scene.add(sun);
         scene.fog = new THREE.Fog(0xbbba90, 0, 80);
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(20.5, -.2, -16.5));
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(10.5, -1.4, -8));
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(-2, -1.4, 15));
+        utils.weapons.create("Sniper_Rifle", new THREE.Vector3(10, -1.4, 19));
+        utils.weapons.create("Micro_Uzi", new THREE.Vector3(14, -1.4, 0));
+        utils.weapons.create("Micro_Uzi", new THREE.Vector3(27.5, .2, 1.6));
+        utils.weapons.create("Micro_Uzi", new THREE.Vector3(28, -.4, 7.5));
       } else if (sandbox.map == "Aero") {
         GRAVITY = 25;
         let sphere = new THREE.SphereGeometry(500, 60, 40);
@@ -1363,14 +1404,28 @@
           if (weapon.name == "Micro_Uzi") {
             utils.weapons.shoot(3, 3);
           }
+          if (weapon.name == "Auto_Pistol") {
+            utils.options.set("RapidFire", true);
+          }
         });
       });
       document.addEventListener("mouseup", function(event) {
         utils.options.set("RapidFire", false);
       });
       let rapidFire = setInterval(function() {
-        if (utils.options.get("RapidFire")) utils.weapons.shoot();
+        if (utils.options.get("RapidFire")) {
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            if (x.name == "Assault_Rifle") utils.weapons.shoot();
+          });
+        }
       }, 75);
+      let rapidFire1 = setInterval(function() {
+        if (utils.options.get("RapidFire")) {
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            if (x.name == "Auto_Pistol") utils.weapons.shoot();
+          });
+        }
+      }, 30);
       utils.options.set("CanFire", true);
       utils.options.set("Reloading", false);
       utils.options.set("RunHealth", 100);
