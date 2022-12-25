@@ -391,7 +391,7 @@
             let h = setInterval(() => {
               map.traverse((x) => {
                 if (x.isObject3D && ((!x.name.includes("scene") && !x.name.includes("Scene")) && collision(e, x))) {
-                  return setTimeout(() => (scene.remove(hole), delete e, delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.penumbra = .1, hole.angle = .01, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide }), clearInterval(h);
+                  return setTimeout(() => (scene.remove(hole), delete e, delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.penumbra = .1, hole.angle = .003, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide }), clearInterval(h);
                 }
                 e.translateZ(-.02);
               });
@@ -636,22 +636,21 @@
         }
 		  },
       explosion: function(obj) {
-        let explosion = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ color: 0xffffff, map: new THREE.TextureLoader().load("images/textures/explosion.png"), transparent: true, opacity: .1, depthWrite: false }));
+        let explosion = sandbox.models["explosion"];
+        let mixer = explosion.mixer.clipAction(explosion.animations[0]);
+        mixer.reset();
+        mixer.loop = THREE.LoopOnce;
+        mixer.clampWhenFinished = true;
+        mixer.play();
         let light = new THREE.PointLight(0xbb3905, 1);
         let lightClone = light.clone();
+        explosion = explosion.object;
         scene.add(explosion);
         explosion.position.copy(obj.position);
         explosion.scale.set(.2, .2, .2);
-        let fadeIn1 = setInterval(() => {
-          if (explosion.material.opacity >= 1) {
-            clearInterval(fadeIn1);
-          } else {
-            explosion.material.opacity += .15;
-            light.intensity += .5;
-            lightClone.intensity += .5;
-          }
-          explosion.lookAt(camera.position);
-        });
+        scene.add(light);
+        light.position.copy(obj.position);
+        weaponScene.add(lightClone);
         let fadeIn = setInterval(() => {
           if (explosion.scale.x >= 3) {
             clearInterval(fadeIn);
@@ -659,28 +658,25 @@
             let increment = .05;
             explosion.scale.set(explosion.scale.x + increment, explosion.scale.y + increment, explosion.scale.z + increment);
           }
-          explosion.lookAt(camera.position);
         });
-        let spin = setInterval(() => { explosion.rotateZ(.1) });
         setTimeout(() => {
           let fadeOut = setInterval(() => {
-            if (explosion.material.opacity <= 0) {
-              scene.remove(light);
-              weaponScene.remove(lightClone);
-              scene.remove(explosion);
-              clearInterval(fadeOut);
-              clearInterval(spin);
-            } else {
-              explosion.material.opacity += -.08;
-              light.intensity <= 0 ? light.intensity = 0 : light.intensity += -.8;
-              lightClone.intensity <= 0 ? lightClone.intensity = 0 : lightClone.intensity += -.8;
-            }
-            explosion.lookAt(camera.position);
+            explosion.traverse(x => {
+              if (!x.material) return;
+              x.material.transparent = true;
+              if (x.material.opacity <= 0) {
+                scene.remove(light);
+                weaponScene.remove(lightClone);
+                scene.remove(x);
+                clearInterval(fadeOut);
+              } else {
+                x.material.opacity += -.08;
+                light.intensity <= 0 ? light.intensity = 0 : light.intensity += -.8;
+                lightClone.intensity <= 0 ? lightClone.intensity = 0 : lightClone.intensity += -.8;
+              }
+            });
           });
         }, 500);
-        scene.add(light);
-        light.position.copy(obj.position);
-        weaponScene.add(lightClone);
       }
 	  };
       sandbox = {
@@ -861,6 +857,13 @@
           },
           "Auto_Pistol": {
             srcPath: "models/weapons/dropped/Auto_Pistol.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "explosion": {
+            srcPath: "models/assets/timeframe_explosion.glb",
             object: null,
             callback: function() {},
             mixer: null,
