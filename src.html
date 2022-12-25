@@ -322,9 +322,10 @@
       },
       ui: {
         infoMarker: {
-          show: function(text) {
+          show: function(text, callback) {
             document.querySelector(".ui").querySelector(".info-marker").querySelector("span").textContent = text;
             document.querySelector(".ui").querySelector(".info-marker").style.visibility = "visible";
+            if (callback) document.querySelector(".ui").querySelector(".info-marker").ontouchstart = () => callback();
           },
           hide: function() {
             document.querySelector(".ui").querySelector(".info-marker").querySelector("span").textContent = "";
@@ -459,7 +460,30 @@
             let h = setInterval(() => {
               if (camera.position.distanceTo(e.position) <= 2) {
                 utils.options.set("TouchingWeapon", e);
-                utils.ui.infoMarker.show("Hold [T] to pick up " + x.name.replace("_", " "));
+                if (sandbox.loadout.indexOf(x.name) > -1) {
+                  let position = sandbox.currentWeapon == sandbox.primaryWeapon ? 0 : 1;
+                  sandbox.weapons.forEach(i => {
+                    if (i.name == x.name) {
+                      i.maxClips += x.clips;
+                      i.clips += x.clips;
+                      let boxes = utils.options.get("WeaponBoxes");
+                      boxes[newWeapon].position.y = -10000;
+                      scene.remove(boxes[newWeapon]);
+                      delete boxes[newWeapon];
+                      utils.options.set("WeaponBoxes", boxes);
+                      clearInterval(h);
+                      utils.ui.infoMarker.hide();
+                    }
+                  });
+                }
+                if (utils.options.get("TouchDevice")) {
+                  utils.ui.infoMarker.show("Hold to pick up " + x.name.replace("_", " "), () => {
+                    document.dispatchEvent(new KeyboardEvent("keydown", { key: "t", code: "KeyT" }));
+                    document.dispatchEvent(new KeyboardEvent("keyup", { key: "t", code: "KeyT" }));
+                  });
+                } else {
+                  utils.ui.infoMarker.show("Hold [T] to pick up " + x.name.replace("_", " "));
+                }
               } else {
                 utils.options.get("TouchingWeapon") == e && utils.options.set("TouchingWeapon", null);
                 !utils.options.get("TouchingWeapon") && utils.ui.infoMarker.hide();
@@ -495,6 +519,7 @@
         create: function(weapon = "", pos = new THREE.Vector3()) {
           let box = new THREE.Object3D();
           let boxName = null;
+          let newWeapon;
           new THREE.GLTFLoader().load("models/assets/weapon_box.glb", function(gltf) {
             box = gltf.scene;
             box.scale.set(.01, .01, .01);
@@ -509,7 +534,7 @@
             });
             weaponArray.push(weapon);
             let id = weaponArray.count(weapon);
-            let newWeapon = weapon + "-" + id;
+            newWeapon = weapon + "-" + id;
             boxName = newWeapon;
             boxes[newWeapon] = box;
             utils.options.set("WeaponBoxes", boxes);
@@ -517,6 +542,24 @@
           let h = setInterval(() => {
             if (camera.position.distanceTo(box.position) <= 2) {
               utils.options.set("TouchingWeapon", box);
+              if (sandbox.loadout.indexOf(weapon) > -1) {
+                let position = sandbox.loadout.indexOf(weapon);
+                utils.weapons.data(position == 0 ? sandbox.primaryWeapon : sandbox.secondaryWeapon).then(x => {
+                  sandbox.weapons.forEach(i => {
+                    if (i.name == weapon) {
+                      i.maxClips += x.clips;
+                      i.clips += x.clips;
+                      let boxes = utils.options.get("WeaponBoxes");
+                      boxes[newWeapon].position.y = -10000;
+                      scene.remove(boxes[newWeapon]);
+                      delete boxes[newWeapon];
+                      utils.options.set("WeaponBoxes", boxes);
+                      clearInterval(h);
+                      utils.ui.infoMarker.hide();
+                    }
+                  });
+                });
+              }
               utils.ui.infoMarker.show("Hold [T] to pick up " + weapon.replace("_", " "));
             } else {
               utils.options.get("TouchingWeapon") == box && utils.options.set("TouchingWeapon", null);
@@ -562,6 +605,7 @@
             weapon.mixer.clipAction(weapon.animations[1]).stop();
             weapon.mixer.clipAction(weapon.animations[6]).stop();
             weapon.mixer.clipAction(weapon.animations[7]).stop();
+            weapon.roundsUsed += weapon.rounds;
             if (weapon.rounds <= 0) {
               new THREE.Sound("sounds/guns/" + weapon.name + "/full.mp3");
               let index = weapon.reloads.full.useDefaultAnimation ? 4 : 5;
@@ -645,6 +689,11 @@
         let light = new THREE.PointLight(0xbb3905, 1);
         let lightClone = light.clone();
         explosion = explosion.object;
+        explosion.traverse(x => {
+          if (!x.material) return;
+          x.material.transparent = true;
+          x.material.opacity = 1;
+        });
         scene.add(explosion);
         explosion.position.copy(obj.position);
         explosion.scale.set(.2, .2, .2);
@@ -659,8 +708,20 @@
             explosion.scale.set(explosion.scale.x + increment, explosion.scale.y + increment, explosion.scale.z + increment);
           }
         });
+        let smoke = sandbox.models["smoke"];
+        smoke.object.scale.set(5, 5, 5);
+        smoke.object.traverse(x => x.frustumCulled = false);
+        let smokeClip = smoke.mixer.clipAction(smoke.animations[0]);
+        smoke.object.position.copy(explosion.position);
+        smokeClip.reset();
+        smokeClip.loop = THREE.LoopOnce;
+        smokeClip.clampWhenFinished = true;
+        smokeClip.play();
+        smoke.object.traverse(x => (x.material && (x.material.opacity = 0)));
+        scene.add(smoke.object);
         setTimeout(() => {
           let fadeOut = setInterval(() => {
+            smoke.object.traverse(x => (x.material && (x.material.transparent = true, x.material.opacity >= .02 || (x.material.opacity += .001))));
             explosion.traverse(x => {
               if (!x.material) return;
               x.material.transparent = true;
@@ -670,13 +731,26 @@
                 scene.remove(x);
                 clearInterval(fadeOut);
               } else {
-                x.material.opacity += -.08;
-                light.intensity <= 0 ? light.intensity = 0 : light.intensity += -.8;
-                lightClone.intensity <= 0 ? lightClone.intensity = 0 : lightClone.intensity += -.8;
+                x.material.opacity += -.01;
+                light.intensity <= 0 ? light.intensity = 0 : light.intensity += -.01;
+                lightClone.intensity <= 0 ? lightClone.intensity = 0 : lightClone.intensity += -.01;
               }
             });
           });
         }, 500);
+        (() => {
+          document.querySelector(".vignette").style.filter = "invert(" + (100 - camera.position.distanceTo(explosion.position).toFixed(0)) + "%)"
+          let t = (100 - camera.position.distanceTo(explosion.position).toFixed(0));
+          let h = setInterval(() => {
+            if (t <= 0) {
+              return document.querySelector(".vignette").style.filter = "", clearInterval(h);
+            }
+            t--;
+            document.querySelector(".vignette").style.filter = "invert(" + t + "%)"
+          });
+        })();
+        setTimeout(() => scene.remove(explosion), 2000);
+        setTimeout(() => scene.remove(smoke.object), 15000);
       }
 	  };
       sandbox = {
@@ -864,6 +938,13 @@
           },
           "explosion": {
             srcPath: "models/assets/timeframe_explosion.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "smoke": {
+            srcPath: "models/assets/smoke_cloud.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -1315,7 +1396,7 @@
       weaponRenderer.domElement.style.left = "0";
       weaponRenderer.domElement.style.top = "0";
       weaponRenderer.domElement.style.pointerEvents = "none";
-      weaponRenderer.domElement.style.zIndex = "9999999999";
+      weaponRenderer.domElement.style.zIndex = "9999";
       weaponRenderer.setClearAlpha();
       weaponRenderer.setClearColor(0x000000, 0);
       let weaponFillLight1 = fillLight1.clone();
