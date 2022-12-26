@@ -128,6 +128,17 @@
         visibility: hidden;
         margin: 0;
       }
+      .loading {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        z-index: 9999999999999999;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+      }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
   </head>
@@ -146,6 +157,9 @@
     <script src="js/ExplosionConfetti.min.js"></script>
     <script src="https://unpkg.com/@seregpie/three.text-texture"></script>
     <script src="https://unpkg.com/@seregpie/three.text-sprite"></script>
+    <div class="loading">
+      <h1></h1>
+    </div>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
@@ -286,6 +300,8 @@
               });
               document.querySelector(".ui").querySelector(".scope").src = "images/icons/ui/scope.png";
               document.querySelector(".ui").querySelector(".scope").style.visibility = "visible";
+              TouchControls.speed = TouchControls.speed / 2;
+              return;
             }
             const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
             let t = 0;
@@ -495,6 +511,9 @@
               if (event.key == "t" && camera.position.distanceTo(e.position) <= 2) {
                 utils.weapons.pickup(newWeapon);
                 let boxes = utils.options.get("WeaponBoxes");
+                pointers[newWeapon].position.y = -10000;
+                scene.remove(pointers[newWeapon]);
+                delete pointers[newWeapon];
                 delete boxes[newWeapon];
                 utils.options.set("WeaponBoxes", boxes);
                 clearInterval(h);
@@ -522,7 +541,6 @@
           let box = new THREE.Object3D();
           new THREE.GLTFLoader().load("models/assets/pointer.glb", function(pointer) {
             pointer = pointer.scene;
-            pointers.push(pointer);
             let boxName = null;
             let newWeapon;
             new THREE.GLTFLoader().load("models/assets/weapon_box.glb", function(gltf) {
@@ -542,6 +560,7 @@
               newWeapon = weapon + "-" + id;
               boxName = newWeapon;
               boxes[newWeapon] = box;
+              pointers[newWeapon] = pointer;
               pointer.position.copy(box.position);
               weaponScene.add(pointer);
               utils.options.set("WeaponBoxes", boxes);
@@ -558,7 +577,10 @@
                         i.clips += x.clips;
                         let boxes = utils.options.get("WeaponBoxes");
                         boxes[newWeapon].position.y = -10000;
+                        pointers[newWeapon].position.y = -10000;
                         scene.remove(boxes[newWeapon]);
+                        scene.remove(pointers[newWeapon]);
+                        delete pointers[newWeapon];
                         delete boxes[newWeapon];
                         utils.options.set("WeaponBoxes", boxes);
                         clearInterval(h);
@@ -577,7 +599,10 @@
               if (event.key == "t" && camera.position.distanceTo(box.position) <= 2) {
                 utils.weapons.pickup(boxName);
                 let boxes = utils.options.get("WeaponBoxes");
+                pointers[boxName].position.y = -1000;
+                scene.remove(pointers[boxName]);
                 delete boxes[boxName];
+                delete pointers[boxName];
                 utils.options.set("WeaponBoxes", boxes);
                 clearInterval(h);
                 utils.ui.infoMarker.hide();
@@ -676,6 +701,12 @@
             let collided = setInterval(() => {
               if (worldOctree.sphereIntersect(sphere.collider)) {
                 setTimeout(() => {
+                  let mark = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ transparent: true, map: new THREE.TextureLoader().load("images/textures/mark.png") }));
+                  scene.add(mark);
+                  mark.position.copy(sphere.mesh.position);
+                  mark.rotateX(-Math.PI / 2);
+                  mark.position.y += -.15;
+                  mark.scale.set(4, 4, 4);
                   utils.explosion(sphere.mesh);
                   scene.remove(sphere.mesh);
                   new THREE.Sound("sounds/explosion.mp3", sphere.mesh, () => {}, true, 20);
@@ -1378,11 +1409,11 @@
       PointerControls.isLocked = true;
       TouchControls.speed = 3;
       weaponCamera.rotation.order = "YXZ";
-      let pointers = [];
+      let pointers = {};
       function weaponAnimate() {
         const delta = clock.getDelta();
         requestAnimationFrame(weaponAnimate);
-        pointers.forEach(x => {
+        Object.values(pointers).forEach(x => {
           let k = (camera.position.distanceTo(x.position) > 4 ? 4 : camera.position.distanceTo(x.position)) / 100;
           x.scale.set(k, k, k);
           x.lookAt(camera.position);
@@ -1676,6 +1707,23 @@
         }
       });
       if (utils.options.get("TouchDevice")) document.body.appendChild(TouchUI.domElement);
+      let loaderInterval = setInterval(() => {
+        let loadedModels = 0;
+        Object.values(sandbox.models).forEach(x => {
+          if (x.object != null) {
+            loadedModels++;
+          }
+        });
+        sandbox.weapons.forEach(x => {
+          if (x.object != null) {
+            loadedModels++;
+          }
+        });
+        if (loadedModels >= ((Object.values(sandbox.models).length - 1) + sandbox.weapons.length) && map != null) {
+          document.querySelector(".loading").remove();
+          clearInterval(loaderInterval);
+        }
+      });
     </script>
   </body>
 </html>
