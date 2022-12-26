@@ -132,12 +132,95 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background: #fff;
         z-index: 9999999999999999;
         top: 0;
         left: 0;
         bottom: 0;
         right: 0;
+        background-image: url(images/assets/maps/Cargo.png);
+        background-size: cover;
+        transition: opacity 2s;
+        pointer-events: none;
+      }
+      .loading-fade {
+        position: absolute;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 9999999999999999;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        filter: invert(100%) !important;
+      }
+      .loading-bar {
+        position: fixed;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
+        background: #fff;
+        height: 10px;
+        left: 0;
+        top: 0;
+        transition: width 2s;
+      }
+      .banner {
+        position: absolute;
+        background: #000;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 99999999999;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        transition: opacity .4s;
+        pointer-events: none;
+      }
+      .users {
+        width: 30%;
+        height: 50%;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -30%);
+      }
+      .users .column {
+        width: 100%;
+        height: 60px;
+        background: #fff;
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        margin-bottom: 5px;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .spin {
+        border: 2px solid #f3f3f3;
+        display: inline-block;
+        border-top: 2px solid #333;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        margin-left: 15px;
+        animation: spin 2s linear infinite;
+      }
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .shadow {
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
       }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
@@ -157,8 +240,14 @@
     <script src="js/ExplosionConfetti.min.js"></script>
     <script src="https://unpkg.com/@seregpie/three.text-texture"></script>
     <script src="https://unpkg.com/@seregpie/three.text-sprite"></script>
+    <div class="banner">
+      <p style="text-align: center; margin-top: 10%; font-size: 2em; font-weight: bold; font-family: Arial, Helvetica, sans-serif !important">[FFA Slayer] - 10 points</span></p>
+      <div class="users"></div>
+    </div>
     <div class="loading">
-      <h1></h1>
+      <img id="loading-fade" src="images/assets/maps/vignette3.png">
+      <div class="center"><h1 class="map shadow" style="text-align: center; font-size: 5em; z-index: 99999999999999999; background: rgba(255, 255, 255, .1); backdrop-filter: blur(5px); padding: 10px; border-radius: 5px; border: .5px solid #fff">LOADING...</h1></div>
+      <div class="loading-bar" style="width: 1%"></div>
     </div>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
@@ -793,6 +882,8 @@
       }
 	  };
       sandbox = {
+        users: [],
+        players: 1,
         map: new URLSearchParams(location.search).get("map") || "Cargo",
         loadout: ["Assault_Rifle", "Glock_19"],
         weapons: [
@@ -1584,9 +1675,14 @@
         if (!isUser && action == "walk") {
           sandbox.models["player"].object.position.set(metadata.x, metadata.y - 1, metadata.z);
         }
+        if (!isUser && action == "info") {
+          sandbox.users.push({
+            player: sandbox.users.length + 1,
+            username: metadata.username
+          });
+        }
       });
       function call(action, metadata) {
-        return;
         let parsedMetaData = JSON.stringify(metadata).replace(/(\")/gi, "'");
         let parameters = gametime.user.position + "," + action.toString() + "," + parsedMetaData;
         gametime.run("playerAction", [parameters.toString()]);
@@ -1708,6 +1804,7 @@
       });
       if (utils.options.get("TouchDevice")) document.body.appendChild(TouchUI.domElement);
       let loaderInterval = setInterval(() => {
+        document.querySelector(".loading-bar").style.width = ((document.querySelector(".loading-bar").style.width.split("%")[0] - 0) + .5) + "%";
         let loadedModels = 0;
         Object.values(sandbox.models).forEach(x => {
           if (x.object != null) {
@@ -1720,10 +1817,29 @@
           }
         });
         if (loadedModels >= ((Object.values(sandbox.models).length - 1) + sandbox.weapons.length) && map != null) {
-          document.querySelector(".loading").remove();
+          document.querySelector(".loading").style.opacity = 0;
+          document.querySelector(".loading").style.width = "100%";
+          sandbox.users.forEach(x => {
+            document.querySelector(".users").innerHTML += `
+            <div class="column">${x.player} - ${x.username} <div class="spin"></div>
+            `;
+          });
+          let playerLoader = setInterval(() => {
+            if (sandbox.users.length >= sandbox.players) {
+              setTimeout(() => {
+                document.querySelector(".banner").style.opacity = 0;
+              }, 4000);
+              clearInterval(playerLoader);
+            }
+          });
           clearInterval(loaderInterval);
         }
       });
+      gametime.onconnect = function() {
+        call("info", {
+          username: localStorage["username"] || ""
+        });
+      }
     </script>
   </body>
 </html>
