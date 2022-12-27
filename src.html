@@ -1424,7 +1424,8 @@
           call("walk", {
             x: camera.position.x,
             y: camera.position.y,
-            z: camera.position.z
+            z: camera.position.z,
+            direction: "forward"
           });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getForwardVector().multiplyScalar(keyStates["ShiftLeft"] ? speedDelta + .05 : speedDelta));
@@ -1433,7 +1434,8 @@
           call("walk", {
             x: camera.position.x,
             y: camera.position.y,
-            z: camera.position.z
+            z: camera.position.z,
+            direction: "backward"
           });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getForwardVector().multiplyScalar(-speedDelta));
@@ -1445,7 +1447,8 @@
           call("walk", {
             x: camera.position.x,
             y: camera.position.y,
-            z: camera.position.z
+            z: camera.position.z,
+            direction: "left"
           });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getSideVector().multiplyScalar(-speedDelta));
@@ -1457,7 +1460,8 @@
           call("walk", {
             x: camera.position.x,
             y: camera.position.y,
-            z: camera.position.z
+            z: camera.position.z,
+            direction: "right"
           });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
@@ -1473,6 +1477,18 @@
       }
       function animate() {
         requestAnimationFrame(animate);
+        if (utils.options.get("PlayerWalking") == "forward") {
+          sandbox.models["player"].object.translateZ(clock.getDelta() * 3);
+        }
+        if (utils.options.get("PlayerWalking") == "backward") {
+          sandbox.models["player"].object.translateZ(-(clock.getDelta() * 3));
+        }
+        if (utils.options.get("PlayerWalking") == "left") {
+          sandbox.models["player"].object.translateX(clock.getDelta() * 3);
+        }
+        if (utils.options.get("PlayerWalking") == "right") {
+          sandbox.models["player"].object.translateX(-(clock.getDelta() * 3));
+        }
         sun.position.set(camera.position.x, 50, camera.position.z);
         utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
         document.querySelector(".run-health").style.width = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth")) + "%";
@@ -1717,6 +1733,7 @@
       utils.options.set("Bobbing", null);
       utils.options.set("WeaponBoxes", {});
       utils.options.set("TouchingWeapon", null);
+      utils.options.set("PlayerWalking", false);
 
       /* Multiplayer setup */
       gametime.make("playerAction");
@@ -1727,7 +1744,7 @@
         let metadata = JSON.parse(data.splice(2).join(",").replace(/(\')/gi, "\""));
         let isUser = user == gametime.user.position;
         if (!isUser && action == "walk") {
-          sandbox.models["player"].object.position.set(metadata.x, metadata.y - 1, metadata.z);
+          utils.options.set("PlayerWalking", metadata.direction);
         }
         if (!isUser && action == "info") {
           sandbox.users.push({
