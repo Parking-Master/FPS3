@@ -132,7 +132,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        z-index: 9999999999999999;
+        z-index: 99999999999999999999999999999;
         top: 0;
         left: 0;
         bottom: 0;
@@ -146,7 +146,7 @@
         position: absolute;
         width: 100% !important;
         height: 100% !important;
-        z-index: 9999999999999999;
+        z-index: 9999999999999999999999999999;
         top: 0;
         left: 0;
         bottom: 0;
@@ -167,7 +167,7 @@
         background: #000;
         width: 100% !important;
         height: 100% !important;
-        z-index: 99999999999;
+        z-index: 99999999999999999999999;
         top: 0;
         left: 0;
         bottom: 0;
@@ -224,6 +224,7 @@
       }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js@latest/js/username-generator.min.js"></script>
   </head>
   <body>
     <script src="https://threejs.org/build/three.min.js"></script>
@@ -245,9 +246,10 @@
       <div class="users"></div>
     </div>
     <div class="loading">
-      <img id="loading-fade" src="images/assets/maps/vignette3.png">
+      <img id="loading-fade" src="images/html/vignette.png">
       <div class="center"><h1 class="map shadow" style="text-align: center; font-size: 5em; z-index: 99999999999999999; background: rgba(255, 255, 255, .1); backdrop-filter: blur(5px); padding: 10px; border-radius: 5px; border: .5px solid #fff">LOADING...</h1></div>
       <div class="loading-bar" style="width: 1%"></div>
+      <p style="position: absolute; left: 20px; top: 25px"><span class="loading-progress">0</span> %</p>
     </div>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
@@ -389,15 +391,18 @@
               });
               document.querySelector(".ui").querySelector(".scope").src = "images/icons/ui/scope.png";
               document.querySelector(".ui").querySelector(".scope").style.visibility = "visible";
+              PointerControls.pointerSpeed = PointerControls.pointerSpeed / 2;
               TouchControls.speed = TouchControls.speed / 2;
+              document.querySelector(".vignette").style.opacity = 0;
               return;
             }
             const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
             let t = 0;
             let transition = setInterval(() => {
-              t >= 26 ? clearInterval(transition) : camera.fov = e - t;
+              t >= 26 ? clearInterval(transition) : (camera.fov = e - t, weaponCamera.fov = e - t);
               t += 2;
               camera.updateProjectionMatrix();
+              weaponCamera.updateProjectionMatrix();
             });
             document.querySelector(".crosshair").src = "images/icons/ui/crosshair_zoomed.png";
             PointerControls.pointerSpeed = PointerControls.pointerSpeed / 2;
@@ -414,9 +419,10 @@
             const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
             let t = 0;
             let transition = setInterval(() => {
-              t >= (x.name == "Sniper_Rifle" ? 65 : 26) ? clearInterval(transition) : camera.fov = e + t;
+              t >= (x.name == "Sniper_Rifle" ? 65 : 26) ? clearInterval(transition) : (camera.fov = e + t, weaponCamera.fov = e + t);
               t += 2;
               camera.updateProjectionMatrix();
+              weaponCamera.updateProjectionMatrix();
             });
             document.querySelector(".crosshair").src = "images/icons/ui/crosshair.png";
             PointerControls.pointerSpeed = PointerControls.pointerSpeed * 2;
@@ -487,15 +493,26 @@
             }
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
             utils.camera.shake(.2);
-            let e = new THREE.Mesh(new THREE.CircleGeometry(.1, 20));
+            let guide = new THREE.Mesh(new THREE.CylinderGeometry(.002, .002, .1), new THREE.MeshBasicMaterial());
+            guide.position.copy(sandbox.currentWeapon.position);
+            guide.rotation.copy(sandbox.currentWeapon.rotation);
+            let e = new THREE.Mesh(new THREE.CircleGeometry(1));
             e.position.copy(camera.position);
             e.rotation.copy(camera.rotation);
+            scene.add(guide);
+            guide.rotateX(Math.PI / 2);
+            guide.translateZ(-.12);
+            guide.updateMatrix();
             e.updateMatrix();
             let hole = new THREE.SpotLight(100, 0x999999, 10000);
             let objects = utils.options.get("TempObjects");
             objects.push(hole);
             if (objects.length > 10) (scene.remove(objects[0]), objects.shift());
             utils.options.set("TempObjects", objects);
+            setTimeout(() => (scene.remove(hole), delete e, clearInterval(guideTranslate), delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.penumbra = .1, hole.angle = .003, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide });
+            let guideTranslate = setInterval(() => {
+              guide.translateY(.2);
+            });
             let h = setInterval(() => {
               map.traverse((x) => {
                 if (x.isObject3D && ((!x.name.includes("scene") && !x.name.includes("Scene")) && collision(e, x))) {
@@ -584,12 +601,12 @@
                   });
                 }
                 if (utils.options.get("TouchDevice")) {
-                  utils.ui.infoMarker.show("Hold to pick up " + x.name.replace("_", " "), () => {
+                  utils.ui.infoMarker.show("Hold to pick up " + x.name.replace(/\_/gi, " "), () => {
                     document.dispatchEvent(new KeyboardEvent("keydown", { key: "t", code: "KeyT" }));
                     document.dispatchEvent(new KeyboardEvent("keyup", { key: "t", code: "KeyT" }));
                   });
                 } else {
-                  utils.ui.infoMarker.show("Hold [T] to pick up " + x.name.replace("_", " "));
+                  utils.ui.infoMarker.show("Hold [T] to pick up " + x.name.replace(/\_/gi, " "));
                 }
               } else {
                 utils.options.get("TouchingWeapon") == e && utils.options.set("TouchingWeapon", null);
@@ -678,7 +695,7 @@
                     });
                   });
                 }
-                utils.ui.infoMarker.show("Hold [T] to pick up " + weapon.replace("_", " "));
+                utils.ui.infoMarker.show("Hold [T] to pick up " + weapon.replace(/\_/gi, " "));
               } else {
                 utils.options.get("TouchingWeapon") == box && utils.options.set("TouchingWeapon", null);
                 !utils.options.get("TouchingWeapon") && utils.ui.infoMarker.hide();
@@ -987,11 +1004,31 @@
               }
             }
           },
+          {
+            name: "Light_Machine_Gun",
+            rounds: 60,
+            minRounds: 0,
+            maxRounds: 60,
+            minClips: 0,
+            maxClips: 2,
+            clips: 2,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 3000
+              },
+              full: {
+                sound: null,
+                time: 3500,
+                useDefaultAnimation: false
+              }
+            }
+          }
         ],
         grenades: {
           min: 0,
-          max: 2,
-          current: 2,
+          max: 3,
+          current: 3,
           types: ["hand"]
         },
         currentWeapon: null,
@@ -1061,6 +1098,13 @@
           },
           "Auto_Pistol": {
             srcPath: "models/weapons/dropped/Auto_Pistol.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Light_Machine_Gun": {
+            srcPath: "models/weapons/dropped/Light_Machine_Gun.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -1634,6 +1678,9 @@
           if (weapon.name == "Auto_Pistol") {
             utils.options.set("RapidFire", true);
           }
+          if (weapon.name == "Light_Machine_Gun") {
+            utils.options.set("RapidFire", true);
+          }
         });
       });
       document.addEventListener("mouseup", function(event) {
@@ -1653,6 +1700,13 @@
           });
         }
       }, 30);
+      let rapidFire2 = setInterval(function() {
+        if (utils.options.get("RapidFire")) {
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            if (x.name == "Light_Machine_Gun") utils.weapons.shoot();
+          });
+        }
+      }, 100);
       utils.options.set("CanFire", true);
       utils.options.set("Reloading", false);
       utils.options.set("RunHealth", 100);
@@ -1802,9 +1856,11 @@
           }
         }
       });
+      document.querySelector(".loading").style.backgroundImage = "url(images/assets/maps/" + sandbox.map + ".png)";
       if (utils.options.get("TouchDevice")) document.body.appendChild(TouchUI.domElement);
       let loaderInterval = setInterval(() => {
         document.querySelector(".loading-bar").style.width = ((document.querySelector(".loading-bar").style.width.split("%")[0] - 0) + .5) + "%";
+        document.querySelector(".loading-progress").textContent = (document.querySelector(".loading-bar").style.width.split("%")[0] - 0).toFixed(0);
         let loadedModels = 0;
         Object.values(sandbox.models).forEach(x => {
           if (x.object != null) {
@@ -1837,8 +1893,17 @@
       });
       gametime.onconnect = function() {
         call("info", {
-          username: localStorage["username"] || ""
+          username: localStorage["username"] || generateName()
         });
+      };
+      if (new URLSearchParams(location.search).get("freeplay")) {
+        sandbox.users.push({
+          player: 1,
+          username: localStorage["username"] || generateName()
+        });
+        gametime.make = () => {};
+        gametime.on = () => {};
+        gametime.run = () => {};
       }
     </script>
   </body>
