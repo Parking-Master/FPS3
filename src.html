@@ -28,7 +28,7 @@
         left: 50%;
         top: 50%;
         margin-left: -20px;
-        margin-top: -25px;
+        margin-top: -20px;
       }
       .ui-centering, .center {
         margin: 0;
@@ -499,7 +499,7 @@
             let e = new THREE.Mesh(new THREE.CircleGeometry(1));
             e.position.copy(camera.position);
             e.rotation.copy(camera.rotation);
-            scene.add(guide);
+            weaponScene.add(guide);
             guide.rotateX(Math.PI / 2);
             guide.translateZ(-.12);
             guide.updateMatrix();
@@ -511,7 +511,7 @@
             utils.options.set("TempObjects", objects);
             setTimeout(() => (scene.remove(hole), delete e, clearInterval(guideTranslate), delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.penumbra = .1, hole.angle = .003, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide });
             let guideTranslate = setInterval(() => {
-              guide.translateY(.2);
+              guide.translateY(.3);
             });
             let h = setInterval(() => {
               map.traverse((x) => {
@@ -902,6 +902,7 @@
         users: [],
         players: 1,
         map: new URLSearchParams(location.search).get("map") || "Cargo",
+        mode: new URLSearchParams(location.search).get("mode") || "Slayer",
         loadout: ["Assault_Rifle", "Glock_19"],
         weapons: [
           {
@@ -1015,11 +1016,11 @@
             reloads: {
               easy: {
                 sound: null,
-                time: 3000
+                time: 2000
               },
               full: {
                 sound: null,
-                time: 3500,
+                time: 2200,
                 useDefaultAnimation: false
               }
             }
@@ -1202,6 +1203,7 @@
       const vector2 = new THREE.Vector3();
       const vector3 = new THREE.Vector3();
       document.addEventListener("keydown", (event) => {
+        if (!PointerControls.isLocked) return;
         keyStates[event.code] = true;
         if (keyStates["ShiftLeft"] && ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"]))) {
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
@@ -1237,6 +1239,7 @@
         }
       });
       document.addEventListener("keyup", (event) => {
+        if (!PointerControls.isLocked) return;
         clearInterval(utils.options.get("Bobbing"));
         utils.options.set("Bobbing", null);
         sandbox.weapons.forEach(weapon => {
@@ -1257,6 +1260,7 @@
         mouseTime = performance.now();
       });
       document.addEventListener("mouseup", () => {
+        if (!PointerControls.isLocked) return;
         PointerControls.lock();
       });
       document.body.addEventListener("mousemove", (event) => { });
@@ -1273,6 +1277,19 @@
         const result = worldOctree.capsuleIntersect(playerCollider);
         playerOnFloor = false;
         if (result) {
+          if (utils.options.get("Starting")) {
+            weaponScene.add(sandbox.currentWeapon);
+            camera.fov = 70;
+            camera.updateProjectionMatrix();
+            document.querySelector(".ui").style.visibility = "visible";
+            PointerControls.isLocked = true;
+            utils.weapons.data(sandbox.currentWeapon).then(x => {
+              x.mixer.clipAction(x.animations[0]).loop = THREE.LoopOnce;
+              x.mixer.clipAction(x.animations[0]).reset();
+              x.mixer.clipAction(x.animations[0]).play();
+            });
+            utils.options.set("Starting", false);
+          }
           playerOnFloor = result.normal.y > 0;
           if (!playerOnFloor) {
             playerVelocity.addScaledVector(result.normal, - result.normal.dot(playerVelocity));
@@ -1557,7 +1574,8 @@
       const weaponCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
       const PointerControls = new PointerLockControls(camera, renderer.domElement);
       const TouchControls = new THREE.TouchControls(camera, renderer.domElement);
-      PointerControls.isLocked = true;
+      PointerControls.isLocked = false;
+      PointerControls.pointerSpeed = 2;
       TouchControls.speed = 3;
       weaponCamera.rotation.order = "YXZ";
       let pointers = {};
@@ -1678,6 +1696,7 @@
         scene.fog = null;
       }
       document.addEventListener("mousedown", function(event) {
+        if (!PointerControls.isLocked) return;
         utils.weapons.data(sandbox.currentWeapon).then(weapon => {
           if (weapon.name == "Assault_Rifle") {
             utils.options.set("RapidFire", true);
@@ -1734,6 +1753,7 @@
       utils.options.set("WeaponBoxes", {});
       utils.options.set("TouchingWeapon", null);
       utils.options.set("PlayerWalking", false);
+      utils.options.set("Starting", false);
 
       /* Multiplayer setup */
       gametime.make("playerAction");
@@ -1877,7 +1897,7 @@
       if (utils.options.get("TouchDevice")) document.body.appendChild(TouchUI.domElement);
       let loaderInterval = setInterval(() => {
         document.querySelector(".loading-bar").style.width = ((document.querySelector(".loading-bar").style.width.split("%")[0] - 0) + .5) + "%";
-        document.querySelector(".loading-progress").textContent = (document.querySelector(".loading-bar").style.width.split("%")[0] - 0).toFixed(0);
+        document.querySelector(".loading-progress").textContent = ((document.querySelector(".loading-bar").style.width.split("%")[0] > 100 ? 100 : document.querySelector(".loading-bar").style.width.split("%")[0]) - 0).toFixed(0);
         let loadedModels = 0;
         Object.values(sandbox.models).forEach(x => {
           if (x.object != null) {
@@ -1899,8 +1919,16 @@
           });
           let playerLoader = setInterval(() => {
             if (sandbox.users.length >= sandbox.players) {
+              weaponScene.remove(sandbox.currentWeapon);
+              document.querySelector(".ui").style.visibility = "hidden";
+              setTimeout(() => {
+                playerVelocity.y = 250;
+                camera.fov = 30;
+                camera.updateProjectionMatrix();
+              }, 2000);
               setTimeout(() => {
                 document.querySelector(".banner").style.opacity = 0;
+                utils.options.set("Starting", true);
               }, 4000);
               clearInterval(playerLoader);
             }
@@ -1913,7 +1941,36 @@
           username: localStorage["username"] || generateName()
         });
       };
+
+      if (sandbox.mode == "Slayer") {
+        sandbox.players = 2;
+      }
+      if (sandbox.mode == "Teams") {
+        sandbox.players = 4;
+      }
+      if (sandbox.mode == "Fiesta") {
+        sandbox.players = 2;
+        sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
+      }
+      if (sandbox.mode == "Snipers") {
+        sandbox.players = 2;
+        sandbox.loadout = ["Sniper_Rifle", "Sniper_Rifle"];
+      }
+      if (sandbox.mode == "Oddball") {
+        sandbox.players = 2;
+      }
+      if (sandbox.mode == "Fistfight") {
+        sandbox.players = 2;
+        sandbox.loadout = ["Knife", "Knife"];
+      }
+      if (sandbox.mode == "Ctf") {
+        sandbox.players = 2;
+      }
+      if (sandbox.mode == "Koth") {
+        sandbox.players = 2;
+      }
       if (new URLSearchParams(location.search).get("freeplay")) {
+        sandbox.players = 1;
         sandbox.users.push({
           player: 1,
           username: localStorage["username"] || generateName()
