@@ -1579,16 +1579,16 @@
       }
       function animate() {
         requestAnimationFrame(animate);
-        if (utils.options.get("PlayerWalking") == "forward") {
+        if (utils.options.get("PlayerWalkingForward")) {
           sandbox.models["player"].object.translateZ(clock.getDelta() * 3);
         }
-        if (utils.options.get("PlayerWalking") == "backward") {
+        if (utils.options.get("PlayerWalkingBackward")) {
           sandbox.models["player"].object.translateZ(-(clock.getDelta() * 3));
         }
-        if (utils.options.get("PlayerWalking") == "left") {
+        if (utils.options.get("PlayerWalkingLeft")) {
           sandbox.models["player"].object.translateX(clock.getDelta() * 3);
         }
-        if (utils.options.get("PlayerWalking") == "right") {
+        if (utils.options.get("PlayerWalkingRight")) {
           sandbox.models["player"].object.translateX(-(clock.getDelta() * 3));
         }
         sun.position.set(camera.position.x, 50, camera.position.z);
@@ -1837,7 +1837,10 @@
       utils.options.set("Bobbing", null);
       utils.options.set("WeaponBoxes", {});
       utils.options.set("TouchingWeapon", null);
-      utils.options.set("PlayerWalking", false);
+      utils.options.set("PlayerWalkingForward", false);
+      utils.options.set("PlayerWalkingBackward", false);
+      utils.options.set("PlayerWalkingLeft", false);
+      utils.options.set("PlayerWalkingRight", false);
       utils.options.set("Starting", false);
 
       /* Multiplayer setup */
@@ -1849,7 +1852,7 @@
         let metadata = JSON.parse(data.splice(2).join(",").replace(/(\')/gi, "\""));
         let isUser = user == gametime.user.position;
         if (!isUser && action == "walk") {
-          utils.options.set("PlayerWalking", metadata.direction);
+          utils.options.set("PlayerWalking" + (metadata.direction[0].toUpperCase() + metadata.direction.split("").splice(1).join("")), true);
         }
         if (!isUser && action == "info") {
           sandbox.users.push({
