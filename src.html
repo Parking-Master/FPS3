@@ -123,7 +123,7 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         pointer-events: none;
         visibility: hidden;
         margin: 0;
@@ -203,6 +203,14 @@
           transform: rotate(360deg);
         }
       }
+      @keyframes spin-reverse {
+        0% {
+          transform: rotate(360deg);
+        }
+        100% {
+          transform: rotate(0deg);
+        }
+      }
       .spin {
         border: 2px solid #f3f3f3;
         display: inline-block;
@@ -213,6 +221,13 @@
         margin-left: 15px;
         animation: spin 2s linear infinite;
       }
+      .spin-reverse {
+        animation: spin-reverse 2s linear infinite;
+      }
+      .spin.spin-large {
+        width: 40px;
+        height: 40px;
+      }
       .center {
         position: absolute;
         top: 50%;
@@ -221,6 +236,43 @@
       }
       .shadow {
         box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
+      }
+      .before-ui {
+        position: absolute;
+        visibility: hidden;
+        z-index: 9999999999999;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        padding: 0;
+        margin: 0;
+      }
+      .center-origin {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      .description {
+        width: 200px;
+        height: 200px;
+        white-space: normal;
+        border: 1px solid #fff;
+        border-radius: 4px;
+        backdrop-filter: blur(3px);
+        text-align: center;
+        padding: 0 10px;
+      }
+      .description-header {
+        background: #fff;
+        color: #333;
+        position: relative;
+        width: 100%;
+        padding: 8px 0;
+      }
+      .description-text {
+        margin-top: 35px;
       }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
@@ -247,9 +299,18 @@
     </div>
     <div class="loading">
       <img id="loading-fade" src="images/html/vignette.png">
-      <div class="center"><h1 class="map shadow" style="text-align: center; font-size: 5em; z-index: 99999999999999999; background: rgba(255, 255, 255, .1); backdrop-filter: blur(5px); padding: 10px; border-radius: 5px; border: .5px solid #fff">LOADING...</h1></div>
+      <div class="center"><h1 class="map shadow" style="text-align: center; font-size: 5em; z-index: 99999999999999999; background: rgba(255, 255, 255, .1); backdrop-filter: blur(5px); padding: 10px; border-radius: 5px; border-bottom: .5px solid #fff">LOADING...</h1></div>
       <div class="loading-bar" style="width: 1%"></div>
       <p style="position: absolute; left: 20px; top: 25px"><span class="loading-progress">0</span> %</p>
+    </div>
+    <div class="before-ui">
+      <div class="spin spin-large center-origin" style="position: absolute; left: 20px; top: 20px">
+        <p class="spin-reverse counter" style="display: inline-block">10</p>
+      </div>
+      <div class="description" style="position: absolute; right: 20px; top: 20px">
+        <div class="description-header">Slayer</div>
+        <div class="description-text">Eliminate enemies using default or power weapons to earn points. First to the score limit wins.</div>
+      </div>
     </div>
     <div class="ui">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
@@ -491,28 +552,26 @@
               cweapon.rounds--;
               cweapon.roundsUsed++;
             }
+            let randomX = Math.random() / 20;
+            let randomY = Math.random() / 20;
+            let shakyWeapon = sandbox.currentWeapon.clone();
+            let shakyCamera = camera.clone();
+            shakyCamera.rotateY(randomY);
+            shakyCamera.rotateX(randomX);
+            shakyWeapon.rotateZ(randomY);
+            shakyWeapon.rotateX(randomX);
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
             utils.camera.shake(.2);
-            let guide = new THREE.Mesh(new THREE.CylinderGeometry(.002, .002, .1), new THREE.MeshBasicMaterial());
-            guide.position.copy(sandbox.currentWeapon.position);
-            guide.rotation.copy(sandbox.currentWeapon.rotation);
             let e = new THREE.Mesh(new THREE.CircleGeometry(1));
             e.position.copy(camera.position);
-            e.rotation.copy(camera.rotation);
-            weaponScene.add(guide);
-            guide.rotateX(Math.PI / 2);
-            guide.translateZ(-.12);
-            guide.updateMatrix();
+            e.rotation.copy(utils.options.get("Zoomed") ? camera.rotation : shakyCamera.rotation);
             e.updateMatrix();
             let hole = new THREE.SpotLight(100, 0x999999, 10000);
             let objects = utils.options.get("TempObjects");
             objects.push(hole);
             if (objects.length > 10) (scene.remove(objects[0]), objects.shift());
             utils.options.set("TempObjects", objects);
-            setTimeout(() => (scene.remove(hole), delete e, clearInterval(guideTranslate), delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.penumbra = .1, hole.angle = .003, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide });
-            let guideTranslate = setInterval(() => {
-              guide.translateY(.3);
-            });
+            setTimeout(() => (scene.remove(hole), delete e, delete hole), 10000), scene.add(hole), hole.color = 0x999999, hole.penumbra = .1, hole.angle = .003, hole.position.copy(e.position), hole.target = e, hole.rotation.copy(e.rotation), hole.translateZ(1), e.material = new THREE.MeshPhongMaterial({ opacity: 0, side: THREE.DoubleSide });
             let h = setInterval(() => {
               map.traverse((x) => {
                 if (x.isObject3D && ((!x.name.includes("scene") && !x.name.includes("Scene")) && collision(e, x))) {
@@ -744,6 +803,7 @@
             weapon.mixer.clipAction(weapon.animations[1]).stop();
             weapon.mixer.clipAction(weapon.animations[6]).stop();
             weapon.mixer.clipAction(weapon.animations[7]).stop();
+            weapon.mixer.clipAction(weapon.animations[9]).stop();
             weapon.roundsUsed += weapon.rounds;
             if (weapon.rounds <= 0) {
               new THREE.Sound("sounds/guns/" + weapon.name + "/full.mp3");
@@ -923,7 +983,8 @@
                 time: 2500,
                 useDefaultAnimation: true
               }
-            }
+            },
+            useDefaultRunAnimation: true
           },
           {
             name: "Glock_19",
@@ -943,7 +1004,8 @@
                 time: 2000,
                 useDefaultAnimation: true
               }
-            }
+            },
+            useDefaultRunAnimation: false
           },
           {
             name: "Sniper_Rifle",
@@ -963,7 +1025,8 @@
                 time: 2750,
                 useDefaultAnimation: false
               }
-            }
+            },
+            useDefaultRunAnimation: true
           },
           {
             name: "Micro_Uzi",
@@ -983,7 +1046,8 @@
                 time: 1750,
                 useDefaultAnimation: true
               }
-            }
+            },
+            useDefaultRunAnimation: false
           },
           {
             name: "Auto_Pistol",
@@ -1003,7 +1067,8 @@
                 time: 2250,
                 useDefaultAnimation: true
               }
-            }
+            },
+            useDefaultRunAnimation: true
           },
           {
             name: "Light_Machine_Gun",
@@ -1023,7 +1088,8 @@
                 time: 2200,
                 useDefaultAnimation: false
               }
-            }
+            },
+            useDefaultRunAnimation: true
           }
         ],
         grenades: {
@@ -1163,7 +1229,7 @@
       renderer.outputEncoding = THREE.sRGBEncoding;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       document.body.appendChild(renderer.domElement);
-      let GRAVITY = 60;
+      let GRAVITY = 50;
       let NUM_SPHERES = 2;
       let SPHERE_RADIUS = 0.2;
       let STEPS_PER_FRAME = 10;
@@ -1207,13 +1273,13 @@
         keyStates[event.code] = true;
         if (keyStates["ShiftLeft"] && ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"]))) {
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
-            utils.options.get("RunHealth") <= 0 ? (weapon.mixer.clipAction(weapon.animations[7]).play(), weapon.mixer.clipAction(weapon.animations[7]).reset(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), keyStates["ShiftLeft"] = false) : utils.options.set("RunHealth", utils.options.get("RunHealth") - 2);
+            utils.options.get("RunHealth") <= 0 ? (weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).play(), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).reset(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]), .4), keyStates["ShiftLeft"] = false) : utils.options.set("RunHealth", utils.options.get("RunHealth") - 2);
           });
         }
         if ((keyStates["KeyW"] || keyStates["ArrowUp"]) && !event.repeat) {
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             if (keyStates["ShiftLeft"]) {
-              utils.options.get("Reloading") || (weapon.mixer.clipAction(weapon.animations[6]).crossFadeTo(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).reset(), weapon.mixer.clipAction(weapon.animations[7]).play());
+              utils.options.get("Reloading") || (weapon.mixer.clipAction(weapon.animations[6]).crossFadeTo(weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]), .4), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).reset(), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).play());
             } else {
               utils.options.get("Reloading") || weapon.mixer.clipAction(weapon.animations[6]).play();
             }
@@ -1243,7 +1309,7 @@
         clearInterval(utils.options.get("Bobbing"));
         utils.options.set("Bobbing", null);
         sandbox.weapons.forEach(weapon => {
-          weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).play();
+          weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]), .4), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).play();
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
             weapon.mixer.clipAction(weapon.animations[6]).stop();
           }
@@ -1278,6 +1344,25 @@
         playerOnFloor = false;
         if (result) {
           if (utils.options.get("Starting")) {
+            if (document.querySelector(".before-ui").style.visibility == "visible") {
+              let wait = setInterval(() => {
+                if (document.querySelector(".before-ui").style.visibility == "hidden") {
+                  weaponScene.add(sandbox.currentWeapon);
+                  camera.fov = 70;
+                  camera.updateProjectionMatrix();
+                  document.querySelector(".ui").style.visibility = "visible";
+                  PointerControls.isLocked = true;
+                  utils.weapons.data(sandbox.currentWeapon).then(x => {
+                    x.mixer.clipAction(x.animations[0]).loop = THREE.LoopOnce;
+                    x.mixer.clipAction(x.animations[0]).reset();
+                    x.mixer.clipAction(x.animations[0]).play();
+                  });
+                  utils.options.set("Starting", false);
+                  clearInterval(wait);
+                }
+              });
+              return;
+            }
             weaponScene.add(sandbox.currentWeapon);
             camera.fov = 70;
             camera.updateProjectionMatrix();
@@ -1427,7 +1512,7 @@
         renderer.shadowMap.needsUpdate = true;
       }
       function teleportPlayerIfOob() {
-        if (camera.position.y <= -25) {
+        if (camera.position.y <= -25 && !utils.options.get("Starting")) {
           playerCollider.start.set(13.5, 0.35, -18.5);
           playerCollider.end.set(13.5, 1, -18.5);
           playerCollider.radius = 0.35;
@@ -1488,7 +1573,7 @@
         }
         if (playerOnFloor) {
           if (keyStates["Space"]) {
-            playerVelocity.y = 10;
+            playerVelocity.y = 15;
           }
         }
       }
@@ -1545,7 +1630,7 @@
           x.mixer = new THREE.AnimationMixer(model.scene);
           x.roundsUsed = 0;
           let weapon = x;
-          weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[7]), .4), weapon.mixer.clipAction(weapon.animations[7]).play();
+          weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]), .4), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).play();
           if (x.name == sandbox.loadout[0]) {
             sandbox.primaryWeapon = x.object;
             sandbox.currentWeapon = x.object;
@@ -1674,7 +1759,7 @@
         utils.weapons.create("Micro_Uzi", new THREE.Vector3(27.5, .2, 1.6));
         utils.weapons.create("Micro_Uzi", new THREE.Vector3(28, -.4, 7.5));
       } else if (sandbox.map == "Aero") {
-        GRAVITY = 25;
+        GRAVITY = 10;
         let sphere = new THREE.SphereGeometry(500, 60, 40);
         space = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/space.png") }));
         space.material.map.generateMipmaps = false;
@@ -1922,12 +2007,22 @@
               weaponScene.remove(sandbox.currentWeapon);
               document.querySelector(".ui").style.visibility = "hidden";
               setTimeout(() => {
-                playerVelocity.y = 250;
+                playerVelocity.y = GRAVITY * 10;
                 camera.fov = 30;
                 camera.updateProjectionMatrix();
               }, 2000);
               setTimeout(() => {
                 document.querySelector(".banner").style.opacity = 0;
+                document.querySelector(".before-ui").style.visibility = "visible";
+                let t = 10;
+                let timer = setInterval(() => {
+                  if (t <= 0) {
+                    document.querySelector(".before-ui").style.visibility = "hidden";
+                    return clearInterval(timer);
+                  }
+                  t--;
+                  document.querySelector(".counter").textContent = t;
+                }, 950);
                 utils.options.set("Starting", true);
               }, 4000);
               clearInterval(playerLoader);
