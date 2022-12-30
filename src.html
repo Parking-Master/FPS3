@@ -361,6 +361,14 @@
       }
     });
     
+    function load(url, callback) {
+      if (Object.keys(utils.cache.models).indexOf(url) > -1) return callback(utils.cache.models[url]);
+      new THREE.GLTFLoader().load(url, function(model) {
+        utils.cache.models[url] = model;
+        callback(model);
+      });
+    }
+
 	  // Game asset variables
 	  otherPlayer = new THREE.Mesh();
 	  space = new THREE.Mesh();
@@ -412,7 +420,8 @@
 	  }
 	  utils = {
       cache: {
-        options: {}
+        options: {},
+        models: {}
       },
       options: {
         set: function(key, value) {
@@ -538,7 +547,7 @@
       },
       ammo: {
         create: function(type, position) {
-          new THREE.GLTFLoader().load("models/assets/ammo/" + type.toLowerCase().trim() + "_ammo.glb", (ammo) => {
+          load("models/assets/ammo/" + type.toLowerCase().trim() + "_ammo.glb", (ammo) => {
             ammo = ammo.scene;
             scene.add(ammo);
             let pos = position.clone();
@@ -588,7 +597,7 @@
             sandbox.weapons.forEach(x => x.object == weapon && resolve(x));
           });
         },
-        shoot: function(rounds = 1) {
+        shoot: function(rounds = 1, damage = 5, sound = true, depleteRounds = true) {
           if (!utils.options.get("CanFire")) return;
           let i = 0;
           let weapon = null;
@@ -608,8 +617,8 @@
               if (cweapon.rounds <= cweapon.minRounds) {
                 return;
               }
-              cweapon.rounds--;
-              cweapon.roundsUsed++;
+              depleteRounds && cweapon.rounds--;
+              depleteRounds && cweapon.roundsUsed++;
             }
             let randomX = Math.random() / 20;
             let randomY = Math.random() / 20;
@@ -643,7 +652,7 @@
               });
             }, 10);
             let guideTranslate = setInterval(() => {
-              ammoBoxes.forEach(x => collision(guide, x) && (ammoBoxes.splice(ammoBoxes.indexOf(x), 1), utils.explosion(x), scene.remove(x), new THREE.GLTFLoader().load("models/assets/ammo/burnt_ammo.glb", (l) => (l = l.scene, l.position.copy(x.position), l.rotation.copy(x.rotation), x = l, scene.add(x)))));
+              ammoBoxes.forEach(x => collision(guide, x) && (ammoBoxes.splice(ammoBoxes.indexOf(x), 1), utils.explosion(x), scene.remove(x), load("models/assets/ammo/burnt_ammo.glb", (l) => (l = l.scene, l.position.copy(x.position), l.rotation.copy(x.rotation), x = l, scene.add(x)))));
               guide.translateZ(-1);
             });
             setTimeout(() => clearInterval(guideTranslate), 5000);
@@ -651,7 +660,7 @@
               utils.camera.shake(1);
             }
             let flash = sandbox.models["flash"].object;
-            new THREE.Sound("sounds/guns/" + weapon.name + "/fire.mp3", sandbox.currentWeapon, () => {}, false);
+            sound && new THREE.Sound("sounds/guns/" + weapon.name + "/fire.mp3", sandbox.currentWeapon, () => {}, false);
             flash.children[0].material.opacity = 1;
             flash.scale.set(.1, .1, .1);
             flash.position.copy(sandbox.currentWeapon.position);
@@ -771,11 +780,11 @@
         },
         create: function(weapon = "", pos = new THREE.Vector3()) {
           let box = new THREE.Object3D();
-          new THREE.GLTFLoader().load("models/assets/pointer.glb", function(pointer) {
+          load("models/assets/pointer.glb", function(pointer) {
             pointer = pointer.scene;
             let boxName = null;
             let newWeapon;
-            new THREE.GLTFLoader().load("models/assets/weapon_box.glb", function(gltf) {
+            load("models/assets/weapon_box.glb", function(gltf) {
               box = gltf.scene;
               box.scale.set(.01, .01, .01);
               box.position.set(pos.x, pos.y, pos.z);
@@ -1168,6 +1177,28 @@
               }
             },
             useDefaultRunAnimation: true
+          },
+          {
+            name: "Shotgun",
+            ammo: "shotgun",
+            rounds: 15,
+            minRounds: 0,
+            maxRounds: 15,
+            minClips: 0,
+            maxClips: 0,
+            clips: 0,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 2000
+              },
+              full: {
+                sound: null,
+                time: 2200,
+                useDefaultAnimation: true
+              }
+            },
+            useDefaultRunAnimation: true
           }
         ],
         grenades: {
@@ -1250,6 +1281,13 @@
           },
           "Light_Machine_Gun": {
             srcPath: "models/weapons/dropped/Light_Machine_Gun.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Shotgun": {
+            srcPath: "models/weapons/dropped/Shotgun.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -1439,19 +1477,19 @@
                   clearInterval(wait);
                 }
               });
-              return;
+            } else {
+              weaponScene.add(sandbox.currentWeapon);
+              camera.fov = 70;
+              camera.updateProjectionMatrix();
+              document.querySelector(".ui").style.visibility = "visible";
+              PointerControls.isLocked = true;
+              utils.weapons.data(sandbox.currentWeapon).then(x => {
+                x.mixer.clipAction(x.animations[0]).loop = THREE.LoopOnce;
+                x.mixer.clipAction(x.animations[0]).reset();
+                x.mixer.clipAction(x.animations[0]).play();
+              });
+              utils.options.set("Starting", false);
             }
-            weaponScene.add(sandbox.currentWeapon);
-            camera.fov = 70;
-            camera.updateProjectionMatrix();
-            document.querySelector(".ui").style.visibility = "visible";
-            PointerControls.isLocked = true;
-            utils.weapons.data(sandbox.currentWeapon).then(x => {
-              x.mixer.clipAction(x.animations[0]).loop = THREE.LoopOnce;
-              x.mixer.clipAction(x.animations[0]).reset();
-              x.mixer.clipAction(x.animations[0]).play();
-            });
-            utils.options.set("Starting", false);
           }
           playerOnFloor = result.normal.y > 0;
           if (!playerOnFloor) {
@@ -1701,7 +1739,7 @@
         renderer.render(scene, camera);
       }
       sandbox.weapons.forEach(x => {
-        new THREE.GLTFLoader().load(`models/weapons/${x.name}.glb`, (model) => {
+        load(`models/weapons/${x.name}.glb`, (model) => {
           x.object = model.scene;
           x.object.scale.set(.01, .01, .01);
           x.animations = model.animations;
@@ -1720,7 +1758,7 @@
         });
       });
       Object.keys(sandbox.models).forEach(x => {
-        new THREE.GLTFLoader().load(sandbox.models[x].srcPath, (model) => {
+        load(sandbox.models[x].srcPath, (model) => {
           sandbox.models[x].object = model.scene;
           sandbox.models[x].mixer = new THREE.AnimationMixer(model.scene);
           sandbox.models[x].animations = model.animations;
@@ -1879,6 +1917,12 @@
           }
           if (weapon.name == "Light_Machine_Gun") {
             utils.options.set("RapidFire", true);
+          }
+          if (weapon.name == "Shotgun") {
+            utils.weapons.shoot(1, 20);
+            for (let i = 0; i < 10; i++) {
+              utils.weapons.shoot(1, 20, false, false);
+            }
           }
         });
       });
@@ -2089,7 +2133,6 @@
               weaponScene.remove(sandbox.currentWeapon);
               document.querySelector(".ui").style.visibility = "hidden";
               setTimeout(() => {
-                playerVelocity.y = GRAVITY * 10;
                 camera.fov = 30;
                 camera.updateProjectionMatrix();
               }, 2000);
