@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store items</title>
+    <style>
+      @font-face {
+        font-family: "Roboto";
+        src: url(fonts/Roboto.ttf);
+      }
+      @font-face {
+        font-family: "Game";
+        src: url(fonts/Game.ttf);
+      }
+      html, body {
+        font-family: "Roboto", Arial;
+        user-select: none !important;
+      }
+      .body {
+        width: 98%;
+        height: 97%;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.3);
+        padding: 0 !important;
+        border: 5px solid #333;
+        border-image: linear-gradient(to top, gold, #fff) 1 / 20px;
+        background: #fefefe;
+        background-repeat: no-repeat;
+        background-size: 550px;
+        background-position-x: center;
+        background-position-y: -12vh;
+      }
+      .card {
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: box-shadow .3s;
+        width: 162px;
+        border-radius: 5px;
+        margin: 10px;
+        display: inline-block;
+        cursor: pointer;
+      }
+      .card.hot {
+        border: 2px solid gold;
+      }
+      .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+      }
+      img {
+        border-radius: 5px 5px 0 0;
+        pointer-events: none;
+      }
+      .container {
+        padding: 2px 16px;
+      }
+      .light {
+        font-size: italic;
+        color: #999;
+      }
+      .wrapper {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 75%;
+        height: 75%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .credit {
+        vertical-align: baseline;
+        width: 6%;
+      }
+      .price {
+        color: gold;
+        vertical-align: baseline;
+      }
+      .strike {
+        text-decoration: line-through;
+        filter: brightness(0%);
+      }
+      .sale {
+        width: 15%;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="body">
+      <h1 style="text-align: center; font-size: 3em"><img class="credit" src="images/html/credit.png" style="width: 2%; vertical-align: baseline"> Store</h1>
+      <p style="text-align: center">You currently own 0 items, with 0 available credit(s)</h1>
+      <div class="wrapper">
+        <div class="card">
+          <img src="images/store/loadouts/Assault_Rifle-Glock_19.png" style="width:100%">
+          <div class="container">
+            <h4><i class="light">Owned</i></h4>
+            <p>Basic loadout</p>
+          </div>
+        </div>
+        <div class="card hot">
+          <img src="images/store/loadouts/Sniper_Rifle-Shotgun.png" style="width:100%">
+          <div class="container">
+            <h4><b class="price">9,000 <img class="credit" src="images/html/credit.png"></b></h4>
+            <p>Sniper loadout</p>
+          </div>
+        </div>
+        <div class="card hot">
+          <img src="images/store/loadouts/Light_Machine_Gun-Auto_Pistol.png" style="width:100%">
+          <div class="container">
+            <h4><b class="price strike">15,500</b> <b class="price">12,500 <img class="credit" src="images/html/credit.png"></b></h4>
+            <p>Auto loadout <img class="sale" src="images/html/sale.png"></p>
+          </div>
+        </div>
+        <div class="card">
+          <img src="images/store/ammo/heavy_ammo.png" style="width:100%">
+          <div class="container">
+            <h4><b class="price">250 <img class="credit" src="images/html/credit.png"></b></h4>
+            <p>Heavy ammo</p>
+          </div>
+        </div>
+        <div class="card">
+          <img src="images/store/ammo/sniper_ammo.png" style="width:100%">
+          <div class="container">
+            <h4><b class="price">300 <img class="credit" src="images/html/credit.png"></b></h4>
+            <p>Sniper ammo</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

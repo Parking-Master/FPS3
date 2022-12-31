@@ -228,7 +228,7 @@
         <button onclick="play(this)" class="button">play</button>
         <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize()" class="button">options</button>
         <br>
-        <button onclick="multiplayer()" class="button">store</button>
+        <button onclick="store(this)" class="button">store</button>
         <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" class="button">help</button>
       </div>
       <p class="copyright" style="position: absolute; text-align: center; margin: 0; top: 90%; font-size: 20px; width: 300px; left: 50%; margin-left: -150px; padding: 0">&copy; 2023 Parking-Master</p>
@@ -391,6 +391,60 @@
         }
         currentMode = availableModes[index];
         element.parentElement.querySelector(".holder").textContent = currentMode;
+      }
+      (() => {
+        let frameCache = "";
+        let frame = document.createElement("iframe");
+        let closeButton = document.createElement("button");
+        frame.style = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        z-index: 9999999999999999999;
+        border: 0;
+        `;
+        closeButton.style = `
+        position: absolute;
+        margin: 0;
+        left: 20px;
+        top: 20px;
+        z-index: 9999999999999999999;
+        border: 1px solid #333;
+        color: #333;
+        border-radius: 4px;
+        padding: 5px;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+        `;
+        closeButton.innerHTML = "&lt; Back";
+        frame.style.visibility = "hidden";
+        closeButton.style.visibility = "hidden";
+        closeButton.addEventListener("click", function() {
+          frame.style.visibility = "hidden";
+          closeButton.style.visibility = "hidden";
+        });
+        document.body.appendChild(frame);
+        document.body.appendChild(closeButton);
+        window.Frame = function(url) {
+          url != frameCache && (frame.src = url, frameCache = url);
+          frame.style.visibility = "visible";
+          closeButton.style.visibility = "visible";
+        };
+        window.FrameLoader = function(urls) {
+          urls.forEach(x => (frame.src = x, frameCache = x));
+        };
+      })();
+      new FrameLoader(["store.html"]);
+      function store() {
+        new Frame("store.html");
       }
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
