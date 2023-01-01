@@ -143,16 +143,16 @@
         transition: opacity 2s;
         pointer-events: none;
       }
-      .loading-fade {
+      #loading-fade {
         position: absolute;
         width: 100% !important;
         height: 100% !important;
+        object-fit: fill !important;
         z-index: 9999999999999999999999999999;
         top: 0;
         left: 0;
         bottom: 0;
         right: 0;
-        filter: invert(100%) !important;
       }
       .loading-bar {
         position: fixed;
@@ -401,11 +401,12 @@
       setTimeout((() => (confetti.dispose(), clearInterval(h))), 1000);
     }
 
-	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true, volume = 5) {
+	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true, volume = 5, loop) {
       if (!preserve3d) {
         let sound = document.createElement("audio");
         sound.src = source;
         sound.play();
+        loop && (sound.loop = loop);
         return;
       }
 	    typeof camera.getObjectByProperty("type", "AudioListener") == "undefined" && camera.add(new THREE.AudioListener());
@@ -2143,10 +2144,13 @@
                 let t = 10;
                 let timer = setInterval(() => {
                   if (t <= 0) {
+                    new THREE.Sound("sounds/load.mp3", null, () => {}, false);
+                    new THREE.Sound("sounds/ambience.mp3", null, () => {}, false, true);
                     document.querySelector(".before-ui").style.visibility = "hidden";
                     return clearInterval(timer);
                   }
                   t--;
+                  t < 4 && new THREE.Sound("sounds/tick.mp3", null, () => {}, false);
                   document.querySelector(".counter").textContent = t;
                 }, 950);
                 utils.options.set("Starting", true);
