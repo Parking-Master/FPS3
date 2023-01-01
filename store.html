@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store items</title>
     <style>
@@ -31,15 +30,11 @@
         border: 5px solid #333;
         border-image: linear-gradient(to top, gold, #fff) 1 / 20px;
         background: #fefefe;
-        background-repeat: no-repeat;
-        background-size: 550px;
-        background-position-x: center;
-        background-position-y: -12vh;
       }
       .card {
         box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
         transition: box-shadow .3s;
-        width: 162px;
+        width: 162px !important;
         border-radius: 5px;
         margin: 10px;
         display: inline-block;
@@ -66,12 +61,12 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 75%;
-        height: 75%;
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+        flex-wrap: wrap;
+        width: 100%;
       }
       .credit {
         vertical-align: baseline;
@@ -89,11 +84,15 @@
         width: 15%;
         vertical-align: middle;
       }
+      * {
+        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
+      }
     </style>
+    <script src="js/user/user.js"></script>
   </head>
   <body>
     <div class="body">
-      <h1 style="text-align: center; font-size: 3em"><img class="credit" src="images/html/credit.png" style="width: 2%; vertical-align: baseline"> Store</h1>
+      <h1 style="text-align: center; font-size: 3em" class="title"><img class="credit" src="images/html/credit.png" style="width: 2%; vertical-align: baseline"> Store</h1>
       <p style="text-align: center">You currently own 0 items, with 0 available credit(s)</h1>
       <div class="wrapper">
         <div class="card">
