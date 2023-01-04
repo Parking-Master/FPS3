@@ -137,9 +137,28 @@
           if (email == email1 && password == password1 && username == username1 && id == id1) {
             Notiflix.Block.hourglass("form", "Verifying...");
             userMan.signUp(username, password, {
+              "username": username,
+              "tuser": username,
               "email": email,
               "tpass": password,
-              "temail": email
+              "temail": email,
+              "metadata": {
+                "points": 0,
+                "preferences": {
+                  "theme": "Default",
+                  "loadout": "Assault_Rifle-Glock_19",
+                  "Character": "Steve",
+                  "items": [
+                    "Theme.Default",
+                    "Character.Steve",
+                    "Loadout.Assault_Rifle-Desert_Eagle"
+                  ]
+                },
+                "history": {
+                  "medals": [],
+                  "kills": 0
+                }
+              }
             }, () => {
               document.querySelector(".notiflix-block-message").textContent = "Success!";
               localStorage.setItem("credentials", btoa(encodeURIComponent(username)) + ":" + btoa(encodeURIComponent(password)));

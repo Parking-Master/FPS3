@@ -227,7 +227,16 @@
           <a class="mini-button" style="margin: 0; font-family: monospace" onclick="start()">Start</a>
         </button>
         <button onclick="play(this)" class="button">play</button>
-        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize()" class="button">options</button>
+        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important;position:absolute" class="hidden-list button">
+          <br>
+          <br>
+          <a style="font-family: Arial, Helvetica, sans-serif !important; font-weight: bold; font-size: 12px" href="login.html">Log in/Sign up</a>
+          <br>
+          <a style="font-family: Arial, Helvetica, sans-serif !important; font-weight: bold; font-size: 12px" href="login.html">Edit/view Settings</a>
+          <br>
+          <a style="font-family: Arial, Helvetica, sans-serif !important; font-weight: bold; font-size: 12px" href="javascript:store()">View the store</a>
+        </button>
+        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize(this)" class="button">options</button>
         <br>
         <button onclick="store(this)" class="button">store</button>
         <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" class="button">help</button>
@@ -298,8 +307,8 @@
               x.remove();
             }, 250);
           });
-          document.querySelector(".hidden-list").style.height = "0";
-          document.querySelector(".hidden-list").style.visibility = "hidden";
+          button.previousElementSibling.style.height = "0";
+          button.previousElementSibling.style.visibility = "hidden";
           button.style.borderBottom = "";
           button.style.borderBottomLeftRadius = "";
           button.style.borderBottomRightRadius = "";
@@ -311,8 +320,8 @@
         i.className = "arrow";
         i.style = "transform: rotate(-45deg); transition: transform .2s; margin-left: 10px";
         button.appendChild(i);
-        document.querySelector(".hidden-list").style.height = "150px";
-        document.querySelector(".hidden-list").style.visibility = "visible";
+        button.previousElementSibling.style.height = "150px";
+        button.previousElementSibling.style.visibility = "visible";
         setTimeout(() => {
           i.style.transform = "rotate(45deg)";
         }, 100);
@@ -447,6 +456,40 @@
       new FrameLoader(["store.html"]);
       function store() {
         new Frame("store.html");
+      }
+      function customize(button) {
+        typeof button.clicked == "undefined" ? button.clicked = false : void(0);
+        if (button.clicked) {
+          button.querySelectorAll(".arrow").forEach(x => {
+            x.style.transform = "rotate(-45deg)";
+            setTimeout(() => {
+              x.remove();
+            }, 250);
+          });
+          button.previousElementSibling.style.height = "0";
+          button.previousElementSibling.style.visibility = "hidden";
+          button.style.borderBottom = "";
+          button.style.borderBottomLeftRadius = "";
+          button.style.borderBottomRightRadius = "";
+          button.style.clipPath = "";
+          button.style.boxShadow = "";
+          return button.clicked = false;
+        }
+        let i = document.createElement("i");
+        i.className = "arrow";
+        i.style = "transform: rotate(-45deg); transition: transform .2s; margin-left: 10px";
+        button.appendChild(i);
+        button.previousElementSibling.style.height = "150px";
+        button.previousElementSibling.style.visibility = "visible";
+        setTimeout(() => {
+          i.style.transform = "rotate(45deg)";
+        }, 100);
+        button.style.borderBottom = "1px dashed #999";
+        button.style.borderBottomLeftRadius = "0";
+        button.style.borderBottomRightRadius = "0";
+        button.style.clipPath = "inset(-5px -5px 0px -5px)";
+        button.style.boxShadow = "none";
+        button.clicked = true;
       }
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
