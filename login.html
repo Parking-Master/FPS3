@@ -271,12 +271,12 @@
               Notiflix.Block.hourglass("form", "Please wait...");
               if (d == "Logged in. Redirecting...") {
                 document.querySelector(".notiflix-block-message").textContent = "Logged in!";
-                setTimeout(() => location.replace("/", 1500));
+                setTimeout(() => location.replace(new URLSearchParams(location.search).get("return") || "/", 1500));
               }
             }, () => {
               document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
               setTimeout(() => Notiflix.Block.remove("form"), 1500);
-            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser"]);
+            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser"], new URLSearchParams(location.search).get("return") || null);
           }
         };
         document.body.addEventListener("click", (e) => {

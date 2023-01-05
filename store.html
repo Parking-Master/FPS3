@@ -42,9 +42,17 @@
       }
       .card.hot {
         border: 2px solid gold;
+        border-image: linear-gradient(to right, gold, #fff) 1 / 2px;
       }
       .card:hover {
+        margin-top: 20px;
         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+      }
+      .card:hover .preview {
+        display: block;
+      }
+      .card .preview {
+        display: none;
       }
       img {
         border-radius: 5px 5px 0 0;
@@ -84,63 +92,249 @@
         width: 15%;
         vertical-align: middle;
       }
-      * {
-        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
-      }
       .user-points {
         border-bottom: 2px solid gold;
       }
+      h1.title, p.description {
+        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
+      }
+      button {
+        padding: 2px;
+        border: 1px solid #333;
+        background: #fff;
+        margin: 5px;
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #eee;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes spin-reverse {
+        0% {
+          transform: rotate(360deg);
+        }
+        100% {
+          transform: rotate(0deg);
+        }
+      }
+      .spin {
+        border: 2px solid #f3f3f3;
+        display: inline-block;
+        border-top: 2px solid gold;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        margin-left: 15px;
+        animation: spin 2s linear infinite;
+      }
+      .spin-reverse {
+        animation: spin-reverse 2s linear infinite;
+      }
+      .spin.spin-large {
+        width: 100px;
+        height: 100px;
+      }
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .loader {
+        background: #fff;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        margin: 0;
+        z-index: 999999999;
+      }
+      .center-origin {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        z-index: 999999;
+        margin: 0 !important;
+        border: none;
+      }
+      #clearfix {
+        outline: none;
+        border: none;
+        background: #fff;
+        color: #333;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.24) !important;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+        font-size: 18px;
+        padding: 6px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
     </style>
     <script src="js/user/user.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
   </head>
   <body>
+    <div class="loader">
+      <div class="spin spin-large center-origin" style="position: absolute; left: 50%; top: 50%; margin-left: -50px; margin-top: -50px; padding: 0 !important">
+        <p class="spin-reverse" style="display: inline-block"><img src="images/html/credit.png" style="width: 50%"></p>
+      </div>
+    </div>
     <div class="body">
       <h1 style="text-align: center; font-size: 3em" class="title"><img class="credit" src="images/html/credit.png" style="width: 2%; vertical-align: baseline"> Store</h1>
-      <p style="text-align: center">You currently own <span class="user-items">0</span> items, with <span class="user-points">0</span> available credit(s)</h1>
+      <p style="text-align: center" class="description">You currently own <span class="user-items">0</span> items, with <span class="user-points">0</span> available credit(s)</h1>
       <div class="wrapper">
-        <div class="card">
+        <div class="card" data-item="Loadout.Assault_Rifle-Glock_19" data-price="300">
           <img src="images/store/loadouts/Assault_Rifle-Glock_19.png" style="width:100%">
           <div class="container">
-            <h4><i class="light">Owned</i></h4>
+            <h4><b class="price">300 <img class="credit" src="images/html/credit.png"></b></h4>
             <p>Basic loadout</p>
+            <button class="preview">Preview</button>
           </div>
         </div>
-        <div class="card hot">
+        <div class="card" data-item="Loadout.Sniper_Rifle-Shotgun" data-price="9000">
           <img src="images/store/loadouts/Sniper_Rifle-Shotgun.png" style="width:100%">
           <div class="container">
             <h4><b class="price">9,000 <img class="credit" src="images/html/credit.png"></b></h4>
             <p>Sniper loadout</p>
+            <button class="preview">Preview</button>
           </div>
         </div>
-        <div class="card hot">
+        <div class="card hot" data-item="Loadout.Light_Machine_Gun-Auto_Pistol" data-price="12500">
           <img src="images/store/loadouts/Light_Machine_Gun-Auto_Pistol.png" style="width:100%">
           <div class="container">
             <h4><b class="price strike">15,500</b> <b class="price">12,500 <img class="credit" src="images/html/credit.png"></b></h4>
             <p>Auto loadout <img class="sale" src="images/html/sale.png"></p>
+            <button class="preview">Preview</button>
           </div>
         </div>
-        <div class="card">
+        <div class="card" data-item="Ammo.Heavy" data-price="250">
           <img src="images/store/ammo/heavy_ammo.png" style="width:100%">
           <div class="container">
             <h4><b class="price">250 <img class="credit" src="images/html/credit.png"></b></h4>
             <p>Heavy ammo</p>
+            <button class="preview">Preview</button>
           </div>
         </div>
-        <div class="card">
+        <div class="card" data-item="Ammo.Sniper" data-price="300">
           <img src="images/store/ammo/sniper_ammo.png" style="width:100%">
           <div class="container">
             <h4><b class="price">300 <img class="credit" src="images/html/credit.png"></b></h4>
             <p>Sniper ammo</p>
+            <button class="preview">Preview</button>
+          </div>
+        </div>
+        <div class="card" data-item="Character.Steve" data-price="550">
+          <img src="images/store/characters/Steve.png" style="width:100%">
+          <div class="container">
+            <h4><b class="price">550 <img class="credit" src="images/html/credit.png"></b></h4>
+            <p>Steve</p>
+            <button class="preview">Preview</button>
+          </div>
+        </div>
+        <div class="card hot" data-item="Character.Max" data-price="12500">
+          <img src="images/store/characters/Max.png" style="width:100%">
+          <div class="container">
+            <h4><b class="price">12,500 <img class="credit" src="images/html/credit.png"></b></h4>
+            <p>Max</p>
+            <button class="preview">Preview</button>
           </div>
         </div>
       </div>
     </div>
+    <div class="bypass" style="display: none; z-index: 999999999999999999999999; position: fixed; left: 0; top: 0; bottom: 0; right: 0; width: 100%; height: 100%; padding: 0; margin: 0; background: rgba(0, 0, 0, .435)">
+      <div style="z-index: 9999999999999999; color: #fff; display: inline-block; font-size: 35px; position: fixed; left: 50%; width: 60%; margin-left: -30%; top: 50%; height: 60%; margin-top: -10%; text-align: center; justify-content: center; align-items: center">You must have an account to use The Store.
+        <br>
+        <br>
+        <button id="clearfix" onclick="location.replace('login.html?return=store.html')">Log in</button>
+      </div>
+    </div>
     <script>
       window.addEventListener("load", () => {
-        if (!userMan.isLoggedIn) return;
+        if (!userMan.isLoggedIn) return document.querySelector(".bypass").style.display = "block";
         userMan.update(["tuser", "tpass"], function(key, value) {
           if (key == "metadata") {
             document.querySelectorAll(".user-points").forEach(x => x.textContent = (value.points - 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+            document.querySelectorAll(".user-items").forEach(x => x.textContent = value.preferences.items.length);
+            setTimeout(() => document.querySelector(".loader").remove(), 1000);
+          }
+        });
+        document.querySelectorAll(".card").forEach(x => {
+          x.addEventListener("click", function(event) {
+            if (event.target.className == "preview") {
+              let video = document.createElement("video");
+              video.src = "previews/" + x.dataset.item + ".mp4";
+              video.play();
+              video.onended = () => video.remove();
+              document.body.appendChild(video);
+              return;
+            }
+            if (userMan.get("metadata").preferences.items.indexOf(x.dataset.item) > -1) {
+              Notiflix.Block.circle("[data-item='" + x.dataset.item + "']", ".");
+              x.querySelector(".notiflix-block-message").innerHTML = `Do you want to <b>sell</b> this item for ${((x.dataset.price - 0) / 2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}<img class="credit" src="images/html/credit.png">?<br><button>Yes</button><button>No</button>`;
+              x.querySelector(".notiflix-block-message").querySelectorAll("button")[0].addEventListener("click", function() {
+                let newdata = userMan.get("metadata");
+                newdata.points = newdata.points - 0;
+                newdata.points += ((x.dataset.price - 0) / 2) - 0;
+                newdata.points = newdata.points.toString();
+                newdata.preferences.items.splice(newdata.preferences.items.indexOf(x.dataset.item), 1);
+                Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
+                userMan.set("metadata", newdata, () => {
+                  location.reload();
+                }, ["tuser", "tpass"]);
+              });
+              x.querySelector(".notiflix-block-message").querySelectorAll("button")[1].addEventListener("click", function() {
+                Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
+              });
+            } else {
+              Notiflix.Block.circle("[data-item='" + x.dataset.item + "']", ".");
+              x.querySelector(".notiflix-block-message").innerHTML = `Do you want to <b>buy</b> this item for ${x.dataset.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}<img class="credit" src="images/html/credit.png">?<br><button>Yes</button><button>No</button>`;
+              x.querySelector(".notiflix-block-message").querySelectorAll("button")[0].addEventListener("click", function() {
+                let price = x.dataset.price;
+                if (price - 0 >= userMan.get("metadata").points - 0) {
+                  Notiflix.Notify.failure("Failed to purchase: insufficient funds.");
+                  Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
+                } else {
+                  let newdata = userMan.get("metadata");
+                  newdata.points = newdata.points - 0;
+                  newdata.points -= x.dataset.price - 0;
+                  newdata.points = newdata.points.toString();
+                  newdata.preferences.items.push(x.dataset.item);
+                  Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
+                  userMan.set("metadata", newdata, () => {
+                    location.reload();
+                  }, ["tuser", "tpass"]);
+                }
+              });
+              x.querySelector(".notiflix-block-message").querySelectorAll("button")[1].addEventListener("click", function() {
+                Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
+              });
+            }
+          });
+          if (userMan.get("metadata").preferences.items.indexOf(x.dataset.item) > -1) {
+            x.querySelector("h4").innerHTML = "<i class='light'>Owned</i>";
+            x.classList.add("owned");
           }
         });
         document.querySelectorAll(".user-points").forEach(x => x.textContent = userMan.get("metadata").points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));

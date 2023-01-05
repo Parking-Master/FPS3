@@ -91,17 +91,21 @@
     let parsed = type == "object" ? JSON.parse(data) : type == "number" ? data - 0 : data;
     return parsed;
   }
-  userMan.set = function(key, value, callback) {
+  userMan.set = function(key, value, callback, colums = ["username", "password"]) {
     if (key == "password") {
       return;
     }
-    let username = userMan.get("username");
-    let password = userMan.get("password");
+    let username = userMan.get(colums[0]);
+    let password = userMan.get(colums[1]);
     Parse.User.logOut();
-    let user = Parse.User.logIn(userMan.get("username"), userMan.get("password")).then(function(user) {
+    let user = Parse.User.logIn(username, password).then(function(user) {
       user.set(key.toString().trim(), value);
       user.save();
-      Object.keys(localStorage).forEach(x => (x.startsWith("userman-") && x != "userman-password" && callback(x, user.get(x.split("-")[1]), localStorage.setItem(x, user.get(x.split("-")[1])))));
+      Object.keys(localStorage).forEach(x => {
+        if (!x.startsWith("userman")) return;
+        localStorage.setItem("userman-" + x.split("-")[1].trim(), (typeof user.get(x.split("-")[1]) == "object" ? JSON.stringify(user.get(x.split("-")[1])) : user.get(x.split("-")[1])) + "." + typeof user.get(x.split("-")[1]));
+        setTimeout(() => callback(), 200);
+      });
     });
   }
   userMan.update = function(columns = ["username", "password"], callback = null) {
