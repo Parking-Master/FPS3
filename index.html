@@ -435,18 +435,18 @@
         cursor: pointer;
         `;
         closeButton.innerHTML = "&lt; Back";
-        frame.style.visibility = "hidden";
-        closeButton.style.visibility = "hidden";
+        frame.style.display = "none";
+        closeButton.style.display = "none";
         closeButton.addEventListener("click", function() {
-          frame.style.visibility = "hidden";
-          closeButton.style.visibility = "hidden";
+          frame.style.display = "none";
+          closeButton.style.display = "none";
         });
         document.body.appendChild(frame);
         document.body.appendChild(closeButton);
         window.Frame = function(url) {
           frame.src = url;
-          frame.style.visibility = "visible";
-          closeButton.style.visibility = "visible";
+          frame.style.display = "block";
+          closeButton.style.display = "block";
         };
       })();
       function store() {
