@@ -403,7 +403,6 @@
         element.parentElement.querySelector(".holder").textContent = currentMode;
       }
       (() => {
-        let frameCache = "";
         let frame = document.createElement("iframe");
         let closeButton = document.createElement("button");
         frame.style = `
@@ -445,15 +444,11 @@
         document.body.appendChild(frame);
         document.body.appendChild(closeButton);
         window.Frame = function(url) {
-          url != frameCache && (frame.src = url, frameCache = url);
+          frame.src = url;
           frame.style.visibility = "visible";
           closeButton.style.visibility = "visible";
         };
-        window.FrameLoader = function(urls) {
-          urls.forEach(x => (frame.src = x, frameCache = x));
-        };
       })();
-      new FrameLoader(["store.html"]);
       function store() {
         new Frame("store.html");
       }
