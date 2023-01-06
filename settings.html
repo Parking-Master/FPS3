@@ -28,7 +28,7 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.3);
         padding: 0 !important;
         border: 5px solid #333;
-        border-image: linear-gradient(to top, gold, #fff) 1 / 20px;
+        border-image: linear-gradient(to top, #333, #fff) 1 / 20px;
         background: #fefefe;
       }
       .card {
@@ -41,8 +41,8 @@
         cursor: pointer;
       }
       .card.hot {
-        border: 2px solid gold;
-        border-image: linear-gradient(to right, gold, #fff) 1 / 2px;
+        border: 2px solid #333;
+        border-image: linear-gradient(to right, #333, #fff) 1 / 2px;
       }
       .card:hover {
         margin-top: 20px;
@@ -81,7 +81,7 @@
         width: 6%;
       }
       .price {
-        color: gold;
+        color: #333;
         vertical-align: baseline;
       }
       .strike {
@@ -93,7 +93,7 @@
         vertical-align: middle;
       }
       .user-points {
-        border-bottom: 2px solid gold;
+        border-bottom: 2px solid #333;
       }
       h1.title, p.description {
         text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
@@ -128,7 +128,7 @@
       .spin {
         border: 2px solid #f3f3f3;
         display: inline-block;
-        border-top: 2px solid gold;
+        border-top: 2px solid #333;
         border-radius: 50%;
         width: 10px;
         height: 10px;
@@ -191,14 +191,25 @@
         border-radius: 3px;
         cursor: pointer;
       }
+      canvas {
+        position: absolute;
+        left : 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+      }
     </style>
     <script src="js/user/user.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
   </head>
   <body>
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="js/GLTFLoader.min.js"></script>
+    <script src="js/fflate.min.js"></script>
     <div class="loader">
       <div class="spin spin-large center-origin" style="position: absolute; left: 50%; top: 50%; margin-left: -50px; margin-top: -50px; padding: 0 !important">
-        <p class="spin-reverse" style="display: inline-block"><img src="images/html/credit.png" style="width: 50%"></p>
+        <p class="spin-reverse" style="display: inline-block"><img src="images/html/settings.png" style="width: 50%"></p>
       </div>
     </div>
     <div class="body">
@@ -208,16 +219,16 @@
         <div class="card" data-item="Loadout.Assault_Rifle-Glock_19" data-price="300">
           <img src="images/store/loadouts/Assault_Rifle-Glock_19.png" style="width:100%">
           <div class="container">
-            <h4><b class="price">300 <img class="credit" src="images/html/credit.png"></b></h4>
-            <p>Basic loadout</p>
+            <h4><b class="price">Basic</b></h4>
+            <p>My loadout</p>
             <button class="preview">Preview</button>
           </div>
         </div>
         <div class="card" data-item="Loadout.Sniper_Rifle-Shotgun" data-price="9000">
           <img src="images/store/loadouts/Sniper_Rifle-Shotgun.png" style="width:100%">
           <div class="container">
-            <h4><b class="price">9,000 <img class="credit" src="images/html/credit.png"></b></h4>
-            <p>Sniper loadout</p>
+            <h4><b class="price">Default</b></h4>
+            <p>My theme</p>
             <button class="preview">Preview</button>
           </div>
         </div>
@@ -264,13 +275,73 @@
       </div>
     </div>
     <div class="bypass" style="display: none; z-index: 999999999999999999999999; position: fixed; left: 0; top: 0; bottom: 0; right: 0; width: 100%; height: 100%; padding: 0; margin: 0; background: rgba(0, 0, 0, .435)">
-      <div style="z-index: 9999999999999999; color: #fff; display: inline-block; font-size: 35px; position: fixed; left: 50%; width: 60%; margin-left: -30%; top: 50%; height: 60%; margin-top: -10%; text-align: center; justify-content: center; align-items: center">You must have an account to use the store.
+      <div style="z-index: 9999999999999999; color: #fff; display: inline-block; font-size: 35px; position: fixed; left: 50%; width: 60%; margin-left: -30%; top: 50%; height: 60%; margin-top: -10%; text-align: center; justify-content: center; align-items: center">You must have an account to change settings.
         <br>
         <br>
-        <button id="clearfix" onclick="location.replace('login.html?return=store.html')">Log in</button>
+        <button id="clearfix" onclick="location.replace('login.html?return=settings.html')">Log in</button>
       </div>
     </div>
     <script>
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.VSMShadowMap;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.shadowMap.autoUpdate = false;
+      document.body.appendChild(renderer.domElement);
+      function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+      }
+      animate();
+      renderer.setClearAlpha();
+      const light = new THREE.DirectionalLight(0xffffff, 2);
+      const ambientLight = new THREE.AmbientLight(0xeeeeee, .5);
+      light.position.set(-10, 10, 0);
+      light.castShadow = true;
+      scene.add(ambientLight);
+      scene.add(light);
+      new THREE.GLTFLoader().load("models/characters/Steve/scene.gltf", (e) => {
+        character = e.scene;
+        scene.add(character);
+        character.position.copy(camera.position);
+        character.rotation.copy(camera.rotation);
+        character.translateZ(-2);
+        character.rotateY(-1);
+        character.position.y += -.8;
+        character.position.x += 2;
+        character.scale.set(1, 1.1, 1);
+        floor = new THREE.Mesh(new THREE.BoxGeometry(2, .5, 2), new THREE.MeshPhongMaterial({ color: 0xffffff }));
+        floor.position.copy(character.position);
+        scene.add(floor);
+        floor.position.y += -.25;
+        character.traverse(x => (x.receiveShadow = true, x.castShadow = true, renderer.shadowMap.needsUpdate = true));
+        floor.receiveShadow = true;
+        new THREE.GLTFLoader().load("models/weapons/dropped/Assault_Rifle.glb", (gun) => {
+          gun = gun.scene;
+          gunHolder = new THREE.Group();
+          gun.rotation.set(0, 0, 0);
+          gun.position.set(0, 0, 0);
+          gun.scale.set(10, 10, 10);
+          gunHolder.add(gun);
+          character.getObjectByName("mixamorigRightHand").add(gunHolder);
+          gunHolder.rotation.set(1.5, .5, 2.9);
+          gunHolder.position.set(2.4475877079089363, 22.013294147805205, 1.5569827148359332);
+          gunHolder.rotateZ(.4);
+          gunHolder.rotateX(-.1);
+        });
+      });
+      window.addEventListener("resize", onWindowResize);
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+      onWindowResize();
       window.addEventListener("load", () => {
         if (!userMan.isLoggedIn) return document.querySelector(".bypass").style.display = "block";
         userMan.update(["tuser", "tpass"], function(key, value) {
