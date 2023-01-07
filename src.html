@@ -308,6 +308,7 @@
     <script src="https://unpkg.com/@seregpie/three.text-texture"></script>
     <script src="https://unpkg.com/@seregpie/three.text-sprite"></script>
     <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
+    <audio src="sounds/walking.mp3" id="walkingSound" loop></audio>
     <div class="banner">
       <p style="text-align: center; margin-top: 10%; font-size: 2em; font-weight: bold; font-family: Arial, Helvetica, sans-serif !important">[FFA Slayer] - 10 points</span></p>
       <div class="users"></div>
@@ -1430,6 +1431,8 @@
           weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]), .4), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).play();
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
             weapon.mixer.clipAction(weapon.animations[6]).stop();
+            document.querySelector("#walkingSound").pause();
+            document.querySelector("#walkingSound").currentTime = 0;
           }
           if (keyStates["KeyF"]) {
             document.dispatchEvent(new MouseEvent("mouseup"));
@@ -1468,6 +1471,8 @@
                   weaponScene.add(sandbox.currentWeapon);
                   camera.fov = 70;
                   camera.updateProjectionMatrix();
+                  weaponCamera.fov = 70;
+                  weaponCamera.updateProjectionMatrix();
                   document.querySelector(".ui").style.visibility = "visible";
                   PointerControls.isLocked = true;
                   utils.weapons.data(sandbox.currentWeapon).then(x => {
@@ -1483,6 +1488,8 @@
               weaponScene.add(sandbox.currentWeapon);
               camera.fov = 70;
               camera.updateProjectionMatrix();
+              weaponCamera.fov = 70;
+              weaponCamera.updateProjectionMatrix();
               document.querySelector(".ui").style.visibility = "visible";
               PointerControls.isLocked = true;
               utils.weapons.data(sandbox.currentWeapon).then(x => {
@@ -1649,6 +1656,7 @@
           });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getForwardVector().multiplyScalar(keyStates["ShiftLeft"] ? speedDelta + .05 : speedDelta));
+          document.querySelector("#walkingSound").play();
         }
         if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
           call("walk", {
@@ -1662,6 +1670,7 @@
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             utils.options.get("Reloading") || weapon.mixer.clipAction(weapon.animations[6]).play();
           });
+          document.querySelector("#walkingSound").play();
         }
         if (keyStates["KeyA"] || keyStates["ArrowLeft"]) {
           call("walk", {
@@ -1675,6 +1684,7 @@
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             utils.options.get("Reloading") || weapon.mixer.clipAction(weapon.animations[6]).play();
           });
+          document.querySelector("#walkingSound").play();
         }
         if (keyStates["KeyD"] || keyStates["ArrowRight"]) {
           call("walk", {
@@ -1688,10 +1698,11 @@
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             utils.options.get("Reloading") || weapon.mixer.clipAction(weapon.animations[6]).play();
           });
+          document.querySelector("#walkingSound").play();
         }
         if (playerOnFloor) {
           if (keyStates["Space"]) {
-            playerVelocity.y = 15;
+            playerVelocity.y = 12;
           }
         }
       }
@@ -2137,6 +2148,8 @@
               setTimeout(() => {
                 camera.fov = 30;
                 camera.updateProjectionMatrix();
+                weaponCamera.fov = 30;
+                weaponCamera.updateProjectionMatrix();
               }, 2000);
               setTimeout(() => {
                 document.querySelector(".banner").style.opacity = 0;
