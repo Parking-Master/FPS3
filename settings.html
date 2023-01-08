@@ -192,9 +192,76 @@
         bottom: 0;
         pointer-events: none;
       }
+      .item {
+        position: relative;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+        border: 2px solid #333;
+        border-image: linear-gradient(to right, #333, #fff) 1 / 2px;
+        width: 200px;
+        left: 50%;
+        margin-left: -100px;
+        margin-bottom: 10px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        cursor: pointer;
+      }
+      .item:hover {
+        background: #fafafa;
+      }
+      .info {
+        position: relative;
+        border-radius: 100%;
+        background-image: linear-gradient(#ccc, #eee);
+        border: 2px solid #ddd;
+        width: 25px;
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #fff;
+      }
+      .notiflix-confirm-overlay {
+        backdrop-filter: blur(5px);
+      }
+      .notiflix-confirm-head * {
+        color: #333 !important;
+      }
+      .notiflix-confirm-buttons a {
+        background: #333 !important;
+        border-radius: 2px !important;
+      }
+      .notiflix-confirm-content {
+        border-radius: 5px !important;
+      }
+      .swal-overlay {
+        z-index: 999 !important;
+      }
+      [class^="swal"] {
+        animation: none !important;
+        transition: none !important;
+      }
+      .swal-button {
+        background: #333 !important;
+        color: #fff;
+        border-radius: 2px;
+        box-shadow: none !important;
+      }
+      .swal-modal {
+        border-radius: 1px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+      }
+      .swal-overlay {
+        background: rgba(10, 10, 10, .3);
+      }
+      .snowflake{z-index:999999;position:absolute;pointer-events:none!important}.snowflake{--size:1vw;width:var(--size);height:var(--size);background:#eee;box-shadow:0 0 5px 5px #eee;border-radius:50%;top:-5vh}@keyframes snowfall{0%{transform:translate3d(var(--left-ini),0,0)}100%{transform:translate3d(var(--left-end),110vh,0)}}.snowflake:first-child{--size:0.8vw;--left-ini:-8vw;--left-end:1vw;left:41vw;animation:13s linear -1s infinite snowfall}.snowflake:nth-child(2){--size:0.6vw;--left-ini:6vw;--left-end:1vw;left:72vw;animation:6s linear -2s infinite snowfall}.snowflake:nth-child(3){--size:1vw;--left-ini:5vw;--left-end:-9vw;left:57vw;animation:14s linear -4s infinite snowfall}.snowflake:nth-child(4){--size:0.2vw;--left-ini:2vw;--left-end:4vw;left:66vw;animation:10s linear -8s infinite snowfall}.snowflake:nth-child(5){--size:0.2vw;--left-ini:5vw;--left-end:-3vw;left:40vw;animation:6s linear -2s infinite snowfall}.snowflake:nth-child(6){--size:0.4vw;--left-ini:0vw;--left-end:-4vw;left:12vw;animation:11s linear -4s infinite snowfall}.snowflake:nth-child(7){--size:0.8vw;--left-ini:1vw;--left-end:-7vw;left:15vw;animation:7s linear -5s infinite snowfall}.snowflake:nth-child(8){--size:1vw;--left-ini:9vw;--left-end:-4vw;left:16vw;animation:13s linear -2s infinite snowfall}.snowflake:nth-child(9){--size:0.4vw;--left-ini:0vw;--left-end:-6vw;left:81vw;animation:7s linear -6s infinite snowfall}.snowflake:nth-child(10){--size:1vw;--left-ini:-7vw;--left-end:-5vw;left:14vw;animation:14s linear -1s infinite snowfall}.snowflake:nth-child(11){--size:1vw;--left-ini:-3vw;--left-end:3vw;left:69vw;animation:7s linear -1s infinite snowfall}.snowflake:nth-child(12){--size:0.8vw;--left-ini:-3vw;--left-end:4vw;left:52vw;animation:11s linear -6s infinite snowfall}.snowflake:nth-child(13){--size:0.8vw;--left-ini:4vw;--left-end:5vw;left:14vw;animation:13s linear -3s infinite snowfall}.snowflake:nth-child(14){--size:1vw;--left-ini:2vw;--left-end:-7vw;left:97vw;animation:8s linear -6s infinite snowfall}.snowflake:nth-child(15){--size:0.4vw;--left-ini:-4vw;--left-end:-9vw;left:77vw;animation:6s linear -10s infinite snowfall}.snowflake:nth-child(16){--size:0.8vw;--left-ini:-4vw;--left-end:6vw;left:27vw;animation:7s linear -8s infinite snowfall}.snowflake:nth-child(17){--size:0.8vw;--left-ini:6vw;--left-end:-6vw;left:74vw;animation:15s linear -8s infinite snowfall}.snowflake:nth-child(18){--size:0.4vw;--left-ini:-7vw;--left-end:-5vw;left:9vw;animation:10s linear -7s infinite snowfall}.snowflake:nth-child(19){--size:0.8vw;--left-ini:6vw;--left-end:-1vw;left:1vw;animation:9s linear -7s infinite snowfall}.snowflake:nth-child(20){--size:0.2vw;--left-ini:9vw;--left-end:0vw;left:22vw;animation:13s linear -10s infinite snowfall}.snowflake:nth-child(21){--size:1vw;--left-ini:-4vw;--left-end:5vw;left:96vw;animation:14s linear -8s infinite snowfall}.snowflake:nth-child(22){--size:0.2vw;--left-ini:7vw;--left-end:-8vw;left:15vw;animation:10s linear -6s infinite snowfall}.snowflake:nth-child(23){--size:1vw;--left-ini:0vw;--left-end:2vw;left:26vw;animation:13s linear -10s infinite snowfall}.snowflake:nth-child(24){--size:0.2vw;--left-ini:-4vw;--left-end:7vw;left:60vw;animation:14s linear -4s infinite snowfall}.snowflake:nth-child(25){--size:0.4vw;--left-ini:4vw;--left-end:4vw;left:17vw;animation:13s linear -6s infinite snowfall}.snowflake:nth-child(26){--size:1vw;--left-ini:2vw;--left-end:7vw;left:9vw;animation:10s linear -9s infinite snowfall}.snowflake:nth-child(27){--size:0.8vw;--left-ini:-4vw;--left-end:2vw;left:68vw;animation:10s linear -1s infinite snowfall}.snowflake:nth-child(28){--size:1vw;--left-ini:-8vw;--left-end:2vw;left:86vw;animation:6s linear -5s infinite snowfall}.snowflake:nth-child(29){--size:0.8vw;--left-ini:-4vw;--left-end:-5vw;left:6vw;animation:9s linear -9s infinite snowfall}.snowflake:nth-child(30){--size:1vw;--left-ini:-1vw;--left-end:5vw;left:80vw;animation:7s linear -1s infinite snowfall}.snowflake:nth-child(31){--size:0.6vw;--left-ini:4vw;--left-end:-3vw;left:100vw;animation:9s linear -10s infinite snowfall}.snowflake:nth-child(32){--size:0.2vw;--left-ini:9vw;--left-end:-5vw;left:71vw;animation:11s linear -1s infinite snowfall}.snowflake:nth-child(33){--size:0.4vw;--left-ini:-4vw;--left-end:-6vw;left:30vw;animation:9s linear -5s infinite snowfall}.snowflake:nth-child(34){--size:1vw;--left-ini:-2vw;--left-end:1vw;left:81vw;animation:13s linear -10s infinite snowfall}.snowflake:nth-child(35){--size:0.4vw;--left-ini:-4vw;--left-end:-1vw;left:22vw;animation:12s linear -6s infinite snowfall}.snowflake:nth-child(36){--size:0.4vw;--left-ini:-7vw;--left-end:1vw;left:33vw;animation:14s linear -3s infinite snowfall}.snowflake:nth-child(37){--size:0.8vw;--left-ini:6vw;--left-end:8vw;left:44vw;animation:9s linear -4s infinite snowfall}.snowflake:nth-child(38){--size:0.4vw;--left-ini:4vw;--left-end:-1vw;left:17vw;animation:10s linear -6s infinite snowfall}.snowflake:nth-child(39){--size:0.2vw;--left-ini:2vw;--left-end:-4vw;left:77vw;animation:11s linear -9s infinite snowfall}.snowflake:nth-child(40){--size:1vw;--left-ini:-6vw;--left-end:2vw;left:48vw;animation:8s linear -6s infinite snowfall}.snowflake:nth-child(41){--size:0.8vw;--left-ini:8vw;--left-end:3vw;left:93vw;animation:6s linear -9s infinite snowfall}.snowflake:nth-child(42){--size:1vw;--left-ini:-7vw;--left-end:-9vw;left:80vw;animation:12s linear -3s infinite snowfall}.snowflake:nth-child(43){--size:0.8vw;--left-ini:-3vw;--left-end:-6vw;left:30vw;animation:14s linear -9s infinite snowfall}.snowflake:nth-child(44){--size:1vw;--left-ini:-7vw;--left-end:-9vw;left:70vw;animation:12s linear -8s infinite snowfall}.snowflake:nth-child(45){--size:0.2vw;--left-ini:-4vw;--left-end:2vw;left:17vw;animation:6s linear -6s infinite snowfall}.snowflake:nth-child(46){--size:0.4vw;--left-ini:-8vw;--left-end:3vw;left:4vw;animation:13s linear -2s infinite snowfall}.snowflake:nth-child(47){--size:0.2vw;--left-ini:-6vw;--left-end:-3vw;left:53vw;animation:14s linear -3s infinite snowfall}.snowflake:nth-child(48){--size:0.8vw;--left-ini:8vw;--left-end:-7vw;left:91vw;animation:13s linear -3s infinite snowfall}.snowflake:nth-child(49){--size:0.6vw;--left-ini:2vw;--left-end:9vw;left:95vw;animation:11s linear -6s infinite snowfall}.snowflake:nth-child(50){--size:1vw;--left-ini:-6vw;--left-end:4vw;left:85vw;animation:6s linear -1s infinite snowfall}.snowflake:nth-child(6n){filter:blur(1px)}
     </style>
     <script src="js/user/user.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   </head>
   <body>
     <audio id="walking" src="sounds/walking.mp3" loop></audio>
@@ -251,13 +318,13 @@
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setPixelRatio(1.1);
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.VSMShadowMap;
+      renderer.shadowMap.autoUpdate = false;
       renderer.outputEncoding = THREE.sRGBEncoding;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.shadowMap.autoUpdate = false;
       document.body.appendChild(renderer.domElement);
       let mixers = [];
       let clock = new THREE.Clock();
@@ -295,7 +362,45 @@
       light.castShadow = true;
       scene.add(ambientLight);
       scene.add(light);
-      new THREE.GLTFLoader().load("models/characters/Max/scene.gltf", (e) => {
+      function info(type) {
+        if (type.includes("Loadout.Assault_Rifle-Glock_19")) {
+          return "A basic loadout that includes a full auto AK-47, and a mid-range Glock 19 pistol.";
+        }
+        if (type.includes("Loadout.Sniper_Rifle-Shotgun")) {
+          return "The sniper loadout includes a long range Sniper Rifle, with a 12 guage shotgun.";
+        }
+        if (type.includes("Loadout.Light_Machine_Gun-Auto_Pistol")) {
+          return "A full auto loadout including a full auto LMG and a Machine Pistol.";
+        }
+        if (type.includes("Loadout.Grenade_Launcher-Rocket_Pistol")) {
+          return "The explosive loadout includes an explosive Grenade Launcher along with the tactical Rocket Pistol.";
+        }
+        if (type.includes("Theme.Default")) {
+          return "Default theme with hex color code #333333 and #FFFFFF";
+        }
+        if (type.includes("Theme.Contrast")) {
+          return "High contrast theme that helps you focus more";
+        }
+        if (type.includes("Theme.Dark")) {
+          return "Dark theme with base hex color code #333333";
+        }
+        if (type.includes("Theme.Light")) {
+          return "Light theme with base hex color code #FFFFFF";
+        }
+        if (type.includes("Theme.Auto")) {
+          return "Auto theme will adjust to what time of day it is.";
+        }
+        if (type.includes("Character.Steve")) {
+          return "Steve is the basic soldier that every account comes with for free.";
+        }
+        if (type.includes("Character.Max")) {
+          return "Max is a warrior who has a legendary armor set (and likes big weapons).";
+        }
+        if (type.includes("Character.Gary")) {
+          return "Gary is a very rare soldier with the lengendary armor set and a free explosive loadout.";
+        }
+      }
+      new THREE.GLTFLoader().load("models/characters/Steve/scene.gltf", (e) => {
         character = e.scene;
         let mixer = new THREE.AnimationMixer(character);
         mixers.push(mixer);
@@ -389,56 +494,47 @@
         });
         document.querySelectorAll(".card").forEach(x => {
           x.addEventListener("click", function(event) {
-            if (userMan.get("metadata").preferences.items.indexOf(x.dataset.item) > -1) {
-              Notiflix.Block.circle("[data-item='" + x.dataset.item + "']", ".");
-              x.querySelector(".notiflix-block-message").innerHTML = `Do you want to <b>sell</b> this item for ${((x.dataset.price - 0) / 2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}<img class="credit" src="images/html/credit.png">?<br><button>Yes</button><button>No</button>`;
-              x.querySelector(".notiflix-block-message").querySelectorAll("button")[0].addEventListener("click", function() {
-                let newdata = userMan.get("metadata");
-                newdata.points = newdata.points - 0;
-                newdata.points += ((x.dataset.price - 0) / 2) - 0;
-                newdata.points = newdata.points.toString();
-                newdata.preferences.items.splice(newdata.preferences.items.indexOf(x.dataset.item), 1);
-                Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
-                userMan.set("metadata", newdata, () => {
-                  location.reload();
-                }, ["tuser", "tpass"]);
-              });
-              x.querySelector(".notiflix-block-message").querySelectorAll("button")[1].addEventListener("click", function() {
-                Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
-              });
-            } else {
-              Notiflix.Block.circle("[data-item='" + x.dataset.item + "']", ".");
-              x.querySelector(".notiflix-block-message").innerHTML = `Do you want to <b>buy</b> this item for ${x.dataset.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}<img class="credit" src="images/html/credit.png">?<br><button>Yes</button><button>No</button>`;
-              x.querySelector(".notiflix-block-message").querySelectorAll("button")[0].addEventListener("click", function() {
-                let price = x.dataset.price;
-                if (price - 0 >= userMan.get("metadata").points - 0) {
-                  Notiflix.Notify.failure("Failed to purchase: insufficient funds.");
-                  Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
-                } else {
-                  let newdata = userMan.get("metadata");
-                  newdata.points = newdata.points - 0;
-                  newdata.points -= x.dataset.price - 0;
-                  newdata.points = newdata.points.toString();
-                  newdata.preferences.items.push(x.dataset.item);
-                  Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
-                  userMan.set("metadata", newdata, () => {
-                    location.reload();
-                  }, ["tuser", "tpass"]);
-                }
-              });
-              x.querySelector(".notiflix-block-message").querySelectorAll("button")[1].addEventListener("click", function() {
-                Notiflix.Block.remove("[data-item='" + x.dataset.item + "']");
-              });
-            }
+            let content = document.createElement("div");
+            let definitions = {
+              "Theme.Default": "Default theme",
+              "Theme.Constrast": "Contrast theme",
+              "Theme.Dark": "Dark theme",
+              "Theme.Light": "Light theme",
+              "Theme.Auto": "Auto theme",
+              "Loadout.Assault_Rifle-Glock_19": "Basic loadout",
+              "Loadout.Sniper_Rifle-Shotgun": "Sniper loadout",
+              "Loadout.Light_Machine_Gun-Auto_Pistol": "Auto loadout",
+              "Loadout.Grenade_Launcher-Rocket_Pistol": "Explosive loadout",
+              "Character.Steve": "Steve soldier",
+              "Character.Max": "Max soldier",
+              "Character.Gary": "Gary soldier",
+            };
+            let items = userMan.get("metadata").preferences.items;
+            items.forEach(o => {
+              if (x.dataset.item.trim() != o.split(".")[0].trim()) return;
+              content.innerHTML += `
+              <div class="item"><img src="images/store/${o.split(".")[0].toLowerCase().trim() + "s/" + o.split(".").splice(1).join(".") + ".png"}" style="width: 30px"> ${definitions[o]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('${o}'), 'Close')">i</button><div>
+              `;
+            });
+            swal({
+              text: "Change " + x.dataset.item.toLowerCase(),
+              content: content
+            });
           });
-          // if (userMan.get("metadata").preferences.items.indexOf(x.dataset.item) > -1) {
-          //   x.querySelector("h4").innerHTML = "<i class='light'>Owned</i>";
-          //   x.classList.add("owned");
-          // }
+          let items1 = userMan.get("metadata").preferences.items;
+          items1.forEach(x => items1[items1.indexOf(x)] = x.split(".")[0]);
+          if (!(items1.indexOf(x.dataset.item) > -1) && x.dataset.item != "Bots") {
+            x.querySelector("img").src = "images/store/failed.png";
+            x.addEventListener("click", function(e) {
+              e.preventDefault();
+              swal("Error: No selections available for this category.");
+            })
+          }
         });
         document.querySelectorAll(".user-points").forEach(x => x.textContent = userMan.get("metadata").points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
         document.querySelectorAll(".user-items").forEach(x => x.textContent = userMan.get("metadata").preferences.items.length);
       });
     </script>
+    <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
   </body>
 </html>
