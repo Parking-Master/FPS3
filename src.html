@@ -600,7 +600,7 @@
             sandbox.weapons.forEach(x => x.object == weapon && resolve(x));
           });
         },
-        shoot: function(rounds = 1, damage = 5, sound = true, depleteRounds = true) {
+        shoot: function(rounds = 1, sound = true, depleteRounds = true) {
           if (!utils.options.get("CanFire")) return;
           let i = 0;
           let weapon = null;
@@ -612,6 +612,7 @@
               return clearInterval(shooting);
             }
             i++;
+            let damage = 0;
             if (weapon) {
               let cweapon = sandbox.weapons[sandbox.weapons.indexOf(weapon)];
               if (cweapon.rounds - 1 <= cweapon.minRounds) {
@@ -622,6 +623,62 @@
               }
               depleteRounds && cweapon.rounds--;
               depleteRounds && cweapon.roundsUsed++;
+              let ammo = cweapon.ammo;
+              if (ammo == "heavy") {
+                damage = 5;
+              }
+              if (ammo == "sniper") {
+                damage = 100;
+              }
+              if (ammo == "light") {
+                damage = 3;
+              }
+              if (ammo == "shotgun") {
+                damage = 20;
+              }
+              if (ammo == "rocket") {
+                damage = 200;
+                utils.camera.zoomOut();
+                utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+                  let clip = weapon.mixer.clipAction(weapon.animations[2]);
+                  clip.loop = THREE.LoopOnce;
+                  clip.reset();
+                  clip.play();
+                });
+                setTimeout(() => utils.camera.shake(1), 50);
+                const rocket = {
+                  mesh: new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff })),
+                  collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), SPHERE_RADIUS * 2),
+                  velocity: new THREE.Vector3()
+                };
+                camera.getWorldDirection(playerDirection);
+                rocket.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
+                const impulse = 15 + 30 * (1 - Math.exp((mouseTime - performance.now()) * 0.001));
+                rocket.velocity.copy(playerDirection).multiplyScalar(impulse);
+                rocket.velocity.addScaledVector(playerVelocity, 2);
+                scene.add(rocket.mesh);
+                rocket.mesh.rotation.copy(camera.rotation);
+                rocket.mesh.rotateX(Math.PI / 2);
+                let collided = setInterval(() => {
+                  if (worldOctree.sphereIntersect(rocket.collider)) {
+                    let mark = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ transparent: true, map: new THREE.TextureLoader().load("images/textures/mark.png") }));
+                    scene.add(mark);
+                    mark.position.copy(rocket.mesh.position);
+                    mark.rotateX(-Math.PI / 2);
+                    mark.position.y += -.15;
+                    mark.scale.set(4, 4, 4);
+                    utils.explosion(rocket.mesh);
+                    scene.remove(rocket.mesh);
+                    new THREE.Sound("sounds/explosion.mp3", rocket.mesh, () => {}, true, 20);
+                    clearInterval(collided);
+                  }
+                  rocket.collider.center.addScaledVector(rocket.velocity, .1);
+                  const damping = Math.exp(- 1.5 * .1) - 1.003;
+                  rocket.velocity.addScaledVector(rocket.velocity, damping);
+                  rocket.mesh.position.copy(rocket.collider.center);
+                });
+                return;
+              }
             }
             let randomX = Math.random() / 20;
             let randomY = Math.random() / 20;
@@ -1202,6 +1259,28 @@
               }
             },
             useDefaultRunAnimation: true
+          },
+          {
+            name: "Rocket_Pistol",
+            ammo: "rocket",
+            rounds: 1,
+            minRounds: 0,
+            maxRounds: 1,
+            minClips: 4,
+            maxClips: 4,
+            clips: 0,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 2000
+              },
+              full: {
+                sound: null,
+                time: 2200,
+                useDefaultAnimation: false
+              }
+            },
+            useDefaultRunAnimation: false
           }
         ],
         grenades: {
@@ -1291,6 +1370,13 @@
           },
           "Shotgun": {
             srcPath: "models/weapons/dropped/Shotgun.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Rocket_Pistol": {
+            srcPath: "models/weapons/dropped/Rocket_Pistol.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -1920,10 +2006,10 @@
             utils.weapons.shoot();
           }
           if (weapon.name == "Sniper_Rifle") {
-            utils.weapons.shoot(1, 100);
+            utils.weapons.shoot(1);
           }
           if (weapon.name == "Micro_Uzi") {
-            utils.weapons.shoot(3, 3);
+            utils.weapons.shoot(3);
           }
           if (weapon.name == "Auto_Pistol") {
             utils.options.set("RapidFire", true);
@@ -1932,10 +2018,13 @@
             utils.options.set("RapidFire", true);
           }
           if (weapon.name == "Shotgun") {
-            utils.weapons.shoot(1, 20);
+            utils.weapons.shoot(1);
             for (let i = 0; i < 10; i++) {
-              utils.weapons.shoot(1, 20, false, false);
+              utils.weapons.shoot(1, false, false);
             }
+          }
+          if (weapon.name == "Rocket_Pistol") {
+            utils.weapons.shoot(1, 20);
           }
         });
       });
