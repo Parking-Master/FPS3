@@ -638,6 +638,7 @@
               }
               if (ammo == "rocket") {
                 damage = 200;
+                const deltaTime = clock.getDelta();
                 utils.camera.zoomOut();
                 utils.weapons.data(sandbox.currentWeapon).then(weapon => {
                   let clip = weapon.mixer.clipAction(weapon.animations[2]);
@@ -656,7 +657,7 @@
                 const impulse = 15 + 30 * (1 - Math.exp((mouseTime - performance.now()) * 0.001));
                 rocket.velocity.copy(playerDirection).multiplyScalar(impulse);
                 rocket.velocity.addScaledVector(playerVelocity, 2);
-                scene.add(rocket.mesh);
+                weaponScene.add(rocket.mesh);
                 rocket.mesh.rotation.copy(camera.rotation);
                 rocket.mesh.rotateX(Math.PI / 2);
                 let collided = setInterval(() => {
@@ -668,12 +669,12 @@
                     mark.position.y += -.15;
                     mark.scale.set(4, 4, 4);
                     utils.explosion(rocket.mesh);
-                    scene.remove(rocket.mesh);
+                    weaponScene.remove(rocket.mesh);
                     new THREE.Sound("sounds/explosion.mp3", rocket.mesh, () => {}, true, 20);
                     clearInterval(collided);
                   }
                   rocket.collider.center.addScaledVector(rocket.velocity, .1);
-                  const damping = Math.exp(- 1.5 * .1) - 1.003;
+                  const damping = Math.exp(- 1.5 * (deltaTime - .01)) - 1.003;
                   rocket.velocity.addScaledVector(rocket.velocity, damping);
                   rocket.mesh.position.copy(rocket.collider.center);
                 });
@@ -1263,11 +1264,11 @@
           {
             name: "Rocket_Pistol",
             ammo: "rocket",
-            rounds: 1,
+            rounds: 4,
             minRounds: 0,
-            maxRounds: 1,
-            minClips: 4,
-            maxClips: 4,
+            maxRounds: 4,
+            minClips: 0,
+            maxClips: 0,
             clips: 0,
             reloads: {
               easy: {
