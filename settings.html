@@ -532,7 +532,7 @@
             items.forEach(o => {
               if (x.dataset.item.trim() != o.split(".")[0].trim()) return;
               content.innerHTML += `
-              <div class="item${userMan.get("metadata").preferences[x.dataset.item.toLowerCase().trim()] == o.split(".")[1].trim() ? " selected" : ""}"><img src="images/store/${o.split(".")[0].toLowerCase().trim() + "s/" + o.split(".").splice(1).join(".") + ".png"}" style="width: 30px"> ${definitions[o]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('${o}'), 'Close')">i</button><div>
+              <div class="item${userMan.get("metadata").preferences[x.dataset.item.toLowerCase().trim()] == o.split(".")[1].trim() ? " selected" : ""}" data-item="${o}"><img src="images/store/${o.split(".")[0].toLowerCase().trim() + "s/" + o.split(".").splice(1).join(".") + ".png"}" style="width: 30px"> ${definitions[o]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('${o}'), 'Close')">i</button><div>
               `;
               content.querySelectorAll("div.item").forEach(i => i.addEventListener("click", function() {
                 i.textContent.trim().split(/\bi\b$/)[0].trim() != definitions[x.dataset.item + "." + userMan.get("metadata").preferences[x.dataset.item.toLowerCase()]] ? (document.querySelector(".swal-button--confirm").disabled = "") : (document.querySelector(".swal-button--confirm").disabled = "disabled");
@@ -570,6 +570,21 @@
         });
         document.querySelectorAll(".user-points").forEach(x => x.textContent = userMan.get("metadata").points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
         document.querySelectorAll(".user-items").forEach(x => x.textContent = userMan.get("metadata").preferences.items.length);
+        if (new URLSearchParams(location.search).get("equip")) {
+          let equip = decodeURIComponent(new URLSearchParams(location.search).get("equip"));
+          let item = equip.split(".")[0].trim();
+          let data = equip.split(".").splice(1).join(".").trim();
+          document.querySelectorAll(".card").forEach(x => {
+            if (x.dataset.item == item) {
+              x.click();
+              Object.values(document.querySelector(".swal-content").querySelector("div").children).forEach(m => {
+                if (m.dataset.item == equip) {
+                  m.click();
+                }
+              });
+            }
+          });
+        }
       });
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>

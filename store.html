@@ -16,6 +16,7 @@
       html, body {
         font-family: "Roboto", Arial;
         user-select: none !important;
+        overflow: none !important;
       }
       .body {
         width: 98%;
@@ -30,6 +31,7 @@
         border: 5px solid #333;
         border-image: linear-gradient(to top, gold, #fff) 1 / 20px;
         background: #fefefe;
+        overflow-y: scroll !important;
       }
       .card {
         box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
@@ -39,13 +41,13 @@
         margin: 10px;
         display: inline-block;
         cursor: pointer;
+        background: #fff;
       }
       .card.hot {
         border: 2px solid gold;
         border-image: linear-gradient(to right, gold, #fff) 1 / 2px;
       }
       .card:hover {
-        margin-top: 20px;
         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
       }
       .card:hover .preview {
@@ -148,6 +150,11 @@
         left: 50%;
         transform: translate(-50%, -50%);
       }
+      .center-h {
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0);
+      }
       .loader {
         background: #fff;
         position: fixed;
@@ -204,8 +211,8 @@
     </div>
     <div class="body">
       <h1 style="text-align: center; font-size: 3em" class="title"><img class="credit" src="images/html/credit.png" style="width: 2%; vertical-align: baseline"> Store</h1>
-      <p style="text-align: center" class="description">You currently own <span class="user-items">0</span> items, with <span class="user-points">0</span> available credit(s)</h1>
-      <div class="wrapper">
+      <p style="text-align: center" class="description">You currently own <span class="user-items">0</span> items, with <span class="user-points">0</span> available credit(s)</h1></p>
+      <div class="wrapper" style="margin-top: 100px">
         <div class="card" data-item="Loadout.Assault_Rifle-Glock_19" data-price="300">
           <img src="images/store/loadouts/Assault_Rifle-Glock_19.png" style="width:100%">
           <div class="container">
@@ -375,6 +382,11 @@
           });
           if (userMan.get("metadata").preferences.items.indexOf(x.dataset.item) > -1) {
             x.querySelector("h4").innerHTML = "<i class='light'>Owned</i>";
+            x.querySelector("button").textContent = "Equip";
+            x.querySelector("button").addEventListener("click", (e) => {
+              e.preventDefault();
+              location.assign("settings.html?equip=" + encodeURIComponent(x.dataset.item));
+            });
             x.classList.add("owned");
           }
         });
