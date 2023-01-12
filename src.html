@@ -1581,8 +1581,12 @@
         PointerControls.lock();
       });
       document.body.addEventListener("mousemove", (event) => {
+        if (!PointerControls.isLocked) return;
         call("turn", {
-          rotation: camera.rotation.y
+          rotation: camera.rotation.y,
+          x: camera.position.x,
+          y: camera.position.y,
+          z: camera.position.z,
         });
       });
       window.addEventListener("resize", onWindowResize);
@@ -2128,11 +2132,17 @@
         let metadata = JSON.parse(data.splice(2).join(",").replace(/(\')/gi, "\""));
         let isUser = user == gametime.user.position;
         if (!isUser && action == "walk") {
+          sandbox.models["player"].object.position.x = metadata.x;
+          sandbox.models["player"].object.position.y = metadata.y;
+          sandbox.models["player"].object.position.z = metadata.z;
           utils.options.set("PlayerWalking" + (metadata.direction[0].toUpperCase() + metadata.direction.split("").splice(1).join("")), true);
         }
         if (!isUser && action == "turn") {
           sandbox.models["player"].object.rotation.order = "YXZ";
           sandbox.models["player"].object.rotation.y = metadata.rotation;
+          sandbox.models["player"].object.position.x = metadata.x;
+          sandbox.models["player"].object.position.y = metadata.y;
+          sandbox.models["player"].object.position.z = metadata.z;
         }
         if (!isUser && action == "info") {
           sandbox.users.push({
