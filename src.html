@@ -503,6 +503,11 @@
               camera.updateProjectionMatrix();
               weaponCamera.updateProjectionMatrix();
             });
+            if (x.name == "Grenade_Launcher") {
+              document.querySelector(".ui").querySelector(".scope").src = "images/icons/ui/scope1.png";
+              document.querySelector(".ui").querySelector(".scope").style.visibility = "visible";
+              weaponScene.remove(sandbox.currentWeapon);
+            }
             document.querySelector(".crosshair").src = "images/icons/ui/crosshair_zoomed.png";
             PointerControls.pointerSpeed = PointerControls.pointerSpeed / 2;
             TouchControls.speed = TouchControls.speed / 2;
@@ -513,7 +518,7 @@
           utils.weapons.data(sandbox.currentWeapon).then(x => {
             if (!utils.options.get("Zoomed")) return;
             utils.options.set("Zoomed", false);
-            if (x.name == "Sniper_Rifle") weaponScene.add(sandbox.currentWeapon);
+            if (x.name == "Sniper_Rifle" || x.name == "Grenade_Launcher") weaponScene.add(sandbox.currentWeapon);
             document.querySelector(".crosshair").style.visibility = "visible";
             const e = Math.floor(2 * Math.atan(camera.getFilmHeight() / 2 / camera.getFocalLength()) * 180 / Math.PI);
             let t = 0;
@@ -638,47 +643,55 @@
               }
               if (ammo == "rocket") {
                 damage = 200;
-                const deltaTime = clock.getDelta();
-                utils.camera.zoomOut();
-                utils.weapons.data(sandbox.currentWeapon).then(weapon => {
-                  let clip = weapon.mixer.clipAction(weapon.animations[2]);
-                  clip.loop = THREE.LoopOnce;
-                  clip.reset();
-                  clip.play();
-                });
-                setTimeout(() => utils.camera.shake(1), 50);
-                const rocket = {
-                  mesh: new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff })),
-                  collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), SPHERE_RADIUS * 2),
-                  velocity: new THREE.Vector3()
-                };
-                camera.getWorldDirection(playerDirection);
-                rocket.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
-                const impulse = 15 + 30 * (1 - Math.exp((mouseTime - performance.now()) * 0.001));
-                rocket.velocity.copy(playerDirection).multiplyScalar(impulse);
-                rocket.velocity.addScaledVector(playerVelocity, 2);
-                weaponScene.add(rocket.mesh);
-                rocket.mesh.rotation.copy(camera.rotation);
-                rocket.mesh.rotateX(Math.PI / 2);
-                let collided = setInterval(() => {
-                  if (worldOctree.sphereIntersect(rocket.collider)) {
-                    let mark = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ transparent: true, map: new THREE.TextureLoader().load("images/textures/mark.png") }));
-                    scene.add(mark);
-                    mark.position.copy(rocket.mesh.position);
-                    mark.rotateX(-Math.PI / 2);
-                    mark.position.y += -.15;
-                    mark.scale.set(4, 4, 4);
-                    utils.explosion(rocket.mesh);
-                    weaponScene.remove(rocket.mesh);
-                    new THREE.Sound("sounds/explosion.mp3", rocket.mesh, () => {}, true, 20);
-                    clearInterval(collided);
-                  }
-                  rocket.collider.center.addScaledVector(rocket.velocity, .1);
-                  const damping = Math.exp(- 1.5 * (deltaTime - .01)) - 1.003;
-                  rocket.velocity.addScaledVector(rocket.velocity, damping);
-                  rocket.mesh.position.copy(rocket.collider.center);
-                });
-                return;
+                if (cweapon.name == "Rocket_Pistol") {
+                  const deltaTime = clock.getDelta();
+                  utils.camera.zoomOut();
+                  utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+                    let clip = weapon.mixer.clipAction(weapon.animations[2]);
+                    clip.loop = THREE.LoopOnce;
+                    clip.reset();
+                    clip.play();
+                  });
+                  setTimeout(() => utils.camera.shake(1), 50);
+                  const rocket = {
+                    mesh: new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff })),
+                    collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), SPHERE_RADIUS * 2),
+                    velocity: new THREE.Vector3()
+                  };
+                  camera.getWorldDirection(playerDirection);
+                  rocket.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
+                  const impulse = 15 + 30 * (1 - Math.exp((mouseTime - performance.now()) * 0.001));
+                  rocket.velocity.copy(playerDirection).multiplyScalar(impulse);
+                  rocket.velocity.addScaledVector(playerVelocity, 2);
+                  weaponScene.add(rocket.mesh);
+                  rocket.mesh.rotation.copy(camera.rotation);
+                  rocket.mesh.rotateX(Math.PI / 2);
+                  let collided = setInterval(() => {
+                    if (worldOctree.sphereIntersect(rocket.collider)) {
+                      let mark = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ transparent: true, map: new THREE.TextureLoader().load("images/textures/mark.png") }));
+                      scene.add(mark);
+                      mark.position.copy(rocket.mesh.position);
+                      mark.rotateX(-Math.PI / 2);
+                      mark.position.y += -.15;
+                      mark.scale.set(4, 4, 4);
+                      utils.explosion(rocket.mesh);
+                      weaponScene.remove(rocket.mesh);
+                      new THREE.Sound("sounds/explosion.mp3", rocket.mesh, () => {}, true, 20);
+                      clearInterval(collided);
+                    }
+                    rocket.collider.center.addScaledVector(rocket.velocity, .1);
+                    const damping = Math.exp(- 1.5 * (deltaTime - .01)) - 1.003;
+                    rocket.velocity.addScaledVector(rocket.velocity, damping);
+                    rocket.mesh.position.copy(rocket.collider.center);
+                  });
+                  sound && new THREE.Sound("sounds/guns/Rocket_Pistol/fire.mp3", sandbox.currentWeapon, () => {}, false);
+                  setTimeout(() => (clearInterval(collided), weaponScene.remove(rocket.mesh)), 10000);
+                  return;
+                }
+              }
+              if (ammo == "grenade") {
+                utils.weapons.grenades.throw(false);
+                sandbox.grenades.current++;
               }
             }
             let randomX = Math.random() / 20;
@@ -979,14 +992,15 @@
           utils.options.set("WeaponLocked", true);
         },
         grenades: {
-          throw: function() {
+          throw: function(animation = true) {
             if (sandbox.grenades.current <= sandbox.grenades.min) {
               return;
             }
             if (utils.options.get("Punching")) return;
-            utils.options.set("Punching", true);
             utils.camera.zoomOut();
             utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+              if (!animation) return;
+              utils.options.set("Punching", true);
               setTimeout(() => (utils.options.set("Punching", false), weapon.mixer.clipAction(weapon.animations[10]).stop()), 500);
               let clip = weapon.mixer.clipAction(weapon.animations[10]);
               let clipFrom = weapon.mixer.clipAction(weapon.animations[1]);
@@ -1282,6 +1296,28 @@
               }
             },
             useDefaultRunAnimation: false
+          },
+          {
+            name: "Grenade_Launcher",
+            ammo: "grenade",
+            rounds: 1,
+            minRounds: 0,
+            maxRounds: 1,
+            minClips: 0,
+            maxClips: 0,
+            clips: 0,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 2000
+              },
+              full: {
+                sound: null,
+                time: 2200,
+                useDefaultAnimation: false
+              }
+            },
+            useDefaultRunAnimation: false
           }
         ],
         grenades: {
@@ -1378,6 +1414,13 @@
           },
           "Rocket_Pistol": {
             srcPath: "models/weapons/dropped/Rocket_Pistol.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Grenade_Launcher": {
+            srcPath: "models/weapons/dropped/Grenade_Launcher.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -2025,7 +2068,10 @@
             }
           }
           if (weapon.name == "Rocket_Pistol") {
-            utils.weapons.shoot(1, 20);
+            utils.weapons.shoot(1);
+          }
+          if (weapon.name == "Grenade_Launcher") {
+            utils.weapons.shoot(1);
           }
         });
       });
