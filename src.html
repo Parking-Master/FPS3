@@ -690,8 +690,8 @@
                 }
               }
               if (ammo == "grenade") {
-                utils.weapons.grenades.throw(false);
                 sandbox.grenades.current++;
+                utils.weapons.grenades.throw(false);
               }
             }
             let randomX = Math.random() / 20;
@@ -852,7 +852,7 @@
             }
           });
         },
-        create: function(weapon = "", pos = new THREE.Vector3()) {
+        create: function(weapon = "", pos = new THREE.Vector3(), useAmmo = true) {
           let box = new THREE.Object3D();
           load("models/assets/pointer.glb", function(pointer) {
             pointer = pointer.scene;
@@ -877,7 +877,7 @@
               boxes[newWeapon] = box;
               pointers[newWeapon] = pointer;
               sandbox.weapons.forEach(x => {
-                if (x.name != weapon) return;
+                if (x.name != weapon || !useAmmo) return;
                 utils.ammo.create(x.ammo, new THREE.Vector3(pos.x - .5, pos.y, pos.z));
                 utils.ammo.create(x.ammo, new THREE.Vector3(pos.x - .5, pos.y, pos.z - .5));
               });
