@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Gametime.js Multiplayer Chat</title>
+    <style>
+      body {
+        background: #444;
+        margin: 0;
+        padding-bottom: 3rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      #form {
+        position: fixed !important;
+        background: #444;
+        padding: 0.25rem;
+        display: flex;
+        left: 2%;
+        right: 2%;
+        bottom: 3%;
+      }
+      #input {
+        border-radius: 0;
+        margin: 20px;
+        border: none;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24);
+        outline: none;
+        width: 350px;
+      }
+      #input:focus {
+        outline: none;
+      }
+      #form button {
+        background: #555;
+        border: none;
+        padding: 10px;
+        margin: 20px;
+        border-radius: 0;
+        outline: none;
+        color: #eee;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24);
+      }
+      #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow-y: scroll !important;
+      }
+      #messages > li {
+        padding: 10px;
+        margin: 2%;
+        background: #eee;
+      }
+      a { color: #38b6ff; font-weight: lighter; text-decoration: underline; }
+      .wrapper {
+        width: 98%;
+        height: 97%;
+        margin: 0;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.3);
+        padding: 0 !important;
+        border: 5px solid #ddd;
+        border-image: linear-gradient(to top, #222, #ddd) 1 / 20px;
+        background: #333;
+      }
+      [id^="NotiflixNotify-"] {
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
+        background: transparent !important;
+        backdrop-filter: blur(5px);
+        border-bottom: .5px solid #fff;
+      }
+      #NotiflixNotifyWrap {
+        z-index: 99999999999999999 !important;
+      }
+      #NotiflixNotifyWrap * {
+        color: #fff !important;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes spin-reverse {
+        0% {
+          transform: rotate(360deg);
+        }
+        100% {
+          transform: rotate(0deg);
+        }
+      }
+      .spin {
+        border: 2px solid #333;
+        display: inline-block;
+        border-top: 2px solid #eee;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        margin-left: 15px;
+        animation: spin 2s linear infinite;
+      }
+      .spin-reverse {
+        animation: spin-reverse 2s linear infinite;
+      }
+      .spin.spin-large {
+        width: 100px;
+        height: 100px;
+      }
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .loader {
+        background: #444;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        margin: 0;
+        z-index: 999999999;
+      }
+      .center-origin {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
+  </head>
+  <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
+  <script type="text/javascript" src="https://npmcdn.com/parse@3.4.4/dist/parse.min.js"></script>
+  <script src="js/user/chat.js"></script>
+  <script src="js/user/user.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/Parking-Master/Date.js@latest/date.min.js"></script>
+  <body>
+    <div class="loader">
+      <div class="spin spin-large center-origin" style="position: absolute; left: 50%; top: 50%; margin-left: -50px; margin-top: -50px; padding: 0 !important">
+        <p class="spin-reverse" style="display: inline-block"><img src="images/html/chat.png" style="width: 50%"></p>
+      </div>
+    </div>
+    <div class="wrapper">
+      <ul id="messages" style="margin-top: 55px"></ul>
+      <form id="form" action="">
+        <input id="input" autocomplete="off" />
+        <button class="send" onclick="event.preventDefault(); sendMessage(document.querySelector('#input').value)">Send</button>
+        <span style="margin-left: 100px"></span>
+        <button class="mention" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.021 17.824c-3.907 0-6.021-2.438-6.021-5.586 0-3.363 2.381-6.062 6.638-6.062 3.107 0 5.362 2.019 5.362 4.801 0 4.356-5.165 5.506-4.906 3.021-.354.555-.927 1.177-2.026 1.177-1.257 0-2.04-.92-2.04-2.403 0-2.222 1.461-4.1 3.19-4.1.829 0 1.399.438 1.638 1.11l.232-.816h1.169c-.122.416-1.161 4.264-1.161 4.264-.323 1.333.675 1.356 1.562.648 1.665-1.29 1.75-4.664-.499-6.071-2.411-1.445-7.897-.551-7.897 4.347 0 2.806 1.976 4.691 4.914 4.691 1.719 0 2.771-.465 3.648-.974l.588.849c-.856.482-2.231 1.104-4.391 1.104zm-1.172-7.153c-.357.67-.588 1.538-.588 2.212 0 1.805 1.761 1.816 2.626.12.356-.697.586-1.586.586-2.265 0-1.458-1.748-1.717-2.624-.067z"/></svg></button>
+        <button class="upload" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12-12 5.373-12 12 5.373 12 12 12zm0-22c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm2 14h-4v-1h4v1zm0 1v1h-4v-1h4zm-4-6h-4l6-6 6 6h-4v3h-4v-3z"/></svg></button>
+        <button class="settings" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-10 12c0-5.514 4.486-10 10-10s10 4.486 10 10c0 1.679-.421 3.26-1.155 4.651l-1.377-1.377c-.662-.661-1.002-1.581-.93-2.514.137-1.767-.471-3.58-1.82-4.93-1.226-1.224-2.825-1.83-4.428-1.83-.603 0-1.206.086-1.79.257l3.77 3.771c.41 1.889-2.33 4.66-4.242 4.242l-3.77-3.77c-.172.584-.259 1.188-.259 1.792 0 1.602.606 3.202 1.829 4.426 1.352 1.351 3.164 1.958 4.932 1.821.932-.072 1.852.269 2.514.931l1.377 1.376c-1.391.734-2.972 1.154-4.651 1.154-5.514 0-10-4.486-10-10z"/></svg></button>
+        <span style="margin-left: 100px"></span>
+        <button class="help" onclick="">?</button>
+        <button class="options" onclick=""><img src="images/icons/hamburger.png" style="right: 2%; width: 20px; height: 20px; filter: drop-shadow(3px 3px 3px rgba(255, 255, 255, .3)) invert(100%); cursor: pointer; pointer-events: all !important" onclick="dropdown(this)"></button>
+        <p style="line-height: 50px; color: #999; font-size: 12px">All messages expire after 48 hours.</p>
+      </form>
+      <script>
+        Notiflix.Notify.init({
+          position: "right-bottom",
+          timeout: 2000,
+          info: {
+            width: "300px",
+            background: "transparent",
+            textColor: "#fff",
+            notiflixIconColor: "#fff"
+          }
+        });
+        words = [];
+        fetch("words.json").then((e) => e.json()).then((e) => words = (e.words));
+        gametime.set("key", "pub-c-c44c8fc4-612e-4fc3-b875-4398f01da63c", "sub-c-b6832794-3c08-11ec-b2c1-a25c7fcd9558");
+        gametime.set("channel", "world");
+        gametime.make("message");
+        function sendMessage(msg = "") {
+          if (document.querySelectorAll("li").length > 5) {
+            document.querySelector("li").remove();
+            chat.truncate(6);
+          }
+          msg = ":bold:" + (userMan.isLoggedIn ? userMan.get("username") : "Guest") + ":endbold: at " + date.js.time() + ": " + msg;
+          let i = msg;
+          let oldmsg = msg;
+          words.forEach((x) => {
+            let newi = i.replace(new RegExp((x.replace(/[\(\)\*\@\!\$\-]/gi, "\\$1")).toString().toLowerCase(), "g"), (t => {
+              let g = "";
+              t.forEach(() => g += "*");
+              return g;
+            })(x.toString().toLowerCase().split("")));
+            i = newi;
+            msg = i;
+          });
+          if (msg != oldmsg) return Notiflix.Notify.info("For everyones safety, we block inaproppriate messages. We're trying to make the chat a safer place.\n\nError: Could not submit message.");
+          msg = msg.replace(/[\<\>]/gi, "");
+          msg = msg.replace(/(\:bold\:)/g, "<b>").replace(/(\:endbold\:)/g, "</b>").replace(/(\:italic\:)/g, "<i>").replace(/(\:enditalic\:)/g, "</i>");
+          var item = document.createElement("li");
+          item.innerHTML = msg.replace(/\<\>/gi,"").split("(|-star-|)").join("&ast;");
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+          chat.add(msg);
+          gametime.run("message", [msg]);
+        }
+        var messages = document.getElementById("messages");
+        var form = document.getElementById("form");
+        var input = document.getElementById("input");
+        chat.get((chat) => {
+          for (let i = 0; i < chat.split(",").length; i++) {
+            var item = document.createElement("li");
+            let msg = decodeURIComponent(chat.split(",")[i]);
+            msg = msg.replace(/(\:bold\:)/g, "<b>").replace(/(\:endbold\:)/g, "</b>");
+            item.innerHTML = msg.replace(/\<\>/gi,"").split("(|-star-|)").join("&ast;");
+            msg && messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+          }
+        });
+        gametime.on("message", function(msg) {
+          msg = msg.replace(/(\:bold\:)/g, "<b>").replace(/(\:endbold\:)/g, "</b>");
+          var item = document.createElement("li");
+          item.innerHTML = msg;
+          msg && messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+        gametime.connected = true;
+        gametime.onconnect = () => document.querySelector("#users").textContent = gametime.connectedPlayers;
+        function invite() {
+          Notiflix.Notify.info("In the input box, type the players username that you want to invite, starting with an \"@\". Then submit it to find an invite.");
+          let k = sendMessage;
+          gametime.on("message", function(i) {
+            if (!i.includes(" ") && !i.includes("@")) {
+              return;
+            }
+            let username = (localStorage["username"] || ("Guest" + Math.random().toString().split(".")[1]));
+            let uselink = (localStorage["username"] ? true : false);
+            sendMessage("[@" + (localStorage["username"] || ("Guest" + Math.random().toString().split(".")[1])) + "](" + (uselink ? "/users/#/" + username : "#") + ") invited [" + i.toString() + "](/users/#/" + i.toString() + ") to a 1v1 match")
+          });
+        }
+        window.addEventListener("load", () => setTimeout(() => document.querySelector(".loader").remove(), 1000));
+      </script>
+    </div>
+  </body>
+</html>
