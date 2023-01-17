@@ -373,8 +373,14 @@
 
 	  // Game asset variables
 	  otherPlayer = new THREE.Mesh();
+	  gunHolder = new THREE.Group();
+    gunHolder.rotation.set(1.5, .5, 2.9);
+    gunHolder.position.set(2.4475877079089363, 22.013294147805205, 1.5569827148359332);
+    gunHolder.rotateZ(.4);
+    gunHolder.rotateX(-.1);
 	  space = new THREE.Mesh();
 	  sun = new THREE.Mesh();
+    
     Array.prototype.count = function() {
       let counter = 0;
       for (occurence of this) {
@@ -931,6 +937,7 @@
           });
         },
 		    switch: function() {
+          call("switch", {});
           utils.camera.zoomOut();
 		    	let newWeapon;
 		    	let oldWeapon = sandbox.currentWeapon;
@@ -1359,6 +1366,7 @@
               scene.add(model);
               model.traverse(x => x.frustumCulled = false);
               model.position.set(17, 0, -2.25);
+              model.getObjectByName("mixamorigRightHand").add(gunHolder);
             },
             mixer: null,
             animations: null
@@ -1526,6 +1534,38 @@
           });
         }
         if ((keyStates["KeyW"] || keyStates["ArrowUp"]) && !event.repeat) {
+          call("walk", {
+            x: camera.position.x,
+            y: camera.position.y,
+            z: camera.position.z,
+            direction: "forward"
+          });
+        }
+        if ((keyStates["KeyA"] || keyStates["ArrowLeft"]) && !event.repeat) {
+          call("walk", {
+            x: camera.position.x,
+            y: camera.position.y,
+            z: camera.position.z,
+            direction: "left"
+          });
+        }
+        if ((keyStates["KeyS"] || keyStates["ArrowDown"]) && !event.repeat) {
+          call("walk", {
+            x: camera.position.x,
+            y: camera.position.y,
+            z: camera.position.z,
+            direction: "backward"
+          });
+        }
+        if ((keyStates["KeyD"] || keyStates["ArrowRight"]) && !event.repeat) {
+          call("walk", {
+            x: camera.position.x,
+            y: camera.position.y,
+            z: camera.position.z,
+            direction: "right"
+          });
+        }
+        if ((keyStates["KeyW"] || keyStates["ArrowUp"]) && !event.repeat) {
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
             if (keyStates["ShiftLeft"]) {
               utils.options.get("Reloading") || (weapon.mixer.clipAction(weapon.animations[6]).crossFadeTo(weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]), .4), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).reset(), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).play());
@@ -1554,6 +1594,9 @@
         }
       });
       document.addEventListener("keyup", (event) => {
+        call("walk", {
+          positive: false
+        });
         if (!PointerControls.isLocked) return;
         clearInterval(utils.options.get("Bobbing"));
         utils.options.set("Bobbing", null);
@@ -1583,7 +1626,7 @@
       document.body.addEventListener("mousemove", (event) => {
         if (!PointerControls.isLocked) return;
         call("turn", {
-          rotation: camera.rotation.y,
+          rotation: new THREE.Vector2(camera.rotation.x, camera.rotation.y),
           x: camera.position.x,
           y: camera.position.y,
           z: camera.position.z,
@@ -1786,23 +1829,11 @@
       function controls(deltaTime) {
         const speedDelta = .025;
         if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
-          call("walk", {
-            x: camera.position.x,
-            y: camera.position.y,
-            z: camera.position.z,
-            direction: "forward"
-          });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getForwardVector().multiplyScalar(keyStates["ShiftLeft"] ? speedDelta + .05 : speedDelta));
           document.querySelector("#walkingSound").play();
         }
         if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
-          call("walk", {
-            x: camera.position.x,
-            y: camera.position.y,
-            z: camera.position.z,
-            direction: "backward"
-          });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getForwardVector().multiplyScalar(-speedDelta));
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
@@ -1811,12 +1842,6 @@
           document.querySelector("#walkingSound").play();
         }
         if (keyStates["KeyA"] || keyStates["ArrowLeft"]) {
-          call("walk", {
-            x: camera.position.x,
-            y: camera.position.y,
-            z: camera.position.z,
-            direction: "left"
-          });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getSideVector().multiplyScalar(-speedDelta));
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
@@ -1825,12 +1850,6 @@
           document.querySelector("#walkingSound").play();
         }
         if (keyStates["KeyD"] || keyStates["ArrowRight"]) {
-          call("walk", {
-            x: camera.position.x,
-            y: camera.position.y,
-            z: camera.position.z,
-            direction: "right"
-          });
           utils.options.get("Bobbing") || utils.options.set("Bobbing", setInterval(() => utils.camera.shake(.4, 50), 400));
           playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
           utils.weapons.data(sandbox.currentWeapon).then(weapon => {
@@ -1847,16 +1866,16 @@
       function animate() {
         requestAnimationFrame(animate);
         if (utils.options.get("PlayerWalkingForward")) {
-          sandbox.models["player"].object.translateZ(clock.getDelta() * 3);
+          sandbox.models["player"].object.translateZ(clock.getDelta() * 35);
         }
         if (utils.options.get("PlayerWalkingBackward")) {
-          sandbox.models["player"].object.translateZ(-(clock.getDelta() * 3));
+          sandbox.models["player"].object.translateZ(-(clock.getDelta() * 35));
         }
         if (utils.options.get("PlayerWalkingLeft")) {
-          sandbox.models["player"].object.translateX(clock.getDelta() * 3);
+          sandbox.models["player"].object.translateX(clock.getDelta() * 35);
         }
         if (utils.options.get("PlayerWalkingRight")) {
-          sandbox.models["player"].object.translateX(-(clock.getDelta() * 3));
+          sandbox.models["player"].object.translateX(-(clock.getDelta() * 35));
         }
         sun.position.set(camera.position.x, 50, camera.position.z);
         utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
@@ -2126,29 +2145,70 @@
       /* Multiplayer setup */
       gametime.make("playerAction");
       gametime.on("playerAction", function(message) {
+        character = {};
         let data = message.split(",");
         let user = data[0];
         let action = data[1];
         let metadata = JSON.parse(data.splice(2).join(",").replace(/(\')/gi, "\""));
         let isUser = user == gametime.user.position;
         if (!isUser && action == "walk") {
-          sandbox.models["player"].object.position.x = metadata.x;
-          sandbox.models["player"].object.position.y = metadata.y;
-          sandbox.models["player"].object.position.z = metadata.z;
-          utils.options.set("PlayerWalking" + (metadata.direction[0].toUpperCase() + metadata.direction.split("").splice(1).join("")), true);
+          typeof metadata.positive == "undefined" && (metadata.positive = true);
+          if (metadata.positive) {
+            sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).play();
+            sandbox.models["player"].object.position.x = metadata.x;
+            sandbox.models["player"].object.position.y = metadata.y - 1;
+            sandbox.models["player"].object.position.z = metadata.z;
+            utils.options.set("PlayerWalking" + (metadata.direction[0].toUpperCase() + metadata.direction.split("").splice(1).join("")), true);
+          } else {
+            sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).stop();
+            sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).reset();
+            utils.options.set("PlayerWalkingForward", false);
+            utils.options.set("PlayerWalkingBackward", false);
+            utils.options.set("PlayerWalkingLeft", false);
+            utils.options.set("PlayerWalkingRight", false);
+          }
         }
         if (!isUser && action == "turn") {
           sandbox.models["player"].object.rotation.order = "YXZ";
-          sandbox.models["player"].object.rotation.y = metadata.rotation;
+          sandbox.models["player"].object.rotation.y = metadata.rotation.y;
           sandbox.models["player"].object.position.x = metadata.x;
-          sandbox.models["player"].object.position.y = metadata.y;
+          sandbox.models["player"].object.position.y = metadata.y - 1;
           sandbox.models["player"].object.position.z = metadata.z;
+          sandbox.models["player"].object.rotateY(Math.PI);
+          sandbox.models["player"].object.getObjectByName("mixamorigNeck").rotation.x = (1.5 - metadata.rotation.x) + (Math.PI / 2);
+          sandbox.models["player"].object.getObjectByName("mixamorigNeck").rotation.x += -Math.PI;
         }
         if (!isUser && action == "info") {
+          if (sandbox.users.find(x => x.username == metadata.username)) return;
           sandbox.users.push({
             player: sandbox.users.length + 1,
-            username: metadata.username
+            username: metadata.username,
+            loadout: metadata.loadout
           });
+          let loadout = setInterval(() => {
+            if (sandbox.models[metadata.loadout[0]].object && sandbox.models[metadata.loadout[1]].object) {
+              character.primaryWeapon = sandbox.models[metadata.loadout[0]].object.clone();
+              character.currentWeapon = character.primaryWeapon;
+              character.secondaryWeapon = sandbox.models[metadata.loadout[1]].object.clone();
+              character.primaryWeapon.scale.set(10, 10, 10);
+              character.primaryWeapon.position.set(0, 0, 0);
+              character.secondaryWeapon.scale.set(10, 10, 10);
+              character.secondaryWeapon.position.set(0, 0, 0);
+              gunHolder.add(character.primaryWeapon);
+              return clearInterval(loadout);
+            }
+          });
+        }
+        if (!isUser && action == "switch") {
+          if (character.currentWeapon == character.primaryWeapon) {
+            gunHolder.remove(character.primaryWeapon);
+            gunHolder.add(character.secondaryWeapon);
+            character.currentWeapon = character.secondaryWeapon;
+          } else {
+            gunHolder.remove(character.secondaryWeapon);
+            gunHolder.add(character.primaryWeapon);
+            character.currentWeapon = character.primaryWeapon;
+          }
         }
       });
       function call(action, metadata) {
@@ -2329,9 +2389,13 @@
         }
       });
       gametime.onconnect = function() {
-        call("info", {
-          username: (userMan.isLoggedIn ? userMan.get("username") : generateName())
-        });
+        let username = userMan.isLoggedIn ? userMan.get("username") : generateName();
+        for (let i = 0; i < 2; i++) {
+          call("info", {
+            username: username,
+            loadout: sandbox.loadout
+          });
+        }
       };
 
       if (sandbox.mode == "Slayer") {
