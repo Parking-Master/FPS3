@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  	<title>Find players - FPS3</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<style>
+      @font-face {
+        font-family: "Roboto";
+        src: url(fonts/Roboto.ttf);
+      }
+      @font-face {
+        font-family: "Game";
+        src: url(fonts/Game.ttf);
+      }
+      html, body {
+        font-family: "Roboto", Arial;
+        overflow: hidden !important;
+        user-select: none !important;
+        background-image: linear-gradient(to right, #fff, #ddd);
+      }
+	  .card {
+        display: block;
+        position: relative;
+        margin: 0;
+        background: #fff;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
+        width: 100px;
+        left: 0;
+        height: 100px;
+        text-align: center;
+        padding-top: 10px;
+        margin-bottom: 20px;
+        border-bottom: 3px solid #333;
+        transition: box-shadow .3s;
+      }
+      .picture {
+        width: 40px;
+        border-radius: 100%;
+        border: 1px solid #333;
+      }
+      .linesep {
+        position: relative;
+        top: 15% !important;
+        margin-left: 60px !important;
+        margin-right: 10px !important;
+        display: inline-block;
+        width: 30%;
+        background: #333;
+        height: 1px;
+        border: none !important;
+        outline: none !important;
+      }
+      #picture + span {
+        position: relative;
+        font-size: 10px;
+        top: 10%;
+      }
+      h1, h2 {
+        color: #fff;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.24);
+        margin-bottom: 100px;
+        text-align: center !important;
+        top: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+      }
+      h1 {
+        font-size: 10em;
+      }
+      h2 {
+        font-size: 2em;
+        margin-bottom: 50px !important;
+      }
+      h2 span {
+        color: #fff;
+        border-bottom: 3px solid #333;
+      }
+      .card, .card * {
+        cursor: pointer !important;
+      }
+      .wrapper {
+        width: 98%;
+        height: 97%;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.3);
+        padding: 0 !important;
+        border: 5px solid #333;
+        border-image: linear-gradient(to top, #333, #fff) 1 / 20px;
+        background: #fefefe;
+      }
+      .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+      }
+      .container {
+        position: absolute;
+        width: 10%;
+        height: 80%;
+        margin: 0;
+        top: 60%;
+        left: 10%;
+        transform: translate(-50%, -50%);
+      }
+      .container.future-friends {
+        left: 30%;
+      }
+      .container.search-users {
+        left: 60%;
+      }
+      .container.my-user {
+        left: 90%;
+      }
+      .card.blank {
+        background: none !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        text-align: center;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0;
+        cursor: auto !important;
+      }
+      .card.blank * {
+        cursor: auto !important;
+      }
+      @media only screen and (max-height: 640px) {
+        h1 {
+          visibility: hidden;
+        }
+      }
+      .strike {
+        width: 30%;
+        height: 4px;
+        position: absolute;
+        background: #333;
+        top: 12%;
+      }
+      .strike.str-left {
+        left: 5%;
+      }
+      .strike.str-right {
+        right: 5%;
+      }
+      h1.secondary-title {
+        text-align: center;
+        font-size: 9em;
+        margin: 0;
+        color: #fff;
+        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
+        z-index: 5;
+        font-family: "Game", Arial, Helvetica, sans-serif !important;
+        padding: 10px 0;
+      }
+      h2.main-title {
+        position: relative;
+        text-align: center;
+        font-size: 6em;
+        margin: 0;
+        color: #fff;
+        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
+        /* background: #fefefe; */
+        z-index: 500 !important;
+        width: 350px;
+        left: 50%;
+        margin-left: -175px;
+        font-family: "Game", Arial, Helvetica, sans-serif !important;
+        font-style: italic;
+      }
+      input {
+        border: 2px solid #333;
+        padding: 10px;
+      }      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes spin-reverse {
+        0% {
+          transform: rotate(360deg);
+        }
+        100% {
+          transform: rotate(0deg);
+        }
+      }
+      .spin {
+        border: 2px solid #333;
+        display: inline-block;
+        border-top: 2px solid #eee;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        margin-left: 15px;
+        animation: spin 2s linear infinite;
+      }
+      .spin-reverse {
+        animation: spin-reverse 2s linear infinite;
+      }
+      .spin.spin-large {
+        width: 100px;
+        height: 100px;
+      }
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .loader {
+        background: #444;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        margin: 0;
+        z-index: 999999999;
+      }
+      .center-origin {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes spin-reverse {
+        0% {
+          transform: rotate(360deg);
+        }
+        100% {
+          transform: rotate(0deg);
+        }
+      }
+      .spin {
+        border: 2px solid #f3f3f3;
+        display: inline-block;
+        border-top: 2px solid #333;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        margin-left: 15px;
+        animation: spin 2s linear infinite;
+      }
+      .spin-reverse {
+        animation: spin-reverse 2s linear infinite;
+      }
+      .spin.spin-large {
+        width: 100px;
+        height: 100px;
+      }
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .loader {
+        background: #fff;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        margin: 0;
+        z-index: 999999999;
+      }
+      .center-origin {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+	</style>
+    <script src="js/user/user.js"></script>
+  </head>
+  <body>
+    <div class="loader">
+      <div class="spin spin-large center-origin" style="position: absolute; left: 50%; top: 50%; margin-left: -50px; margin-top: -50px; padding: 0 !important">
+        <p class="spin-reverse" style="display: inline-block"><img src="images/html/users.png" style="width: 50%"></p>
+      </div>
+    </div>
+    <div class="wrapper">
+      <h2 style="margin-top: 2%" class="main-title">FPS</h2>
+      <div class="strike str-left"></div>
+      <div class="strike str-right"></div>
+      <div class="top-users container">
+        <div class="card blank">
+          <h2 style="color: #333">Top players</h2>
+        </div>
+      </div>
+      <div class="future-friends container">
+        <div class="card blank">
+          <h2 style="color: #333">Future friends</h2>
+        </div>
+      </div>
+      <div class="search-users container">
+        <div class="card blank">
+        </div>
+      </div>
+      <div class="search-users container">
+        <div class="card blank">
+          <input onkeyup="search(this.value)" style="margin-top: -45px" placeholder="Search for people...">
+        </div>
+      </div>
+      <div class="my-user container">
+        <div class="card blank">
+          <h2 style="color: #333">My user</h2>
+        </div>
+        <div>
+          <div class="card">
+            <b><span class="my-username username"></span></b>
+            <br>
+            <br>
+            <img class="my-picture picture" src="">
+          </div>
+        </div>
+      </div>
+      <script>
+        function traverse(obj, callback) {
+          for (let property in obj) {
+            if (obj.hasOwnProperty(property)) {
+              if (typeof obj[property] == "object") {
+                traverse(obj[property], callback);
+              } else {
+                callback(obj[property], property);
+              }
+            }
+          }
+        }
+        function createTable(user) {
+          let myValues = {};
+          let userValues = {};
+          let relatedItems = 0;
+          traverse(user.get("metadata"), (x, i) => {
+            user.get("temail") != userMan.get("temail") && (userValues[i] = x);
+          });
+          traverse(userMan.get("metadata"), (x, i) => {
+            myValues[i] = x;
+          });
+          Object.keys(userValues).forEach(x => {
+            if (myValues[x] == userValues[x]) {
+              relatedItems++;
+            }
+          });
+          let isRelated = relatedItems >= 2;
+          Object.values(user.get("metadata").preferences)
+          document.querySelector(".top-users.container").querySelectorAll(".card").length > 3 || (document.querySelector(".top-users.container").innerHTML += `
+          <div onclick="location.assign('./user.html?q=${encodeURIComponent(user.get("username"))}')">
+            <div class="card">
+              <b><span id="username">${user.get("username")}</span></b>
+              <br>
+              <br>
+              <img src="${user.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png"}" class="picture">
+            </div>
+          </div>
+          `);
+          isRelated && (document.querySelector(".future-friends.container").innerHTML += `
+          <div onclick="location.assign('./user.html?q=${encodeURIComponent(user.get("username"))}')">
+            <div class="card">
+              <b><span id="username">${user.get("username")}</span></b>
+              <br>
+              <br>
+              <img src="${user.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png"}" class="picture">
+            </div>
+          </div>
+          `);
+        }
+        users = [];
+        let init = setInterval(() => {
+          if (typeof Parse != "undefined") {
+            (async () => {
+              let e = !1;
+              const t = Parse.Object.extend("User");
+              const n = new Parse.Query(t);
+              const s = await n.find();
+              let lobbies = [];
+              let pause = false;
+              for (let t = 0; t < s.length; t++) {
+                let ot = t;
+                const n = Parse.Object.extend("User");
+                new Parse.Query(n).get(s[t].id).then((t => {
+                  Parse.User.logIn(t.get("username"), t.get("tpass")).then((user) => {
+                    users.push(user);
+                    createTable(user);
+                  });
+                }));
+              }
+            })();
+            document.querySelectorAll(".my-username").forEach(x => x.textContent = userMan.get("username"));
+            document.querySelectorAll(".my-picture").forEach(x => x.src = userMan.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png");
+            clearInterval(init);
+          }
+        });
+        function search(user) {
+          Object.values(document.querySelector(".search-users.container").children).forEach(x => !x.className.includes("blank") && (x.remove()));
+          users.forEach(x => {
+            if (x.get("username").toLowerCase().trim().startsWith(user) && (user.length >= x.get("username") ? x.get("username").toLowerCase().trim().endsWith(user.slice(user.length / 2, user.length)) : true)) {
+              document.querySelector(".search-users.container").innerHTML += `
+              <div onclick="location.assign('./user.html?q=${encodeURIComponent(x.get("username"))}')">
+                <div class="card">
+                  <b><span id="username">${x.get("username")}</span></b>
+                  <br>
+                  <br>
+                  <img src="${x.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png"}" class="picture">
+                </div>
+              </div>
+              `;
+            }
+          });
+        }
+        window.addEventListener("load", () => setTimeout(() => document.querySelector(".loader").remove(), 1000));
+      </script>
+    </div>
+  </body>
+</html>
