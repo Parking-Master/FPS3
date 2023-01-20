@@ -1,0 +1,17 @@
+* {
+  color: #ddd !important;
+  text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25) !important;
+}
+img {
+  filter: invert(100%) brightness(120%) !important;
+}
+button {
+  border-color: #ddd !important;
+}
+.wrapper {
+  border-image: linear-gradient(to top, #ddd, #fff) 1 / 20px;
+  background-image: none !important;
+}
+.strike {
+  background: #ddd;
+}

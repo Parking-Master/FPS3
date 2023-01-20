@@ -1,0 +1,21 @@
+body {
+  background: #444;
+}
+* {
+  color: #eee !important;
+  text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.5) !important;
+}
+img {
+  filter: invert(100%) brightness(120%) !important;
+}
+button {
+  border-color: #222 !important;
+}
+.wrapper {
+  border: 5px solid #ddd;
+  border-image: linear-gradient(to top, #222, #ddd) 1 / 20px;
+  background: #333;
+}
+.strike {
+  background: #ddd;
+}

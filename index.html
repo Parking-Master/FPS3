@@ -219,8 +219,8 @@
     </div>
     <div class="wrapper">
       <img src="images/icons/hamburger.png" style="position: absolute; left: 2%; top: 2%; width: 50px; filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .3)) contrast(120%); cursor: pointer; pointer-events: all !important" onclick="dropdown(this)">
-      <h2 style="margin-top: 2%">FPS</h2>
-      <h1 style="margin-top: -2%">3</h1>
+      <h2 style="margin-top: 2%" class="main-title">FPS</h2>
+      <h1 style="margin-top: -2%" class="secondary-title">3</h1>
       <div class="strike str-left"></div>
       <div class="strike str-right"></div>
       <img src="images/html/mastery.png" class="main-image" style="margin-top: -60px">
@@ -446,6 +446,7 @@
         frame.style.display = "none";
         closeButton.style.display = "none";
         closeButton.addEventListener("click", function() {
+          refresh();
           frame.style.display = "none";
           closeButton.style.display = "none";
         });
@@ -538,6 +539,33 @@
         </div>
         `;
         document.body.appendChild(box);
+      }
+      window.addEventListener("load", function() {
+        if (userMan.isLoggedIn) {
+          let style = document.createElement("link");
+          style.rel = "stylesheet";
+          if (userMan.get("metadata").preferences.theme.toLowerCase().trim() == "auto") {
+            let date = new Date();
+            if (date.getHours() >= 18 || date.getHours() <= 6) {
+              style.href = "styles/themes/dark.css";
+            } else {
+              style.href = "styles/themes/light.css";
+            }
+            document.body.appendChild(style);
+            return;
+          }
+          style.href = "styles/themes/" + userMan.get("metadata").preferences.theme.toLowerCase().trim() + ".css";
+          document.body.appendChild(style);
+        }
+      });
+      function refresh() {
+        fetch("/").then(function(response) {
+          return response.text();
+        }).then(function(body) {
+          document.documentElement.innerHTML = "";
+          document.write(body);
+          setTimeout(() => window.dispatchEvent(new Event("load")), 100);
+        });
       }
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>

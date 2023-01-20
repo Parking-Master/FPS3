@@ -135,8 +135,55 @@
         align-items: center;
         justify-content: center;
       }
+      .swal-overlay {
+        z-index: 999 !important;
+      }
+      [class^="swal"] {
+        animation: none !important;
+        transition: none !important;
+      }
+      .swal-button {
+        background: #333 !important;
+        color: #fff;
+        border-radius: 2px;
+        box-shadow: none !important;
+      }
+      .swal-modal {
+        border-radius: 1px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+      }
+      .swal-overlay {
+        background: rgba(10, 10, 10, .3);
+      }
+      .swal-content {
+        height: 200px;
+        overflow-y: scroll;
+      }
+      code {
+        padding: 2px;
+        background: #ddd;
+        border-radius: 2px;
+        font-size: 16px;
+      }
+      pre {
+        padding: 8px 5px;
+        width: 100%;
+        background: #ddd;
+        border-radius: 2px;
+        font-size: 16px;
+        overflow-x: scroll !important;
+        white-space: nowrap;
+      }
+      blockquote {
+        border-left: 2px solid #ddd;
+        color: #999;
+        margin-left: 5px !important;
+        padding: 3px 0;
+        padding-left: 10px !important;
+      }
     </style>
     <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   </head>
   <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
   <script type="text/javascript" src="https://npmcdn.com/parse@3.4.4/dist/parse.min.js"></script>
@@ -153,13 +200,13 @@
       <ul id="messages" style="margin-top: 55px"></ul>
       <form id="form" action="">
         <input id="input" autocomplete="off" placeholder="Type your message here..." />
-        <button class="send" onclick="event.preventDefault(); sendMessage(document.querySelector('#input').value)">Send</button>
+        <button class="send" onclick="event.preventDefault(); sendMessage(document.querySelector('#input').value) && (document.querySelector('#input').value = '')">Send</button>
         <span style="margin-left: 100px"></span>
         <button class="mention" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.021 17.824c-3.907 0-6.021-2.438-6.021-5.586 0-3.363 2.381-6.062 6.638-6.062 3.107 0 5.362 2.019 5.362 4.801 0 4.356-5.165 5.506-4.906 3.021-.354.555-.927 1.177-2.026 1.177-1.257 0-2.04-.92-2.04-2.403 0-2.222 1.461-4.1 3.19-4.1.829 0 1.399.438 1.638 1.11l.232-.816h1.169c-.122.416-1.161 4.264-1.161 4.264-.323 1.333.675 1.356 1.562.648 1.665-1.29 1.75-4.664-.499-6.071-2.411-1.445-7.897-.551-7.897 4.347 0 2.806 1.976 4.691 4.914 4.691 1.719 0 2.771-.465 3.648-.974l.588.849c-.856.482-2.231 1.104-4.391 1.104zm-1.172-7.153c-.357.67-.588 1.538-.588 2.212 0 1.805 1.761 1.816 2.626.12.356-.697.586-1.586.586-2.265 0-1.458-1.748-1.717-2.624-.067z"/></svg></button>
         <button class="upload" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12-12 5.373-12 12 5.373 12 12 12zm0-22c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm2 14h-4v-1h4v1zm0 1v1h-4v-1h4zm-4-6h-4l6-6 6 6h-4v3h-4v-3z"/></svg></button>
         <button class="settings" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-10 12c0-5.514 4.486-10 10-10s10 4.486 10 10c0 1.679-.421 3.26-1.155 4.651l-1.377-1.377c-.662-.661-1.002-1.581-.93-2.514.137-1.767-.471-3.58-1.82-4.93-1.226-1.224-2.825-1.83-4.428-1.83-.603 0-1.206.086-1.79.257l3.77 3.771c.41 1.889-2.33 4.66-4.242 4.242l-3.77-3.77c-.172.584-.259 1.188-.259 1.792 0 1.602.606 3.202 1.829 4.426 1.352 1.351 3.164 1.958 4.932 1.821.932-.072 1.852.269 2.514.931l1.377 1.376c-1.391.734-2.972 1.154-4.651 1.154-5.514 0-10-4.486-10-10z"/></svg></button>
         <span style="margin-left: 100px"></span>
-        <button class="help" onclick="">?</button>
+        <button class="help" onclick="event.preventDefault(), help()">?</button>
         <button class="options" onclick=""><img src="images/icons/hamburger.png" style="right: 2%; width: 20px; height: 20px; filter: drop-shadow(3px 3px 3px rgba(255, 255, 255, .3)) invert(100%); cursor: pointer; pointer-events: all !important" onclick="dropdown(this)"></button>
         <p style="white-space: nowrap; margin: 20px; padding: 10px; color: #999; font-size: 12px">All messages expire after 48 hours.</p>
       </form>
@@ -180,6 +227,7 @@
         gametime.set("channel", "world");
         gametime.make("message");
         function sendMessage(msg = "") {
+          if (!msg.trim()) return false;
           msg = ":bold:" + (userMan.isLoggedIn ? userMan.get("username") : "Guest") + ":endbold: at " + date.js.time() + ": " + msg;
           let oldmsg = msg.toLowerCase();
           let i = oldmsg;
@@ -205,6 +253,7 @@
           window.scrollTo(0, document.body.scrollHeight);
           chat.add(msg);
           gametime.run("message", [gametime.user.position + "," + btoa(encodeURIComponent(msg))]);
+          return true;
         }
         var messages = document.getElementById("messages");
         var form = document.getElementById("form");
@@ -242,6 +291,86 @@
             let username = (localStorage["username"] || ("Guest" + Math.random().toString().split(".")[1]));
             let uselink = (localStorage["username"] ? true : false);
             sendMessage("[@" + (localStorage["username"] || ("Guest" + Math.random().toString().split(".")[1])) + "](" + (uselink ? "/users/#/" + username : "#") + ") invited [" + i.toString() + "](/users/#/" + i.toString() + ") to a 1v1 match")
+          });
+        }
+        function help() {
+          let content = document.createElement("div");
+          content.className = "swal-text";
+          content.innerHTML = `
+          Welcome to the chat! Here's some tips:
+          <br>
+          <br>
+          <b>Text styling</b>
+          <br>
+          <br>
+          Use <code>:bold:</code> and <code>:endbold:</code> to make text bold.
+          <br>
+          <br>
+          Example:
+          <br>
+          <br>
+          <pre>My message is :bold:very bold:endbold:</pre>
+          <br>
+          <br>
+          Output:
+          <br>
+          <br>
+          <blockquote>My message is <b>very bold</b></blockquote>
+          <br>
+          <br>
+          You can do the same thing with <code>:italic:</code> and <code>:enditalic:</code> to make text <i>italic</i>.
+          <br>
+          <br>
+          Example:
+          <br>
+          <br>
+          <pre>My message is :italic:very italic:enditalic:</pre>
+          <br>
+          <br>
+          Output:
+          <br>
+          <br>
+          <blockquote>My message is <i>very italic</i></blockquote>
+          <br>
+          <br>
+          <b>Sending messages</b>
+          <br>
+          <br>
+          Remember to keep the chat clean when sending messages, as the whole world can see it!
+          <br>
+          <br>
+          To type a message, select the input box on the bottom of the screen.
+          <br>
+          <br>
+          Type your message.
+          <br>
+          <br>
+          Send it via the "Enter" key or clicking "Send" on the right.
+          <br>
+          <br>
+          Viola! You sent a message in the world chat.
+          <br>
+          <br>
+          <b>Inviting players</b>
+          <br>
+          <br>
+          To invite someone, click the "@" button next to the input box.
+          <br>
+          <br>
+          In the popup, type the users name.
+          <br>
+          <br>
+          Once you select them, close the popup and click the username in the input box.
+          <br>
+          <br>
+          Select "Invite player" via the context menu.
+          <br>
+          <br>
+          Wait for the player to join.
+          `;
+          swal({
+            title: "Chat documentation",
+            content: content
           });
         }
         window.addEventListener("load", () => setTimeout(() => document.querySelector(".loader").remove(), 1000));
