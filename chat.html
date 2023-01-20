@@ -181,6 +181,46 @@
         padding: 3px 0;
         padding-left: 10px !important;
       }
+      a.column-link {
+        display: block;
+        text-decoration: none !important;
+        color: #333;
+        border-bottom: 2px solid #efefef;
+      }
+      a.column-link:nth-child(odd) {
+        background: #efefef;
+      }
+      .keyword-holder a {
+        background: #333;
+        border-radius: 3px;
+        padding: 3px;
+        color: #eee;
+        text-align: center;
+      }
+      .keyword-holder {
+        margin-left: 20px;
+        display: inline-flex;
+        pointer-events: none !important;
+      }
+      .context-menu a {
+        border-bottom: 1px solid #ddd;
+        display: block;
+        color: #333;
+        margin: 3px;
+        text-decoration: none;
+      }
+      .user-selector1 {
+        overflow-y: scroll;
+      }
+      .swal-content button {
+        background: #efefef;
+        border: none;
+        color: #333;
+        padding: 10px;
+        margin: 10px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24);
+        border-radius: 0;
+      }
     </style>
     <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
@@ -199,11 +239,16 @@
     <div class="wrapper">
       <ul id="messages" style="margin-top: 55px"></ul>
       <form id="form" action="">
-        <input id="input" autocomplete="off" placeholder="Type your message here..." />
-        <button class="send" onclick="event.preventDefault(); sendMessage(document.querySelector('#input').value) && (document.querySelector('#input').value = '')">Send</button>
+        <div id="input" style="display: inline-flex; align-items: center; justify-content: center; text-align: center; background: #fff">
+          <div class="keyword-holder" style="position: relative; width: auto; text-align: left; display: inline-block">
+            
+          </div>
+          <input id="input" autocomplete="off" placeholder="Type your message here..." style="width: 100%; height: 100%; margin: 0; box-shadow: none; padding: 0" />
+        </div>
+        <button class="send" onclick="event.preventDefault(); sendMessage(document.querySelector('input#input').value) && (document.querySelector('input#input').value = '')">Send</button>
         <span style="margin-left: 100px"></span>
-        <button class="mention" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.021 17.824c-3.907 0-6.021-2.438-6.021-5.586 0-3.363 2.381-6.062 6.638-6.062 3.107 0 5.362 2.019 5.362 4.801 0 4.356-5.165 5.506-4.906 3.021-.354.555-.927 1.177-2.026 1.177-1.257 0-2.04-.92-2.04-2.403 0-2.222 1.461-4.1 3.19-4.1.829 0 1.399.438 1.638 1.11l.232-.816h1.169c-.122.416-1.161 4.264-1.161 4.264-.323 1.333.675 1.356 1.562.648 1.665-1.29 1.75-4.664-.499-6.071-2.411-1.445-7.897-.551-7.897 4.347 0 2.806 1.976 4.691 4.914 4.691 1.719 0 2.771-.465 3.648-.974l.588.849c-.856.482-2.231 1.104-4.391 1.104zm-1.172-7.153c-.357.67-.588 1.538-.588 2.212 0 1.805 1.761 1.816 2.626.12.356-.697.586-1.586.586-2.265 0-1.458-1.748-1.717-2.624-.067z"/></svg></button>
-        <button class="upload" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12-12 5.373-12 12 5.373 12 12 12zm0-22c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm2 14h-4v-1h4v1zm0 1v1h-4v-1h4zm-4-6h-4l6-6 6 6h-4v3h-4v-3z"/></svg></button>
+        <button class="mention" onclick="event.preventDefault(), mention()"><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.021 17.824c-3.907 0-6.021-2.438-6.021-5.586 0-3.363 2.381-6.062 6.638-6.062 3.107 0 5.362 2.019 5.362 4.801 0 4.356-5.165 5.506-4.906 3.021-.354.555-.927 1.177-2.026 1.177-1.257 0-2.04-.92-2.04-2.403 0-2.222 1.461-4.1 3.19-4.1.829 0 1.399.438 1.638 1.11l.232-.816h1.169c-.122.416-1.161 4.264-1.161 4.264-.323 1.333.675 1.356 1.562.648 1.665-1.29 1.75-4.664-.499-6.071-2.411-1.445-7.897-.551-7.897 4.347 0 2.806 1.976 4.691 4.914 4.691 1.719 0 2.771-.465 3.648-.974l.588.849c-.856.482-2.231 1.104-4.391 1.104zm-1.172-7.153c-.357.67-.588 1.538-.588 2.212 0 1.805 1.761 1.816 2.626.12.356-.697.586-1.586.586-2.265 0-1.458-1.748-1.717-2.624-.067z"/></svg></button>
+        <button class="download" onclick="event.preventDefault(), exportChat()"><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 24c6.627 0 12-5.373 12-12s-5.373-12-12-12-12 5.373-12 12 5.373 12 12 12zm0-22c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm2 14h-4v-1h4v1zm0 1v1h-4v-1h4zm-4-6h-4l6-6 6 6h-4v3h-4v-3z"/></svg></button>
         <button class="settings" onclick=""><svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-10 12c0-5.514 4.486-10 10-10s10 4.486 10 10c0 1.679-.421 3.26-1.155 4.651l-1.377-1.377c-.662-.661-1.002-1.581-.93-2.514.137-1.767-.471-3.58-1.82-4.93-1.226-1.224-2.825-1.83-4.428-1.83-.603 0-1.206.086-1.79.257l3.77 3.771c.41 1.889-2.33 4.66-4.242 4.242l-3.77-3.77c-.172.584-.259 1.188-.259 1.792 0 1.602.606 3.202 1.829 4.426 1.352 1.351 3.164 1.958 4.932 1.821.932-.072 1.852.269 2.514.931l1.377 1.376c-1.391.734-2.972 1.154-4.651 1.154-5.514 0-10-4.486-10-10z"/></svg></button>
         <span style="margin-left: 100px"></span>
         <button class="help" onclick="event.preventDefault(), help()">?</button>
@@ -228,7 +273,11 @@
         gametime.make("message");
         function sendMessage(msg = "") {
           if (!msg.trim()) return false;
-          msg = ":bold:" + (userMan.isLoggedIn ? userMan.get("username") : "Guest") + ":endbold: at " + date.js.time() + ": " + msg;
+          if (selectedUser) {
+            msg = "From :bold:" + (userMan.isLoggedIn ? userMan.get("username") : "Guest") + ":endbold:, to :bold:" + selectedUser + ":endbold: at " + date.js.time() + ": " + msg;
+          } else {
+            msg = ":bold:" + (userMan.isLoggedIn ? userMan.get("username") : "Guest") + ":endbold: at " + date.js.time() + ": " + msg;
+          }
           let oldmsg = msg.toLowerCase();
           let i = oldmsg;
           words.forEach((x) => {
@@ -257,13 +306,12 @@
         }
         var messages = document.getElementById("messages");
         var form = document.getElementById("form");
-        var input = document.getElementById("input");
+        var input = document.querySelector("input#input");
         chat.get((chat) => {
           for (let i = 0; i < chat.split(",").length; i++) {
             var item = document.createElement("li");
             let msg = decodeURIComponent(chat.split(",")[i]);
-            msg = msg.replace(/(\:bold\:)/g, "<b>").replace(/(\:endbold\:)/g, "</b>");
-            item.innerHTML = msg.replace(/\<\>/gi,"").split("(|-star-|)").join("&ast;");
+            item.innerHTML = msg;
             msg && messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
           }
@@ -371,6 +419,126 @@
           swal({
             title: "Chat documentation",
             content: content
+          });
+        }
+        users = [];
+        let init = setInterval(() => {
+          if (typeof Parse != "undefined") {
+            (async () => {
+              let e = !1;
+              const t = Parse.Object.extend("User");
+              const n = new Parse.Query(t);
+              const s = await n.find();
+              let lobbies = [];
+              let pause = false;
+              for (let t = 0; t < s.length; t++) {
+                let ot = t;
+                const n = Parse.Object.extend("User");
+                new Parse.Query(n).get(s[t].id).then((t => {
+                  Parse.User.logIn(t.get("username"), t.get("tpass")).then((user) => {
+                    users.push(user);
+                  });
+                }));
+              }
+            })();
+            document.querySelectorAll(".my-username").forEach(x => x.textContent = userMan.get("username"));
+            document.querySelectorAll(".my-picture").forEach(x => x.src = userMan.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png");
+            clearInterval(init);
+          }
+        });
+        function searchUser(name) {
+          document.querySelectorAll(".user-selector1 a").forEach(x => x.remove());
+          users.forEach(i => {
+            if (i.get('username').toLowerCase().trim().startsWith(name.toLowerCase().trim())) {
+              document.querySelector('.user-selector1').innerHTML += `
+              <a onclick="event.preventDefault(), selectUser('${btoa(encodeURIComponent(i.get("username")))}')" href="#" class="column-link">${i.get("username")}</a>
+              `;
+            }
+          });
+        }
+        function mention() {
+          let content = document.createElement("div");
+          content.className = "user-selector1";
+          content.innerHTML = `
+          <input style="margin: 0; padding: 5px; border-radius: 0; border: 3px solid #efefef" placeholder="Search for users..." onkeyup="searchUser(this.value)">
+          `;
+          users.forEach(user => {
+            content.innerHTML += `
+            <a onclick="event.preventDefault(), selectUser('${btoa(encodeURIComponent(user.get("username")))}')" href="#" class="column-link">${user.get("username")}</a>
+            `;
+          });
+          swal({
+            title: "Select a user",
+            content: content,
+            button: "Cancel"
+          });
+          content.parentElement.classList.add("user-selector");
+        }
+        selectedUser = null;
+        function selectUser(name) {
+          swal.close();
+          name = decodeURIComponent(atob(name)).trim();
+          selectedUser = name;
+          document.querySelector(".keyword-holder a") && document.querySelector(".keyword-holder a").remove();
+          document.querySelector(".keyword-holder").innerHTML += `
+          <a href="#" style="pointer-events: all !important" onclick="userOptions(this, '${btoa(encodeURIComponent(name))}', event)">${(document.querySelector("input#input").value + " @" + name).trim()}</a>
+          `;
+          document.querySelector(".keyword-holder").style.paddingRight = "10px";
+        }
+        function userOptions(element, name, event) {
+          let contextMenu = document.createElement("div");
+          contextMenu.className = "context-menu";
+          contextMenu.style = `
+          position: absolute;
+          width: 100px;
+          text-align: left;
+          background: #fff;
+          z-index: 999999999999;
+          padding: 5px;
+          box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24);
+          `;
+          contextMenu.innerHTML = `
+          <a href="">Add friend</a>
+          <a href="">User info</a>
+          <a href="">Invite to</a>
+          `;
+          contextMenu.style.top = event.clientY + "px";
+          contextMenu.style.left = event.clientX + "px";
+          document.body.appendChild(contextMenu);
+          document.addEventListener("mouseup", function(e) {
+            if (e.target != contextMenu) {
+              contextMenu.remove();
+            }
+          });
+        }
+        function exportChat() {
+          let content = document.createElement("div");
+          content.innerHTML = `
+          <button class="export-html">HTML</button> <button class="export-json">JSON</button> <button class="export-text">Text</button>
+          `;
+          swal({
+            title: "Export chat as",
+            content: content,
+            button: "Cancel"
+          });
+          let download = document.createElement("a");
+          document.querySelector(".export-html").addEventListener("click", function() {
+            let html = Object.values(document.querySelectorAll("#messages li")).map(x => x.innerHTML);
+            download.setAttribute("href", "data:text/html;base64," + btoa(html));
+            download.setAttribute("download", "FPS World Chat.html");
+            download.click();
+          });
+          document.querySelector(".export-json").addEventListener("click", function() {
+            let json = JSON.parse("{" + Object.values(document.querySelectorAll("#messages li")).map(x => "\"" + x.textContent.split(": ")[0] + "\": \"" + encodeURIComponent(x.textContent.split(": ").splice(1).join(": ").trim()) + "\"").join(", ") + "}");
+            download.setAttribute("href", "data:application/json," + JSON.stringify(json));
+            download.setAttribute("download", "FPS World Chat.json");
+            download.click();
+          });
+          document.querySelector(".export-text").addEventListener("click", function() {
+            let text = Object.values(document.querySelectorAll("#messages li")).map(x => x.textContent);
+            download.setAttribute("href", "data:text/plain," + text);
+            download.setAttribute("download", "FPS World Chat.txt");
+            download.click();
           });
         }
         window.addEventListener("load", () => setTimeout(() => document.querySelector(".loader").remove(), 1000));
