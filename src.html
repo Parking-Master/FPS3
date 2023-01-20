@@ -848,6 +848,9 @@
           let weaponBox = utils.options.get("WeaponBoxes")[weapon];
           scene.remove(weaponBox);
           weaponBox.position.y = -10000;
+          call("remove", {
+            id: weapon
+          });
           let newWeapon = null;
           sandbox.weapons.forEach(x => {
             if (weapon.includes(x.name)) {
@@ -2276,6 +2279,11 @@
           character.currentWeapon = position == 0 ? character.secondaryWeapon : character.primaryWeapon;
           character.loadout = metadata.loadout;
           gunHolder.add(character.currentWeapon);
+        }
+        if (!isUser && action == "remove") {
+          let weaponBox = utils.options.get("WeaponBoxes")[metadata.id];
+          scene.remove(weaponBox);
+          weaponBox.position.y = -10000;
         }
       });
       function call(action, metadata) {
