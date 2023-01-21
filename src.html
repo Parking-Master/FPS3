@@ -287,6 +287,23 @@
       #NotiflixNotifyWrap * {
         color: #fff !important;
       }
+      .swal-modal {
+        background: transparent;
+      }
+      [class^="swal-"] {
+        color: #eee;
+        white-space: nowrap;
+      }
+      .swal-title {
+        font-size: 40px;
+        font-weight: 600;
+      }
+      .swal-text {
+        font-size: 20px;
+      }
+      .swal-overlay {
+        backdrop-filter: blur(3px);
+      }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js@latest/js/username-generator.min.js"></script>
@@ -383,6 +400,12 @@
 	  space = new THREE.Mesh();
 	  sun = new THREE.Mesh();
     
+    let v3 = THREE.Vector3;
+    THREE.Vector3 = function(x, y, z, rotation = null) {
+      let v = new v3(x, y, z);
+      v.rotation = rotation;
+      return v;
+    }
     Array.prototype.count = function() {
       let counter = 0;
       for (occurence of this) {
@@ -1155,11 +1178,37 @@
         capture && call("explosion", {
           position: [explosion.position.x, explosion.position.y, explosion.position.z]
         });
+      },
+      respawn: function() {
+        let spawnPoint = sandbox.mapRespawnPoints[sandbox.map];
+        let tempSpawns = [];
+        spawnPoint.forEach(x => {
+          playerTarget.position.distanceTo(x) <= 10 || tempSpawns.push(x);
+        });
+        if (!tempSpawns[0]) {
+          tempSpawns.push(spawnPoint[Math.floor(Math.random() * spawnPoint.length)]);
+        }
+        let respawnPoint = tempSpawns[Math.floor(Math.random() * tempSpawns.length)];
+        playerCollider.start.set(respawnPoint.x, respawnPoint.y + .35, respawnPoint.z);
+        playerCollider.end.set(respawnPoint.x, respawnPoint.y + 1, respawnPoint.z);
+        playerCollider.radius = 0.35;
+        camera.position.copy(playerCollider.end);
+        camera.rotation.set(respawnPoint.rotation.x, respawnPoint.rotation.y, respawnPoint.rotation.z);
+        call("respawn", {
+          position: [camera.position.x, camera.position.y, camera.position.z, camera.rotation.x, camera.rotation.y, camera.rotation.z]
+        });
       }
 	  };
       sandbox = {
         users: [],
         players: 1,
+        tempName: generateName(),
+        mapRespawnPoints: {
+          "Cargo": [
+            new THREE.Vector3(13.5, 0, -18.5, new THREE.Vector3(0, Math.PI, 0)),
+            new THREE.Vector3(17, 0, -2, new THREE.Vector3(0, Math.PI / 2, 0))
+          ]
+        },
         map: new URLSearchParams(location.search).get("map") || "Cargo",
         mode: new URLSearchParams(location.search).get("mode") || "Slayer",
         loadout: ["Assault_Rifle", "Glock_19"],
@@ -1865,7 +1914,7 @@
           playerCollider.end.set(13.5, 1, -18.5);
           playerCollider.radius = 0.35;
           camera.position.copy(playerCollider.end);
-          camera.rotation.set(0,Math.PI,0);
+          camera.rotation.set(0, Math.PI, 0);
         }
       }
       function controls(deltaTime) {
@@ -2333,7 +2382,12 @@
           }, 5000));
           utils.options.set("Health", utils.options.get("Health") - metadata.damage);
           if (utils.options.get("Health") <= 0) {
-            call("die", {});
+            utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+              call("die", {
+                name: userMan.isLoggedIn ? userMan.get("username") : sandbox.tempName,
+                weapon: weapon.name
+              });
+            });
           }
         }
         if (!isUser && action == "explosion") {
@@ -2341,14 +2395,21 @@
           object.position.set(metadata.position[0], metadata.position[1], metadata.position[2]);
           utils.explosion(object, false);
         }
-        if (!isUser && action == "die") {
+        if (isUser && action == "die") {
+          if (utils.options.get("Killed")) return;
+          utils.options.set("Killed", true);
           PointerControls.isLocked = false;
           TouchControls.isLocked = false;
           GamepadControls.isLocked = false;
-          utils.ui.dialog("You died", "You were killed by " + metadata.name + " using " + metadata.weapon, 2500);
+          utils.ui.dialog("You died", "You were killed by " + metadata.name + " using " + metadata.weapon.replace(/_/gi, " "), 4000);
           setTimeout(() => {
             utils.respawn();
-          }, 3000);
+            utils.options.set("Killed", false);
+          }, 4000);
+        }
+        if (isUser && action == "respawn") {
+          sandbox.models["player"].object.position.set(metadata.position[0], metadata.position[1] - 1, metadata.position[2]);
+          sandbox.models["player"].object.rotation.set(metadata.position[3], metadata.position[4], metadata.position[5]);
         }
       });
       function call(action, metadata) {
@@ -2529,7 +2590,7 @@
         }
       });
       gametime.onconnect = function() {
-        let username = userMan.isLoggedIn ? userMan.get("username") : generateName();
+        let username = userMan.isLoggedIn ? userMan.get("username") : sandbox.tempName;
         for (let i = 0; i < 2; i++) {
           call("info", {
             username: username,
