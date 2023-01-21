@@ -290,6 +290,7 @@
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js@latest/js/username-generator.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="js/user/user.js"></script>
   </head>
   <body>
@@ -558,6 +559,18 @@
         },
         notify: function(msg, icon) {
           Notiflix.Notify[icon](msg);
+        },
+        dialog: function(title, text, timeout) {
+          swal({
+            title: title,
+            text: text,
+            closeOnClickOutside: false,
+            closeOnEsc: false,
+            closeOnEnterKey: false,
+            closeOnSpaceKey: false,
+            button: false
+          });
+          setTimeout(() => swal.close(), timeout);
         }
       },
       ammo: {
@@ -737,6 +750,11 @@
             }, 10);
             let guideTranslate = setInterval(() => {
               ammoBoxes.forEach(x => collision(guide, x) && (ammoBoxes.splice(ammoBoxes.indexOf(x), 1), utils.explosion(x), scene.remove(x), load("models/assets/ammo/burnt_ammo.glb", (l) => (l = l.scene, l.position.copy(x.position), l.rotation.copy(x.rotation), x = l, scene.add(x)))));
+              if (collision(guide, playerTarget)) {
+                call("hit", {
+                  damage: damage
+                });
+              }
               guide.translateZ(-1);
             });
             setTimeout(() => clearInterval(guideTranslate), 5000);
@@ -1057,7 +1075,7 @@
           }
         }
 		  },
-      explosion: function(obj) {
+      explosion: function(obj, capture = true) {
         let explosion = sandbox.models["explosion"];
         let mixer = explosion.mixer.clipAction(explosion.animations[0]);
         mixer.reset();
@@ -1129,6 +1147,14 @@
         })();
         setTimeout(() => scene.remove(explosion), 2000);
         setTimeout(() => scene.remove(smoke.object), 15000);
+        if (playerTarget.position.distanceTo(explosion.position) <= 4) {
+          call("hit", {
+            damage: (playerTarget.position.distanceTo(explosion.position) * 200).toFixed(0) - 0
+          });
+        }
+        capture && call("explosion", {
+          position: [explosion.position.x, explosion.position.y, explosion.position.z]
+        });
       }
 	  };
       sandbox = {
@@ -1918,6 +1944,8 @@
         utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
         document.querySelector(".run-health").style.width = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth")) + "%";
         document.querySelector(".run-health").querySelector("span").querySelector("span").textContent = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth"));
+        document.querySelector(".health").style.width = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health")) + "%";
+        document.querySelector(".health").querySelector("span").querySelector("span").textContent = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health"));
         document.querySelector(".current-grenades").textContent = sandbox.grenades.current;
         sandbox.currentWeapon && utils.weapons.data(sandbox.currentWeapon).then(weapon => {
           document.querySelector(".current-ammo").textContent = (weapon.maxRounds * (weapon.maxClips + 1)) - weapon.roundsUsed;
@@ -2167,6 +2195,8 @@
       }, 100);
       utils.options.set("CanFire", true);
       utils.options.set("Reloading", false);
+      utils.options.set("HealthRegenerator", null);
+      utils.options.set("Health", 100);
       utils.options.set("RunHealth", 100);
       utils.options.set("WeaponLocked", true);
       utils.options.set("Zoomed", false);
@@ -2289,6 +2319,36 @@
           let weaponBox = utils.options.get("WeaponBoxes")[metadata.id];
           scene.remove(weaponBox);
           weaponBox.position.y = -10000;
+        }
+        if (!isUser && action == "hit") {
+          clearTimeout(utils.options.get("HealthRegenerator"));
+          utils.options.set("HealthRegenerator", setTimeout(() => {
+            let regeneration = setInterval(() => {
+              if (utils.options.get("Health") >= 100) {
+                utils.options.set("Health", 100);
+                return clearInterval(regeneration);
+              }
+              utils.options.set("Health", utils.options.get("Health") + 1);
+            });
+          }, 5000));
+          utils.options.set("Health", utils.options.get("Health") - metadata.damage);
+          if (utils.options.get("Health") <= 0) {
+            call("die", {});
+          }
+        }
+        if (!isUser && action == "explosion") {
+          let object = new THREE.Mesh();
+          object.position.set(metadata.position[0], metadata.position[1], metadata.position[2]);
+          utils.explosion(object, false);
+        }
+        if (!isUser && action == "die") {
+          PointerControls.isLocked = false;
+          TouchControls.isLocked = false;
+          GamepadControls.isLocked = false;
+          utils.ui.dialog("You died", "You were killed by " + metadata.name + " using " + metadata.weapon, 2500);
+          setTimeout(() => {
+            utils.respawn();
+          }, 3000);
         }
       });
       function call(action, metadata) {

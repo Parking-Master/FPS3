@@ -299,7 +299,7 @@
       availableModes = ["Slayer", "Teams", "Fiesta", "Snipers", "Oddball", "Fistfight", "CTF", "KOTH"];
       availableMaps = ["Cargo", "Storage", "Complex", "Lihid", "Aero"];
       currentMode = availableModes[0];
-      
+
       function loader(rate = 200) {
         let loader1 = document.createElement("div");
         let loader2 = document.createElement("div");
@@ -342,6 +342,7 @@
       }
       window.addEventListener("load", () => {
         loader();
+        Session.clearCache();
       });
       function play(button) {
         typeof button.clicked == "undefined" ? button.clicked = false : void(0);
