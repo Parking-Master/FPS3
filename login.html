@@ -276,7 +276,7 @@
             }, () => {
               document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
               setTimeout(() => Notiflix.Block.remove("form"), 1500);
-            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser"], new URLSearchParams(location.search).get("return") || null);
+            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail"], new URLSearchParams(location.search).get("return") || null);
           }
         };
         document.body.addEventListener("click", (e) => {

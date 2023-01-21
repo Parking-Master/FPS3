@@ -158,6 +158,7 @@
       .swal-content {
         height: 200px;
         overflow-y: scroll;
+        border-bottom: 2px solid #333;
       }
       code {
         padding: 2px;
@@ -196,9 +197,13 @@
         padding: 3px;
         color: #eee;
         text-align: center;
+        white-space: nowrap;
+      }
+      a .close {
+        text-decoration: none !important;
       }
       .keyword-holder {
-        margin-left: 20px;
+        margin-left: 10px;
         display: inline-flex;
         pointer-events: none !important;
       }
@@ -229,6 +234,7 @@
   <script type="text/javascript" src="https://npmcdn.com/parse@3.4.4/dist/parse.min.js"></script>
   <script src="js/user/chat.js"></script>
   <script src="js/user/user.js"></script>
+  <script src="js/user/mailer.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/Parking-Master/Date.js@latest/date.min.js"></script>
   <body>
     <div class="loader">
@@ -240,9 +246,7 @@
       <ul id="messages" style="margin-top: 55px"></ul>
       <form id="form" action="">
         <div id="input" style="display: inline-flex; align-items: center; justify-content: center; text-align: center; background: #fff">
-          <div class="keyword-holder" style="position: relative; width: auto; text-align: left; display: inline-block">
-            
-          </div>
+          <div class="keyword-holder" style="position: relative; width: auto; text-align: left; display: inline-block"></div>
           <input id="input" autocomplete="off" placeholder="Type your message here..." style="width: 100%; height: 100%; margin: 0; box-shadow: none; padding: 0" />
         </div>
         <button class="send" onclick="event.preventDefault(); sendMessage(document.querySelector('input#input').value) && (document.querySelector('input#input').value = '')">Send</button>
@@ -481,11 +485,18 @@
           selectedUser = name;
           document.querySelector(".keyword-holder a") && document.querySelector(".keyword-holder a").remove();
           document.querySelector(".keyword-holder").innerHTML += `
-          <a href="#" style="pointer-events: all !important" onclick="userOptions(this, '${btoa(encodeURIComponent(name))}', event)">${(document.querySelector("input#input").value + " @" + name).trim()}</a>
+          <a href="#" style="pointer-events: all !important" onclick="userOptions(this, '${btoa(encodeURIComponent(name))}', event)"><span onclick="event.preventDefault(), removeUser(this.parentElement.textContent.trim())" class="close">&times;</span>&ThickSpace;${("@" + name).trim()}</a>
           `;
           document.querySelector(".keyword-holder").style.paddingRight = "10px";
         }
+        function removeUser(name) {
+          selectedUser = null;
+          document.querySelector(".keyword-holder a") && document.querySelector(".keyword-holder a").remove();
+          document.querySelector(".keyword-holder").style.paddingRight = "0";
+        }
         function userOptions(element, name, event) {
+          name = decodeURIComponent(atob(name));
+          if (event.target.className == "close") return;
           let contextMenu = document.createElement("div");
           contextMenu.className = "context-menu";
           contextMenu.style = `
@@ -498,7 +509,7 @@
           box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24);
           `;
           contextMenu.innerHTML = `
-          <a href="">Add friend</a>
+          <a href="#" onclick="event.preventDefault(), contextAction('add', '${btoa(encodeURIComponent(name))}')">Add friend</a>
           <a href="">User info</a>
           <a href="">Invite to</a>
           `;
@@ -540,6 +551,17 @@
             download.setAttribute("download", "FPS World Chat.txt");
             download.click();
           });
+        }
+        function contextAction(type, username) {
+          username = decodeURIComponent(atob(username));
+          if (type == "add") {
+            let mail = new Mail(username.trim(), "Friend request", userMan.get("username").trim() + " wants to add you as friend", () => {
+              swal({
+                text: "Friend request sent!"
+              });
+            });
+            mail.send();
+          }
         }
         window.addEventListener("load", () => setTimeout(() => document.querySelector(".loader").remove(), 1000));
       </script>

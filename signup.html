@@ -160,7 +160,13 @@
                   "medals": [],
                   "kills": 0
                 }
-              }
+              },
+              "mail": [
+                {
+                  "sender": "System",
+                  "message": "Welcome to FPS3! we are excited to show you the future of web gaming. Click \"Help\" to learn more about how to use things. Enjoy!"
+                }
+              ]
             }, () => {
               document.querySelector(".notiflix-block-message").textContent = "Success!";
               localStorage.setItem("credentials", btoa(encodeURIComponent(username)) + ":" + btoa(encodeURIComponent(password)));

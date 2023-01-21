@@ -212,8 +212,42 @@
       .options {
         filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .3)) contrast(120%) brightness(150%) !important;
       }
+      .swal-overlay {
+        z-index: 999 !important;
+      }
+      [class^="swal"] {
+        animation: none !important;
+        transition: none !important;
+      }
+      .swal-button {
+        background: #333 !important;
+        color: #fff;
+        border-radius: 2px;
+        box-shadow: none !important;
+      }
+      .swal-modal {
+        border-radius: 1px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+      }
+      .swal-overlay {
+        background: rgba(10, 10, 10, .3);
+      }
+      .swal-content {
+        height: 200px;
+        overflow-y: scroll;
+        border-bottom: 2px solid #333;
+      }
+      .mail-body {
+        width: 90%;
+        background: #f1f1f1;
+        border: .2px solid #999;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+        margin: 10px;
+        padding: 4px;
+      }
     </style>
     <script src="js/user/user.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   </head>
 	<script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
   <body>
@@ -564,13 +598,14 @@
           <br>
           <span class="disabled"><a href="javascript:logout()" ${!userMan.isLoggedIn ? "disabled" : ""}>Log out user</a></span>
           <br>
-          <a href="javascript:help()">Help/Support</a>
+          <a href="javascript:mail()">Mail inbox</a>
         </div>
         `;
         document.body.appendChild(box);
       }
       window.addEventListener("load", function() {
         if (userMan.isLoggedIn) {
+          userMan.update(["tuser", "tpass"], function(key, value) {});
           let style = document.createElement("link");
           style.rel = "stylesheet";
           if (userMan.get("metadata").preferences.theme.toLowerCase().trim() == "auto") {
@@ -596,6 +631,18 @@
           document.write(body);
           document.close();
           window.dispatchEvent(new Event("load"));
+        });
+      }
+      function mail() {
+        let content = document.createElement("div");
+        userMan.get("mail").forEach(mail => {
+          content.innerHTML += `
+          <div class="mail-body"><h3>${mail.sender}</h3><p>${mail.message.slice(0, 15)}...</p></div>
+          `;
+        })
+        swal({
+          title: "Mail",
+          content: content
         });
       }
     </script>

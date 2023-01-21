@@ -302,6 +302,7 @@
     <script src="js/Octree.min.js"></script>
     <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
+    <script src="js/GamepadControls.min.js"></script>
     <script src="js/TouchControls.min.js"></script>
     <script src="js/UI.js"></script>
     <script src="js/ExplosionConfetti.min.js"></script>
@@ -1669,6 +1670,7 @@
                   weaponCamera.updateProjectionMatrix();
                   document.querySelector(".ui").style.visibility = "visible";
                   PointerControls.isLocked = true;
+                  GamepadControls.isLocked = true;
                   utils.weapons.data(sandbox.currentWeapon).then(x => {
                     x.mixer.clipAction(x.animations[0]).loop = THREE.LoopOnce;
                     x.mixer.clipAction(x.animations[0]).reset();
@@ -1686,6 +1688,7 @@
               weaponCamera.updateProjectionMatrix();
               document.querySelector(".ui").style.visibility = "visible";
               PointerControls.isLocked = true;
+              GamepadControls.isLocked = true;
               utils.weapons.data(sandbox.currentWeapon).then(x => {
                 x.mixer.clipAction(x.animations[0]).loop = THREE.LoopOnce;
                 x.mixer.clipAction(x.animations[0]).reset();
@@ -1978,8 +1981,10 @@
       const weaponScene = new THREE.Scene();
       const weaponCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
       const PointerControls = new PointerLockControls(camera, renderer.domElement);
+      const GamepadControls = THREE.GamepadControls(camera);
       const TouchControls = new THREE.TouchControls(camera, renderer.domElement);
       PointerControls.isLocked = false;
+      GamepadControls.isLocked = false;
       PointerControls.pointerSpeed = 2;
       TouchControls.speed = 3;
       weaponCamera.rotation.order = "YXZ";
