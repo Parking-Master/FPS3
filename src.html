@@ -348,6 +348,7 @@
       </div>
     </div>
     <div class="ui">
+      <img class="hit" src="images/other/hit.png" style="transition: opacity .2s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0; opacity: 0;">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
       <div class="ui-centering center">
         <img src="images/icons/ui/crosshair.png" class="crosshair drop-shadow">
@@ -622,6 +623,13 @@
                   }
                 });
               }
+              if (playerTarget.position.distanceTo(ammo.position) <= 1.5) {
+                if (run) return;
+                run = true;
+                scene.remove(ammo);
+                ammo.position.y = -10000;
+                clearInterval(pickup);
+              }
             });
           });
         }
@@ -775,12 +783,14 @@
               ammoBoxes.forEach(x => collision(guide, x) && (ammoBoxes.splice(ammoBoxes.indexOf(x), 1), utils.explosion(x), scene.remove(x), load("models/assets/ammo/burnt_ammo.glb", (l) => (l = l.scene, l.position.copy(x.position), l.rotation.copy(x.rotation), x = l, scene.add(x)))));
               if (collision(guide, playerTarget)) {
                 call("hit", {
-                  damage: damage
+                  damage: !utils.options.get("Zoomed") ? damage / 2 : damage
                 });
+                sandbox.models["player"].object.getObjectByName("mixamorigNeck").rotateX(-.2);
+                setTimeout(() => sandbox.models["player"].object.getObjectByName("mixamorigNeck").rotateX(.2), 50);
               }
-              guide.translateZ(-1);
+              guide.translateZ(-.5);
             });
-            setTimeout(() => clearInterval(guideTranslate), 5000);
+            setTimeout(() => clearInterval(guideTranslate), 10000);
             if (weapon.name == "Sniper_Rifle" && utils.options.get("Zoomed")) {
               utils.camera.shake(1);
             }
@@ -890,7 +900,7 @@
           let weaponBox = utils.options.get("WeaponBoxes")[weapon];
           scene.remove(weaponBox);
           weaponBox.position.y = -10000;
-          call("remove", {
+          typeof weaponBox.getObjectByName("BoxFBX") != undefined && call("remove", {
             id: weapon
           });
           let newWeapon = null;
@@ -1179,7 +1189,7 @@
           position: [explosion.position.x, explosion.position.y, explosion.position.z]
         });
       },
-      respawn: function() {
+      respawn: function(show = true) {
         let spawnPoint = sandbox.mapRespawnPoints[sandbox.map];
         let tempSpawns = [];
         spawnPoint.forEach(x => {
@@ -1197,10 +1207,55 @@
         call("respawn", {
           position: [camera.position.x, camera.position.y, camera.position.z, camera.rotation.x, camera.rotation.y, camera.rotation.z]
         });
+        if (show) {
+          new THREE.Sound("sounds/load.mp3", null, () => {}, false);
+          if (sandbox.mode == "Slayer") {
+            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+          }
+          if (sandbox.mode == "Teams") {
+            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+          }
+          if (sandbox.mode == "Fiesta") {
+            sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
+          }
+          if (sandbox.mode == "Snipers") {
+            sandbox.loadout = ["Sniper_Rifle", "Sniper_Rifle"];
+          }
+          if (sandbox.mode == "Oddball") {
+            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+          }
+          if (sandbox.mode == "Fistfight") {
+            sandbox.loadout = ["Knife", "Knife"];
+          }
+          if (sandbox.mode == "Ctf") {
+            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+          }
+          if (sandbox.mode == "Koth") {
+            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+          }
+          weaponScene.remove(sandbox.currentWeapon);
+          sandbox.weapons.forEach(x => {
+            x.rounds = x.maxRounds;
+            x.clips = x.maxClips;
+          });
+          sandbox.primaryWeapon = sandbox.weapons[sandbox.weapons.map(x => x.name == sandbox.loadout[0]).indexOf(true)].object;
+          sandbox.secondaryWeapon = sandbox.weapons[sandbox.weapons.map(x => x.name == sandbox.loadout[1]).indexOf(true)].object;
+          sandbox.currentWeapon = sandbox.primaryWeapon;
+          weaponScene.remove(sandbox.currentWeapon);
+          document.querySelector(".ui").style.visibility = "visible";
+          weaponScene.add(sandbox.currentWeapon);
+        }
       }
 	  };
+      let tempName = generateName();
       sandbox = {
-        users: [],
+        tempName: tempName,
+        users: [
+          {
+            player: 1,
+            username: tempName
+          }
+        ],
         players: 1,
         tempName: generateName(),
         mapRespawnPoints: {
@@ -1601,7 +1656,7 @@
       playerCollider.end.set(13.5, 1, -18.5);
       playerCollider.radius = 0.35;
       camera.position.copy(playerCollider.end);
-      camera.rotation.set(0,Math.PI,0);
+      camera.rotation.set(0, Math.PI, 0);
       const playerVelocity = new THREE.Vector3();
       const playerDirection = new THREE.Vector3();
       const playerTarget = new THREE.Mesh(new THREE.BoxGeometry(.4, 2.3, .4), new THREE.MeshStandardMaterial({ transparent: true, opacity: 0 }));
@@ -1993,8 +2048,8 @@
         utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
         document.querySelector(".run-health").style.width = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth")) + "%";
         document.querySelector(".run-health").querySelector("span").querySelector("span").textContent = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth"));
-        document.querySelector(".health").style.width = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health")) + "%";
-        document.querySelector(".health").querySelector("span").querySelector("span").textContent = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health"));
+        document.querySelector(".health").style.width = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0)) + "%";
+        document.querySelector(".health").querySelector("span").querySelector("span").textContent = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0));
         document.querySelector(".current-grenades").textContent = sandbox.grenades.current;
         sandbox.currentWeapon && utils.weapons.data(sandbox.currentWeapon).then(weapon => {
           document.querySelector(".current-ammo").textContent = (weapon.maxRounds * (weapon.maxClips + 1)) - weapon.roundsUsed;
@@ -2366,10 +2421,17 @@
         }
         if (!isUser && action == "remove") {
           let weaponBox = utils.options.get("WeaponBoxes")[metadata.id];
+          if (!weaponBox) return;
+          pointers[metadata.id].position.y = -10000;
+          scene.remove(pointers[metadata.id]);
+          delete pointers[metadata.id];
           scene.remove(weaponBox);
           weaponBox.position.y = -10000;
         }
         if (!isUser && action == "hit") {
+          document.querySelector(".hit").style.opacity = .5;
+          setTimeout(() => (document.querySelector(".hit").style.opacity = 0), 200);
+          utils.camera.shake(metadata.damage / 10 >= 2 ? 2 : metadata.damage / 10);
           clearTimeout(utils.options.get("HealthRegenerator"));
           utils.options.set("HealthRegenerator", setTimeout(() => {
             let regeneration = setInterval(() => {
@@ -2384,8 +2446,8 @@
           if (utils.options.get("Health") <= 0) {
             utils.weapons.data(sandbox.currentWeapon).then(weapon => {
               call("die", {
-                name: userMan.isLoggedIn ? userMan.get("username") : sandbox.tempName,
-                weapon: weapon.name
+                name: sandbox.users[sandbox.users.map(x => x.username != (userMan.isLoggedIn ? userMan.get("username") : sandbox.tempName)).indexOf(true)].username,
+                weapon: Object.keys(sandbox.models)[Object.keys(sandbox.models).map(x => x == (character.currentWeapon == character.primaryWeapon ? character.loadout[0] : character.loadout[1])).indexOf(true)]
               });
             });
           }
@@ -2401,15 +2463,21 @@
           PointerControls.isLocked = false;
           TouchControls.isLocked = false;
           GamepadControls.isLocked = false;
+          document.querySelector(".ui").style.visibility = "hidden";
           utils.ui.dialog("You died", "You were killed by " + metadata.name + " using " + metadata.weapon.replace(/_/gi, " "), 4000);
           setTimeout(() => {
             utils.respawn();
             utils.options.set("Killed", false);
           }, 4000);
+          weaponScene.remove(sandbox.currentWeapon);
         }
-        if (isUser && action == "respawn") {
+        if (!isUser && action == "die") {
+          sandbox.models["player"].object.position.y = -10000;
+        }
+        if (!isUser && action == "respawn") {
           sandbox.models["player"].object.position.set(metadata.position[0], metadata.position[1] - 1, metadata.position[2]);
           sandbox.models["player"].object.rotation.set(metadata.position[3], metadata.position[4], metadata.position[5]);
+          sandbox.models["player"].object.rotateY(Math.PI);
         }
       });
       function call(action, metadata) {
@@ -2556,15 +2624,18 @@
             <div class="column">${x.player} - ${x.username} <div class="spin"></div>
             `;
           });
+          utils.respawn(false);
           let playerLoader = setInterval(() => {
             if (sandbox.users.length >= sandbox.players) {
               weaponScene.remove(sandbox.currentWeapon);
               document.querySelector(".ui").style.visibility = "hidden";
+              utils.respawn(false);
               setTimeout(() => {
                 camera.fov = 30;
                 camera.updateProjectionMatrix();
                 weaponCamera.fov = 30;
                 weaponCamera.updateProjectionMatrix();
+                utils.respawn(false);
               }, 2000);
               setTimeout(() => {
                 document.querySelector(".banner").style.opacity = 0;
