@@ -595,6 +595,39 @@
             button: false
           });
           setTimeout(() => swal.close(), timeout);
+        },
+        medal: function(name, points) {
+          medals.push(name.trim());
+          let icon = "images/icons/medals/" + name.toLowerCase() + ".png";
+          name = name.replace(/_/gi, " ");
+          name = (name[0].toUpperCase() + name.toLowerCase().slice(1));
+          utils.options.set("ActiveMedals", utils.options.get("ActiveMedals") + 1);
+          let medal = document.createElement("div");
+          let medals = [];
+          document.querySelectorAll(".medal").forEach(x => {
+            medals.push(x.textContent.toLowerCase().trim());
+          });
+          if (medals.indexOf(name.toLowerCase().trim()) > -1) return;
+          medal.innerHTML = `
+          +${points}&ThickSpace;&ThickSpace;<img src="${icon}" width="30px">&ThickSpace;&ThickSpace;<span class="medal" style="color: #333 !important">${name}</span>
+          `;
+          medal.style = `
+          transition: transform 1s ease-in;
+          display: inline-flex;
+          position: absolute;
+          z-index: 9999999999999999999;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          color: #333 !important;
+          top: ${(150 + ((utils.options.get("ActiveMedals") - 1) * 35))}px;
+          left: 200px;
+          filter: invert(100%);
+          transform: scale(1.5);
+          `;
+          document.body.appendChild(medal);
+          setTimeout(() => medal.style.transform = "", 300);
+          setTimeout(() => (document.body.removeChild(medal), utils.options.set("ActiveMedals", utils.options.get("ActiveMedals") - 1)), 3000);
         }
       },
       ammo: {
@@ -758,7 +791,11 @@
             shakyWeapon.rotateX(randomX);
             sandbox.weapons.forEach(x => x.object == sandbox.currentWeapon && (x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).loop = THREE.LoopOnce, x.mixer.clipAction(x.animations[2]).reset(), x.mixer.clipAction(x.animations[2]).play(), x.mixer.clipAction(x.animations[2]).timeScale = 5, x.mixer.clipAction(x.animations[2]).fadeIn()));
             utils.camera.shake(.2);
-            let guide = new THREE.Mesh(new THREE.CircleGeometry(.1));
+            let guide = new THREE.Group();
+            guide.add(new THREE.Mesh(new THREE.CylinderGeometry(.005, .005, .05), new THREE.MeshBasicMaterial({ color: 0xffffff })));
+            guide.children[0].rotateX(Math.PI / 2);
+            guide.children[0].translateY(.5);
+            scene.add(guide);
             let e = new THREE.Mesh(new THREE.CircleGeometry(1));
             guide.position.copy(camera.position);
             e.position.copy(camera.position);
@@ -1250,12 +1287,11 @@
       let tempName = generateName();
       sandbox = {
         tempName: tempName,
-        users: [
-          {
-            player: 1,
-            username: tempName
-          }
-        ],
+        medals: [],
+        kills: 0,
+        points: [0, 0],
+        maxPoints: 10,
+        users: [],
         players: 1,
         tempName: generateName(),
         mapRespawnPoints: {
@@ -2014,6 +2050,59 @@
       intersection = null;
       function animate() {
         requestAnimationFrame(animate);
+        if (sandbox.points[0] >= sandbox.maxPoints) {
+          if (gametime.user.position == 1) {
+            if (!utils.options.get("GameOver")) {
+              utils.options.set("GameOver", true);
+              let points = (sandbox.points[0] + sandbox.medals.length) * 10;
+              utils.ui.dialog("Game over", "You win! You earned " + sandbox.medals.length + " medals and " + points + " points", 10000);
+              let rewards = {
+                points: points,
+                medals: sandbox.medals
+              };
+              localStorage.setItem("temp-rewards", JSON.stringify(rewards));
+              setTimeout(() => location.replace("/"), 5000);
+            }
+          } else {
+            if (!utils.options.get("GameOver")) {
+              utils.options.set("GameOver", true);
+              let points = 50;
+              utils.ui.dialog("Game over", "You lose... But you earned " + points + " points for playing!", 10000);
+              let rewards = {
+                points: points,
+                medals: []
+              };
+              localStorage.setItem("temp-rewards", JSON.stringify(rewards));
+              setTimeout(() => location.replace("/"), 5000);
+            }
+          }
+        } else if (sandbox.points[1] >= sandbox.maxPoints) {
+          if (gametime.user.position == 2) {
+            if (!utils.options.get("GameOver")) {
+              utils.options.set("GameOver", true);
+              let points = (sandbox.points[1] + sandbox.medals.length) * 10;
+              utils.ui.dialog("Game over", "You win! You earned " + sandbox.medals.length + " medals and " + points + " points", 10000);
+              let rewards = {
+                points: points,
+                medals: sandbox.medals
+              };
+              localStorage.setItem("temp-rewards", JSON.stringify(rewards));
+              setTimeout(() => location.replace("/"), 5000);
+            }
+          } else {
+            if (!utils.options.get("GameOver")) {
+              utils.options.set("GameOver", true);
+              let points = 50;
+              utils.ui.dialog("Game over", "You lose... But you earned " + points + " points for playing!", 10000);
+              let rewards = {
+                points: points,
+                medals: []
+              };
+              localStorage.setItem("temp-rewards", JSON.stringify(rewards));
+              setTimeout(() => location.replace("/"), 5000);
+            }
+          }
+        }
         camera.updateMatrixWorld();
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         let intersections = raycaster.intersectObjects(raycastTargets);
@@ -2314,6 +2403,10 @@
       utils.options.set("PlayerWalkingLeft", false);
       utils.options.set("PlayerWalkingRight", false);
       utils.options.set("Starting", false);
+      utils.options.set("Killed", false);
+      utils.options.set("OtherKilled", false);
+      utils.options.set("GameOver", false);
+      utils.options.set("ActiveMedals", 0);
 
       /* Multiplayer setup */
       character = {
@@ -2460,6 +2553,9 @@
         if (isUser && action == "die") {
           if (utils.options.get("Killed")) return;
           utils.options.set("Killed", true);
+          if (gametime.user.position == 1) {
+            sandbox.points[1]++;
+          } else sandbox.points[0]++;
           PointerControls.isLocked = false;
           TouchControls.isLocked = false;
           GamepadControls.isLocked = false;
@@ -2472,7 +2568,53 @@
           weaponScene.remove(sandbox.currentWeapon);
         }
         if (!isUser && action == "die") {
+          if (utils.options.get("OtherKilled")) return;
+          utils.options.set("OtherKilled", true);
+          setTimeout(() => utils.options.set("OtherKilled", false), 2000);
           sandbox.models["player"].object.position.y = -10000;
+          if (gametime.user.position == 1) {
+            sandbox.points[0]++;
+            utils.ui.medal("kill", 10);
+            new THREE.Sound("sounds/kill.mp3", null, () => {}, false);
+            utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+              if (weapon.ammo == "rocket") {
+                utils.ui.medal("rocket_kill", 10);
+              }
+              if (weapon.ammo == "grenade") {
+                utils.ui.medal("grenade_kill", 15);
+              }
+              if (weapon.rounds <= weapon.minRounds && weapon.ammo != "rocket" && weapon.ammo != "grenade") {
+                utils.ui.medal("last_shot", 10);
+              }
+              if (weapon.ammo == "sniper") {
+                if (!utils.options.get("Zoomed")) {
+                  utils.ui.medal("no_scope", 15);
+                }
+                utils.ui.medal("sniper_kill", 5);
+              }
+            });
+          } else {
+            sandbox.points[1]++;
+            utils.ui.medal("kill", 10);
+            new THREE.Sound("sounds/kill.mp3", null, () => {}, false);
+            utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+              if (weapon.ammo == "rocket") {
+                utils.ui.medal("rocket_kill", 10);
+              }
+              if (weapon.ammo == "grenade") {
+                utils.ui.medal("grenade_kill", 15);
+              }
+              if (weapon.rounds <= weapon.minRounds && weapon.ammo != "rocket" && weapon.ammo != "grenade") {
+                utils.ui.medal("last_shot", 10);
+              }
+              if (weapon.ammo == "sniper") {
+                if (!utils.options.get("Zoomed")) {
+                  utils.ui.medal("no_scope", 15);
+                }
+                utils.ui.medal("sniper_kill", 5);
+              }
+            });
+          }
         }
         if (!isUser && action == "respawn") {
           sandbox.models["player"].object.position.set(metadata.position[0], metadata.position[1] - 1, metadata.position[2]);
@@ -2624,6 +2766,7 @@
             <div class="column">${x.player} - ${x.username} <div class="spin"></div>
             `;
           });
+          sandbox.users.push({});
           utils.respawn(false);
           let playerLoader = setInterval(() => {
             if (sandbox.users.length >= sandbox.players) {

@@ -93,6 +93,7 @@
         border: 5px solid #333;
         border-image: linear-gradient(to top, #333, #fff) 1 / 20px;
         background: #fefefe;
+        text-align: center;
       }
       .card:hover {
         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
@@ -176,7 +177,8 @@
       input {
         border: 2px solid #333;
         padding: 10px;
-      }      @keyframes spin {
+      }
+      @keyframes spin {
         0% {
           transform: rotate(0deg);
         }
@@ -272,6 +274,11 @@
         left: 50%;
         transform: translate(-50%, -50%);
       }
+      .center-h {
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0);
+      }
       .loader {
         background: #fff;
         position: fixed;
@@ -290,6 +297,50 @@
         align-items: center;
         justify-content: center;
       }
+      hr {
+        width: 50%;
+        background: #eee;
+        outline: none;
+        border: none;
+        height: 3px;
+        border-radius: 3px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.1);
+      }
+      .profilepicture {
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.1);
+      }
+      .bio {
+        border: 2px solid #333;
+        text-align: left;
+        width: 250px;
+        height: 70px;
+        padding: 5px;
+        background: #f9f9f9;
+        display: inline-block;
+        border-radius: 3px;
+        position: absolute;
+        margin: 20px;
+        right: 50% !important;
+        margin-right: -20%;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.1);
+      }
+      @media only screen and (max-width: 1220px) {
+        .seperator {
+          display: none !important;
+        }
+      }
+      @media only screen and (max-width: 885px) {
+        .bio {
+          display: block;
+          position: absolute;
+          left: 50%;
+          transform: translate(-50%, 0);
+          margin: 0;
+        }
+        .profilepicture {
+          margin-left: 0 !important;
+        }
+      }
 	</style>
     <script src="js/user/user.js"></script>
   </head>
@@ -300,41 +351,24 @@
       </div>
     </div>
     <div class="wrapper">
-      <h2 style="margin-top: 2%" class="main-title">FPS</h2>
-      <div class="strike str-left"></div>
-      <div class="strike str-right"></div>
-      <div class="top-users container">
-        <div class="card blank">
-          <h2 style="color: #333">Top players</h2>
-        </div>
+      <p style="font-size: 30px">User info for "<span class="username"></span>"</p>
+      <hr>
+      <img class="profilepicture" src="https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png" style="width: 80px; border: 2px solid #333; border-radius: 100%; margin: 20px; margin-left: -30%">
+      <hr class="seperator" style="position: absolute; display: inline-block; width: 8vw; left: 50%; margin-left: -10vw; margin-top: 50px; box-shadow: none; background: #333; border-radius: 0">
+      <div class="bio">
+        <i style="color: #999">No bio is set for this user.</i>
       </div>
-      <div class="future-friends container">
-        <div class="card blank">
-          <h2 style="color: #333">Future friends</h2>
+      <hr>
+      <p style="font-size: 20px">Achievements</p>
+      <div class="center-h">
+        <div class="medals">
+          <img class="medal" src="images/store/failed.png" style="width: 50px; border: 2px solid #333; border-radius: 100%; margin: 10px">
         </div>
+        <br>
+        <p><span class="kills">0</span> total kills</p>
+        <p><span class="medalsearned">0</span> medal(s) earned</p>
       </div>
-      <div class="search-users container">
-        <div class="card blank">
-        </div>
-      </div>
-      <div class="search-users container">
-        <div class="card blank">
-          <input onkeyup="search(this.value)" style="margin-top: -45px" placeholder="Search for people...">
-        </div>
-      </div>
-      <div class="my-user container">
-        <div class="card blank">
-          <h2 style="color: #333">My user</h2>
-        </div>
-        <div>
-          <div class="card">
-            <b><span class="my-username username"></span></b>
-            <br>
-            <br>
-            <img class="my-picture picture" src="">
-          </div>
-        </div>
-      </div>
+      <hr style="margin-top: 15%">
       <script>
         function traverse(obj, callback) {
           for (let property in obj) {
@@ -346,44 +380,6 @@
               }
             }
           }
-        }
-        function createTable(user) {
-          let myValues = {};
-          let userValues = {};
-          let relatedItems = 0;
-          traverse(user.get("metadata"), (x, i) => {
-            user.get("temail") != userMan.get("temail") && (userValues[i] = x);
-          });
-          traverse(userMan.get("metadata"), (x, i) => {
-            myValues[i] = x;
-          });
-          Object.keys(userValues).forEach(x => {
-            if (myValues[x] == userValues[x]) {
-              relatedItems++;
-            }
-          });
-          let isRelated = relatedItems >= 2;
-          Object.values(user.get("metadata").preferences)
-          document.querySelector(".top-users.container").querySelectorAll(".card").length > 3 || (document.querySelector(".top-users.container").innerHTML += `
-          <div onclick="location.assign('./user.html?q=${encodeURIComponent(user.get("username"))}')">
-            <div class="card">
-              <b><span id="username">${user.get("username")}</span></b>
-              <br>
-              <br>
-              <img src="${user.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png"}" class="picture">
-            </div>
-          </div>
-          `);
-          isRelated && (document.querySelector(".future-friends.container").innerHTML += `
-          <div onclick="location.assign('./user.html?q=${encodeURIComponent(user.get("username"))}')">
-            <div class="card">
-              <b><span id="username">${user.get("username")}</span></b>
-              <br>
-              <br>
-              <img src="${user.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png"}" class="picture">
-            </div>
-          </div>
-          `);
         }
         users = [];
         let init = setInterval(() => {
@@ -401,33 +397,29 @@
                 new Parse.Query(n).get(s[t].id).then((t => {
                   Parse.User.logIn(t.get("username"), t.get("tpass")).then((user) => {
                     users.push(user);
-                    createTable(user);
+                    if (user.get("username").trim() == decodeURIComponent(new URLSearchParams(location.search).get("q")).trim()) {
+                      document.querySelectorAll(".username").forEach(x => x.textContent = user.get("username"));
+                      document.querySelectorAll(".profilepicture").forEach(x => x.src = user.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png");
+                      document.querySelectorAll(".kills").forEach(x => x.textContent = user.get("metadata").history.kills || 0);
+                      document.querySelectorAll(".medalsearned").forEach(x => x.textContent = user.get("metadata").history.medals.length);
+                      if (user.get("metadata").history.medals.length < 1) {
+                        document.querySelector(".medals").innerHTML = `
+                        <i style="color: #999">This user has not earned any medals.</i>
+                        `;
+                      }
+                      user.get("metadata").history.medals.forEach(x => {
+                        document.querySelector(".medals").innerHTML += `
+                        <img class="medal" src="images/icons/medals/${x.trim().toLowerCase()}.png" style="width: 50px; border: 2px solid #333; border-radius: 100%; margin: 10px">
+                        `;
+                      });
+                    }
                   });
                 }));
               }
             })();
-            document.querySelectorAll(".my-username").forEach(x => x.textContent = userMan.get("username"));
-            document.querySelectorAll(".my-picture").forEach(x => x.src = userMan.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png");
             clearInterval(init);
           }
         });
-        function search(user) {
-          Object.values(document.querySelector(".search-users.container").children).forEach(x => !x.className.includes("blank") && (x.remove()));
-          users.forEach(x => {
-            if (x.get("username").toLowerCase().trim().startsWith(user) && (user.length >= x.get("username") ? x.get("username").toLowerCase().trim().endsWith(user.slice(user.length / 2, user.length)) : true)) {
-              document.querySelector(".search-users.container").innerHTML += `
-              <div onclick="location.assign('./user.html?q=${encodeURIComponent(x.get("username"))}')">
-                <div class="card">
-                  <b><span id="username">${x.get("username")}</span></b>
-                  <br>
-                  <br>
-                  <img src="${x.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png"}" class="picture">
-                </div>
-              </div>
-              `;
-            }
-          });
-        }
         window.addEventListener("load", () => setTimeout(() => document.querySelector(".loader").remove(), 1000));
       </script>
     </div>

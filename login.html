@@ -104,13 +104,30 @@
       .notiflix-confirm-head > h5 {
         color: #333 !important;
       }
+      .swal-overlay {
+        z-index: 999 !important;
+      }
+      [class^="swal"] {
+        animation: none !important;
+        transition: none !important;
+      }
       .swal-button {
         background: #333 !important;
+        color: #fff;
+        border-radius: 2px;
         box-shadow: none !important;
-        color: #fff !important;
       }
-      .swal-content__input {
-        border-color: #333 !important;
+      .swal-modal {
+        border-radius: 1px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+      }
+      .swal-overlay {
+        background: rgba(10, 10, 10, .3);
+      }
+      .swal-content {
+        height: 200px;
+        overflow-y: scroll;
+        border-bottom: 2px solid #333;
       }
     </style>
   </head>

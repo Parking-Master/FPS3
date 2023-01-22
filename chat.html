@@ -270,12 +270,15 @@
             notiflixIconColor: "#fff"
           }
         });
+        availableModes = ["Slayer", "Teams", "Fiesta", "Snipers", "Oddball", "Fistfight", "CTF", "KOTH"];
+        availableMaps = ["Cargo", "Storage", "Complex", "Lihid", "Aero"];
         words = [];
         fetch("words.json").then((e) => e.json()).then((e) => words = (e.words));
         gametime.set("key", "pub-c-1ed2f84f-762b-4211-84f9-617b19be2b23", "sub-c-1521e0cc-f132-41e5-9d46-6b06a7d09f90");
         gametime.set("channel", "world");
         gametime.make("message");
-        function sendMessage(msg = "") {
+        function sendMessage(msg = "", isInvite = false) {
+          console.log(msg)
           if (!msg.trim()) return false;
           if (selectedUser) {
             msg = "From :bold:" + (userMan.isLoggedIn ? userMan.get("username") : "Guest") + ":endbold:, to :bold:" + selectedUser + ":endbold: at " + date.js.time() + ": " + msg;
@@ -284,28 +287,32 @@
           }
           let oldmsg = msg.toLowerCase();
           let i = oldmsg;
-          words.forEach((x) => {
-            x = x.toLowerCase();
-            let newi = i.replace(new RegExp((x.replace(/[\(\)\*\@\!\$\-]/gi, "\\$1")).toString().toLowerCase(), "g"), (t => {
-              let g = "";
-              t.forEach(() => g += "*");
-              return g;
-            })(x.toString().toLowerCase().split("")));
-            i = newi;
-          });
-          if (i.toLowerCase() != oldmsg) return Notiflix.Notify.info("For everyones safety, we block inaproppriate messages. We're trying to make the chat a safer place.\n\nError: Could not submit message.");
+          if (!isInvite) {
+            words.forEach((x) => {
+              x = x.toLowerCase();
+              let newi = i.replace(new RegExp((x.replace(/[\(\)\*\@\!\$\-]/gi, "\\$1")).toString().toLowerCase(), "g"), (t => {
+                let g = "";
+                t.forEach(() => g += "*");
+                return g;
+              })(x.toString().toLowerCase().split("")));
+              i = newi;
+            });
+            if (i.toLowerCase() != oldmsg) return Notiflix.Notify.info("For everyones safety, we block inaproppriate messages. We're trying to make the chat a safer place.\n\nError: Could not submit message.");
+          }
+          console.log(msg)
           if (document.querySelectorAll("li").length >= 6) {
             document.querySelector("li").remove();
             chat.truncate(6);
           }
           msg = msg.replace(/[\<\>]/gi, "");
-          msg = msg.replace(/(\:bold\:)/g, "<b>").replace(/(\:endbold\:)/g, "</b>").replace(/(\:italic\:)/g, "<i>").replace(/(\:enditalic\:)/g, "</i>");
+          msg = msg.replace(/(\:bold\:)/g, "<b>").replace(/(\:endbold\:)/g, "</b>").replace(/(\:italic\:)/g, "<i>").replace(/(\:enditalic\:)/g, "</i>").replace(/(\:link (.*))/g, "<a $1").replace(/(\:endlink\:)/g, "</a>").replace(/(href\=.(.*).\:)/, "href=\"$2\">").replace(":link", "").trim();
           var item = document.createElement("li");
           item.innerHTML = msg.replace(/\<\>/gi,"").split("(|-star-|)").join("&ast;");
           messages.appendChild(item);
           window.scrollTo(0, document.body.scrollHeight);
           chat.add(msg);
           gametime.run("message", [gametime.user.position + "," + btoa(encodeURIComponent(msg))]);
+          console.log(msg)
           return true;
         }
         var messages = document.getElementById("messages");
@@ -333,18 +340,6 @@
           window.scrollTo(0, document.body.scrollHeight);
         });
         gametime.connected = true;
-        function invite() {
-          Notiflix.Notify.info("In the input box, type the players username that you want to invite, starting with an \"@\". Then submit it to find an invite.");
-          let k = sendMessage;
-          gametime.on("message", function(i) {
-            if (!i.includes(" ") && !i.includes("@")) {
-              return;
-            }
-            let username = (localStorage["username"] || ("Guest" + Math.random().toString().split(".")[1]));
-            let uselink = (localStorage["username"] ? true : false);
-            sendMessage("[@" + (localStorage["username"] || ("Guest" + Math.random().toString().split(".")[1])) + "](" + (uselink ? "/users/#/" + username : "#") + ") invited [" + i.toString() + "](/users/#/" + i.toString() + ") to a 1v1 match")
-          });
-        }
         function help() {
           let content = document.createElement("div");
           content.className = "swal-text";
@@ -510,15 +505,15 @@
           `;
           contextMenu.innerHTML = `
           <a href="#" onclick="event.preventDefault(), contextAction('add', '${btoa(encodeURIComponent(name))}')">Add friend</a>
-          <a href="">User info</a>
-          <a href="">Invite to</a>
+          <a href="#" onclick="event.preventDefault(), contextAction('info', '${btoa(encodeURIComponent(name))}')">User info</a>
+          <a href="#" onclick="event.preventDefault(), contextAction('invite', '${btoa(encodeURIComponent(name))}')">Invite to</a>
           `;
           contextMenu.style.top = event.clientY + "px";
           contextMenu.style.left = event.clientX + "px";
           document.body.appendChild(contextMenu);
           document.addEventListener("mouseup", function(e) {
             if (e.target != contextMenu) {
-              contextMenu.remove();
+              setTimeout(() => contextMenu.remove(), 50);
             }
           });
         }
@@ -561,6 +556,14 @@
               });
             });
             mail.send();
+          }
+          if (type == "info") {
+            let link = "/user.html?b=1&q=" + encodeURIComponent(username);
+            location.assign(link);
+          }
+          if (type == "invite") {
+            let link = "/src.html?lobby=" + btoa(Math.random() * Math.random()) + "&map=" + availableMaps[Math.floor(Math.random() * availableMaps.length)] + "&mode=" + availableModes[Math.floor(Math.random() * availableModes.length)];
+            sendMessage(":link href='" + link + "':Game invite:endlink:", true);
           }
         }
         window.addEventListener("load", () => setTimeout(() => document.querySelector(".loader").remove(), 1000));

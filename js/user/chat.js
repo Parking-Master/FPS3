@@ -45,10 +45,9 @@ chat = {};
   chat.truncate = function(length) {
     getHistory().then((chistory) => {
       let messages = chistory.get("history").split(",");
-      console.log(messages)
       messages = messages.slice(messages.length - length, messages.length);
-      console.log(messages)
       chistory.set("history", messages.join(","));
+      chistory.save();
     });
   }
 })();
