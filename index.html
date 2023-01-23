@@ -608,6 +608,21 @@
       window.addEventListener("load", function() {
         if (userMan.isLoggedIn) {
           userMan.update(["tuser", "tpass"], function(key, value) {});
+          if (localStorage["temp-rewards"]) {
+            let rewards = JSON.parse(localStorage["temp-rewards"]);
+            rewards.medals = [...new Set(rewards.medals)];
+            userMan.get("metadata").history.medals.forEach(x => {
+              if (rewards.medals.indexOf(x.trim()) > -1) {
+                rewards.medals.splice(rewards.medals.indexOf(x.trim()), 1);
+              }
+            });
+            let oldRewards = userMan.get("metadata");
+            oldRewards.history.medals = rewards.medals;
+            oldRewards.points += rewards.points;
+            oldRewards.history.kills += rewards.kills || 0;
+            userMan.set("metadata", oldRewards, () => {});
+            localStorage.removeItem("temp-rewards");
+          }
           let style = document.createElement("link");
           style.rel = "stylesheet";
           if (userMan.get("metadata").preferences.theme.toLowerCase().trim() == "auto") {

@@ -326,7 +326,7 @@
         <div class="card blank">
           <h2 style="color: #333">My user</h2>
         </div>
-        <div>
+        <div class="my-link">
           <div class="card">
             <b><span class="my-username username"></span></b>
             <br>
@@ -363,7 +363,6 @@
             }
           });
           let isRelated = relatedItems >= 2;
-          Object.values(user.get("metadata").preferences)
           document.querySelector(".top-users.container").querySelectorAll(".card").length > 3 || (document.querySelector(".top-users.container").innerHTML += `
           <div onclick="location.assign('./user.html?q=${encodeURIComponent(user.get("username"))}')">
             <div class="card">
@@ -406,6 +405,7 @@
                 }));
               }
             })();
+            document.querySelectorAll(".my-link").forEach(x => x.onclick = () => location.assign("./user.html?q=" + encodeURIComponent(userMan.get("username"))));
             document.querySelectorAll(".my-username").forEach(x => x.textContent = userMan.get("username"));
             document.querySelectorAll(".my-picture").forEach(x => x.src = userMan.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png");
             clearInterval(init);
