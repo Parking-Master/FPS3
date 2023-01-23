@@ -693,8 +693,9 @@
         }
       },
 	    weapons: {
-        punch: function() {
+        punch: function(damage = 50) {
           if (utils.options.get("Punching")) return;
+          new THREE.Sound("sounds/punch.mp3", sandbox.currentWeapon, () => {}, false);
           utils.camera.zoomOut();
           utils.options.set("Punching", true);
           setTimeout(() => utils.camera.shake(1), 200);
@@ -708,6 +709,11 @@
             clip.play();
             setTimeout(() => (clip.timeScale = -1, clip.paused = false), 500);
           });
+          if (sandbox.currentWeapon.position.distanceTo(playerTarget.position) <= 1.5) {
+            call("hit", {
+              damage: damage
+            });
+          }
         },
         data: function(weapon) {
           return new Promise(function(resolve, reject) {
@@ -1311,6 +1317,9 @@
         }
       }
 	  };
+      utils.weapons.create.disable = function() {
+        utils.weapons.create = () => {};
+      }
       let tempName = generateName();
       sandbox = {
         tempName: tempName,
@@ -1554,6 +1563,28 @@
               }
             },
             useDefaultRunAnimation: false
+          },
+          {
+            name: "Knife",
+            ammo: "none",
+            rounds: 0,
+            minRounds: 0,
+            maxRounds: 0,
+            minClips: 0,
+            maxClips: 0,
+            clips: 0,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 0
+              },
+              full: {
+                sound: null,
+                time: 0,
+                useDefaultAnimation: true
+              }
+            },
+            useDefaultRunAnimation: false
           }
         ],
         grenades: {
@@ -1658,6 +1689,13 @@
           },
           "Grenade_Launcher": {
             srcPath: "models/weapons/dropped/Grenade_Launcher.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Knife": {
+            srcPath: "models/weapons/dropped/Knife.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -2332,6 +2370,37 @@
       gametime.set("channel", new URLSearchParams(location.search).get("lobby"));
 
       // Game setup
+      if (sandbox.mode == "Slayer") {
+        sandbox.players = 2;
+      }
+      if (sandbox.mode == "Teams") {
+        sandbox.players = 4;
+      }
+      if (sandbox.mode == "Fiesta") {
+        sandbox.players = 2;
+        sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
+        utils.weapons.create.disable();
+      }
+      if (sandbox.mode == "Snipers") {
+        sandbox.players = 2;
+        sandbox.loadout = ["Sniper_Rifle", "Sniper_Rifle"];
+        utils.weapons.create.disable();
+      }
+      if (sandbox.mode == "Oddball") {
+        sandbox.players = 2;
+      }
+      if (sandbox.mode == "Fistfight") {
+        sandbox.players = 2;
+        sandbox.loadout = ["Knife", "Knife"];
+        utils.weapons.create.disable();
+      }
+      if (sandbox.mode == "Ctf") {
+        sandbox.players = 2;
+      }
+      if (sandbox.mode == "Koth") {
+        sandbox.players = 2;
+      }
+      
       if (sandbox.map == "Cargo") {
         sun = new THREE.Mesh(new THREE.CircleGeometry(10), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/sun.png"), transparent: true }));
         scene.background = new THREE.Color(0x88ccee);
@@ -2426,6 +2495,24 @@
           }
           if (weapon.name == "Grenade_Launcher") {
             utils.weapons.shoot(1);
+          }
+          if (weapon.name == "Knife") {
+            let swing1;
+            let e = sandbox.currentWeapon.children[0].rotation;
+            let d = sandbox.currentWeapon.children[0].position;
+            let t = 0;
+            let swing = setInterval(() => {
+              if (t >= .2) return swing1 = setInterval(() => {
+              if (t <= 0) return sandbox.currentWeapon.children[0].rotation.copy(e), sandbox.currentWeapon.children[0].position.copy(d), clearInterval(swing1);
+              t += -.005;
+              sandbox.currentWeapon.children[0].rotateX(-.02);
+              sandbox.currentWeapon.children[0].translateY(.2);
+            }), clearInterval(swing);
+              t += .005;
+              sandbox.currentWeapon.children[0].rotateX(.02);
+              sandbox.currentWeapon.children[0].translateY(-.2);
+            });
+            utils.weapons.punch(200);
           }
         });
       });
@@ -2655,7 +2742,7 @@
               if (weapon.ammo == "grenade") {
                 utils.ui.medal("grenade_kill", 15);
               }
-              if (weapon.rounds <= weapon.minRounds && weapon.ammo != "rocket" && weapon.ammo != "grenade") {
+              if (weapon.rounds <= weapon.minRounds && weapon.ammo != "rocket" && weapon.ammo != "grenade" && weapon.name != "Knife") {
                 utils.ui.medal("last_shot", 10);
               }
               if (weapon.ammo == "sniper") {
@@ -2885,33 +2972,6 @@
         }
       };
 
-      if (sandbox.mode == "Slayer") {
-        sandbox.players = 2;
-      }
-      if (sandbox.mode == "Teams") {
-        sandbox.players = 4;
-      }
-      if (sandbox.mode == "Fiesta") {
-        sandbox.players = 2;
-        sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
-      }
-      if (sandbox.mode == "Snipers") {
-        sandbox.players = 2;
-        sandbox.loadout = ["Sniper_Rifle", "Sniper_Rifle"];
-      }
-      if (sandbox.mode == "Oddball") {
-        sandbox.players = 2;
-      }
-      if (sandbox.mode == "Fistfight") {
-        sandbox.players = 2;
-        sandbox.loadout = ["Knife", "Knife"];
-      }
-      if (sandbox.mode == "Ctf") {
-        sandbox.players = 2;
-      }
-      if (sandbox.mode == "Koth") {
-        sandbox.players = 2;
-      }
       if (new URLSearchParams(location.search).get("freeplay")) {
         utils.respawn = () => {};
         sandbox.players = 1;
