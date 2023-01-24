@@ -263,6 +263,7 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   </head>
 	<script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
+	<script src="js/GamepadMenuControls.js"></script>
   <body>
     <div class="loader">
       <div class="loader-5"></div>
@@ -366,6 +367,9 @@
             notiflixIconColor: "gold"
           }
         });
+
+        // Gamepad setup
+        GamepadControls = new GamepadMenuControls(["button:nth-of-type(2)", "button:nth-of-type(5)", "button:nth-of-type(4)", "button:nth-of-type(6)", ".frame-close-button", ".frame-reload-button"]);
       });
       function play(button) {
         typeof button.clicked == "undefined" ? button.clicked = false : void(0);
@@ -523,6 +527,8 @@
         frame.style.display = "none";
         reloadButton.style.display = "none";
         closeButton.style.display = "none";
+        reloadButton.className = "frame-reload-button";
+        closeButton.className = "frame-close-button";
         reloadButton.addEventListener("click", () => frame.src = frame.src);
         closeButton.addEventListener("click", function() {
           refresh();
