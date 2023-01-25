@@ -348,6 +348,7 @@
     <script src="https://unpkg.com/@seregpie/three.text-texture"></script>
     <script src="https://unpkg.com/@seregpie/three.text-sprite"></script>
     <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alvaromontoro/gamecontroller.js@latest/dist/gamecontroller.min.js"></script>
     <audio src="sounds/walking.mp3" id="walkingSound" loop></audio>
     <div class="banner">
       <p style="text-align: center; margin-top: 10%; font-size: 2em; font-weight: bold; font-family: Arial, Helvetica, sans-serif !important">[FFA Slayer] - 10 points</span></p>
@@ -1322,6 +1323,16 @@
       }
       let tempName = generateName();
       sandbox = {
+        descriptions: {
+          "Slayer": "Eliminate the enemy using default or power weapons to earn points. First to the score limit wins.",
+          "Teams": "Team up in a 2v2 Slayer match to eliminate the enemy team. First team to the score limit wins.",
+          "Fiesta": "Every time you spawn or respawn you will get a random loadout. First to the score limit wins.",
+          "Snipers": "Snipers only match with no map weapons or equipment. First to the score limit wins.",
+          "Oddball": "Hold the ball to earn points, and stay away from enemies!",
+          "Fistfight": "Knives only match with no map weapons or equipment. First to the score limit wins.",
+          "CTF": "(Capture the flag): Capture the enemy flag to earn a point.",
+          "KOTH": "(King of the Hill): Capture the specified zone to earn points."
+        },
         tempName: tempName,
         medals: [],
         kills: 0,
@@ -1912,6 +1923,48 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         weaponRenderer.setSize(window.innerWidth, window.innerHeight);
       }
+      gameControl.on("connect", (controller) => {
+        window.GamepadController = controller;
+      });
+      function pollGamepad() {
+        let jumped = false;
+        let shooted = false;
+        if (!GamepadControls.isLocked || !navigator.getGamepads()[0]) return;
+        gamepad = navigator.getGamepads()[0];
+        if (gamepad.axes[3] > 0.20) {
+          rotateCamera(-gamepad.axes[3] * 0.02, 0);
+        }
+        if (gamepad.axes[3] < -0.20) {
+          rotateCamera(-gamepad.axes[3] * 0.02, 0);
+        }
+        if (gamepad.axes[2] < -0.20) {
+          rotateCamera(0, -gamepad.axes[2] * 0.02);
+        }
+        if (gamepad.axes[2] > 0.20) {
+          rotateCamera(0, -gamepad.axes[2] * 0.02);
+        }
+        GamepadController.on("button16", () => {}).before("button16", () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "f", code: "KeyF" }));
+        }).after("button16", () => {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "f", code: "KeyF" }));
+        });
+        GamepadController.on("button0", () => {}).before("button0", () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space" }));
+        }).after("button0", () => {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: " ", code: "Space" }));
+        });
+      }
+      function rotateCamera(dx, dy) {
+        let x = camera.rotation.x;
+        camera.rotateX(-x);
+        camera.rotateY(dy);
+        if (Math.abs(dx + x) > Math.PI / 2 - 0.05) {
+          camera.rotateX(x);
+        } else {
+          camera.rotateX(x + dx);
+        }
+        camera.rotation.z = 0;
+      }
       function playerCollisions() {
         const result = worldOctree.capsuleIntersect(playerCollider);
         playerOnFloor = false;
@@ -2141,6 +2194,7 @@
       intersection = null;
       function animate() {
         requestAnimationFrame(animate);
+        pollGamepad();
         typeof sandbox.users[0] != "undefined" && (document.querySelector(".player1").querySelector(".username").textContent = (sandbox.users[0].username || sandbox.tempName).slice(0, 13));
         typeof sandbox.users[1] != "undefined" && (document.querySelector(".player2").querySelector(".username").textContent = (sandbox.users[1].username || sandbox.tempName).slice(0, 13));
         document.querySelector(".player1").querySelector(".score").textContent = sandbox.points[0];
@@ -2305,7 +2359,9 @@
       const weaponScene = new THREE.Scene();
       const weaponCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
       const PointerControls = new PointerLockControls(camera, renderer.domElement);
-      const GamepadControls = THREE.GamepadControls(camera);
+      const GamepadControls = {
+        isLocked: true
+      };
       const TouchControls = new THREE.TouchControls(camera, renderer.domElement);
       PointerControls.isLocked = false;
       GamepadControls.isLocked = false;
@@ -2366,7 +2422,7 @@
 	    weaponRenderer.setPixelRatio(1.1);
 
 	    // Multiplayer setup
-      gametime.set("key", "pub-c-1ed2f84f-762b-4211-84f9-617b19be2b23", "sub-c-1521e0cc-f132-41e5-9d46-6b06a7d09f90");
+      gametime.set("key", "pub-c-3740053e-fec0-4122-bfc4-9214ccfff37d", "sub-c-e4d0d472-66a4-49dc-b796-830b9e56a653");
       gametime.set("channel", new URLSearchParams(location.search).get("lobby"));
 
       // Game setup
@@ -2497,6 +2553,7 @@
             utils.weapons.shoot(1);
           }
           if (weapon.name == "Knife") {
+            if (utils.options.get("Punching")) return;
             let swing1;
             let e = sandbox.currentWeapon.children[0].rotation;
             let d = sandbox.currentWeapon.children[0].position;
@@ -2926,6 +2983,8 @@
             `;
           });
           sandbox.users.push({});
+          document.querySelector(".description-header").textContent = sandbox.mode;
+          document.querySelector(".description-text").textContent = sandbox.descriptions[sandbox.mode];
           utils.respawn(false);
           let playerLoader = setInterval(() => {
             if (sandbox.users.length >= sandbox.players) {
