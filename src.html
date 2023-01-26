@@ -2838,11 +2838,99 @@
           sandbox.models["player"].object.rotateY(Math.PI);
         }
       });
-      function call(action, metadata) {
+      function call(action, metadata, bot = false) {
         let parsedMetaData = JSON.stringify(metadata).replace(/(\")/gi, "'");
-        let parameters = gametime.user.position + "," + action.toString() + "," + parsedMetaData;
+        let parameters = (bot ? (gametime.user.position == 1 ? 2 : 1) : gametime.user.position) + "," + action.toString() + "," + parsedMetaData;
         gametime.run("playerAction", [parameters.toString()]);
       }
+
+      // Bot setup
+      if (new URLSearchParams(location.search).get("bot")) {
+        sandbox.users.push({
+          player: sandbox.users.length + 1,
+          username: generateName()
+        });
+        let check = setInterval(() => {
+          if (document.querySelector(".before-ui").style.visibility == "hidden") {
+            let bot = sandbox.models["player"].object;
+            let walk = true;
+            const botCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+            bot.add(botCamera);
+            setInterval(() => {
+              botCamera.updateMatrix();
+              botCamera.updateMatrixWorld();
+              let frustum = new THREE.Frustum();
+              frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(botCamera.projectionMatrix, botCamera.matrixWorldInverse));
+              let position = camera.position;
+              if (frustum.containsPoint(position)) {
+                bot.lookAt(camera.position);
+                bot.rotation.x = 0;
+                bot.rotation.z = 0;
+                if (bot.position.distanceTo(camera.position) <= 5) {
+                  bot.translateZ(-1);
+                }
+                call("shoot", {
+                  weapon: character.loadout[character.currentWeapon == character.primaryWeapon ? 0 : 1]
+                }, true);
+              }
+              if (Math.floor(Math.random() * 40) == 0) {
+                call("switch", {}, true);
+              }
+              let playerForwardTarget = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
+              let playerBackwardTarget = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
+              let playerLeftTarget = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
+              let playerRightTarget = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
+              playerForwardTarget.position.copy(bot.position);
+              playerBackwardTarget.position.copy(bot.position);
+              playerLeftTarget.position.copy(bot.position);
+              playerRightTarget.position.copy(bot.position);
+              playerForwardTarget.rotation.copy(bot.rotation);
+              playerBackwardTarget.rotation.copy(bot.rotation);
+              playerLeftTarget.rotation.copy(bot.rotation);
+              playerRightTarget.rotation.copy(bot.rotation);
+              playerForwardTarget.translateZ(1);
+              playerBackwardTarget.translateZ(-1);
+              playerLeftTarget.translateX(1);
+              playerRightTarget.translateX(-1);
+              map.traverse(object => {
+                if (object.name.includes("Cube")) return;
+                if (collision(object, playerForwardTarget)) {
+                  bot.translateZ(-.1);
+                  sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).stop();
+                  sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).reset();
+                }
+                if (collision(object, playerBackwardTarget)) {
+                  bot.translateZ(.1);
+                }
+                if (collision(object, playerLeftTarget)) {
+                  bot.rotateY(-.05);
+                }
+                if (collision(object, playerRightTarget)) {
+                  bot.rotateY(.05);
+                }
+              });
+              if (walk) {
+                bot.translateZ(.05);
+                sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).play();
+              } else {
+                bot.rotateY(Math.floor(Math.random() * 2) == 0 ? -Math.random() : Math.random());
+                sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).stop();
+                sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).reset();
+              }
+            });
+            setInterval(() => {
+              if (Math.floor(Math.random() * 20) == 0) {
+                walk = false;
+                Math.floor(Math.random() * 10) == 0 && bot.rotateY(Math.random());
+              } else {
+                walk = true;
+              }
+            });
+            clearInterval(check);
+          }
+        });
+      }
+
       let params = { code: "ShiftLeft", key: "Shift" };
       const TouchUI = new UI("touch", function(type, parameters) {
         if (type == "move") {

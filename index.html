@@ -257,6 +257,9 @@
       #NotiflixNotifyWrap * {
         color: gold !important;
       }
+      .gamepad-focus {
+        outline: 5px solid #fbf719c4;
+      }
     </style>
     <script src="js/user/user.js"></script>
     <script src="js/help/help.js"></script>
@@ -370,7 +373,21 @@
 
         // Gamepad setup
         GamepadControls = new GamepadMenuControls(["button:nth-of-type(2)", "button:nth-of-type(5)", "button:nth-of-type(4)", "button:nth-of-type(6)", ".frame-close-button", ".frame-reload-button"]);
+        GamepadControls.action = function(type, element) {
+          if (type == "click") {
+            if (element.textContent.trim().toLowerCase().includes("play")) {
+              document.querySelector(".holder").onclick = function() {
+                document.querySelectorAll(".arrow-holder")[1].click();
+              };
+              GamepadControls.elements.splice(1, 0, ".holder");
+              GamepadControls.elements.splice(2, 0, ".mini-button");
+              GamepadControls.update();
+              GamepadControls.focus = 3;
+            }
+          }
+        }
       });
+
       function play(button) {
         typeof button.clicked == "undefined" ? button.clicked = false : void(0);
         if (button.clicked) {
@@ -414,15 +431,16 @@
         currentObjectId = null;
         gametime.make("join");
         gametime.make("joined");
-        gametime.on("joined", function(data) {
+        function joined(data) {
           let extend = new Parse.Object.extend("Lobby");
           let lobby = new extend();
           lobby.set("objectId", data.split(",")[0]);
           document.querySelector(".notiflix-confirm-head").querySelector("h5").textContent = "Match found!";
           document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Connecting players... (1/2)";
           setTimeout(() => document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Connecting players... (2/2)", 500);
-          setTimeout(() => location.assign("./src.html?lobby=" + lobby.get("sessionId") + "&mode=" + lobby.get("query").mode + "&map=" + lobby.get("query").map), 3000);
-        });
+          setTimeout(() => location.assign("./src.html?lobby=" + lobby.get("sessionId") + "&mode=" + lobby.get("query").mode + "&map=" + lobby.get("query").map + (data.split(",")[1] ? "&bot=1" : "")), 3000);
+        }
+        gametime.on("joined", joined);
         gametime.on("join", function(data) {
           if (data.split(",")[0] == gametime.user.position) return;
           let extend = new Parse.Object.extend("Lobby");
@@ -433,7 +451,11 @@
           }
         });
         Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel");
-        document.querySelector(".notiflix-confirm-head").querySelector("div").innerHTML += "<br><br><a href='./src.html?freeplay=true&mode=" + currentMode + "&map=" + availableMaps[Math.floor(Math.random() * availableMaps.length)] + "'>Free play</a>";
+        let botWaitTime = (((Math.floor(Math.random() * 10) + Math.floor(Math.random() * 10)) + 24) / 1.3).toFixed(0) - 0;
+        setTimeout(() => {
+          joined([currentObjectId, true].join())
+        }, (botWaitTime + (Math.floor(Math.random() * 2) == 0 ? (Math.floor(Math.random() * 4)) : -(Math.floor(Math.random() * 4)))) * 1000);
+        document.querySelector(".notiflix-confirm-head").querySelector("div").innerHTML += "<br><br><a href='./src.html?freeplay=true&mode=" + currentMode + "&map=" + availableMaps[Math.floor(Math.random() * availableMaps.length)] + "'>Free play</a><br><p>Estimated wait time: " + botWaitTime + " seconds</p>";
         document.querySelector("#NXConfirmButtonOk").onclick = () => {
           clearInterval(search);
           Session.clearCache();
