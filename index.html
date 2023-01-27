@@ -376,13 +376,20 @@
         GamepadControls.action = function(type, element) {
           if (type == "click") {
             if (element.textContent.trim().toLowerCase().includes("play")) {
+              if (element.previousElementSibling.style.visibility != "visible") {
+                GamepadControls.elements.splice(GamepadControls.elements.indexOf(".holder"), 1);
+                GamepadControls.elements.splice(GamepadControls.elements.indexOf(".mini-button"), 1);
+                GamepadControls.update();
+                GamepadControls.focus = 0;
+                return;
+              }
               document.querySelector(".holder").onclick = function() {
                 document.querySelectorAll(".arrow-holder")[1].click();
               };
               GamepadControls.elements.splice(1, 0, ".holder");
               GamepadControls.elements.splice(2, 0, ".mini-button");
               GamepadControls.update();
-              GamepadControls.focus = 3;
+              GamepadControls.focus = 4;
             }
           }
         }

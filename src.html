@@ -1927,31 +1927,63 @@
         window.GamepadController = controller;
       });
       function pollGamepad() {
+        let sensitivity = .025;
         let jumped = false;
         let shooted = false;
         if (!GamepadControls.isLocked || !navigator.getGamepads()[0]) return;
         gamepad = navigator.getGamepads()[0];
         if (gamepad.axes[3] > 0.20) {
-          rotateCamera(-gamepad.axes[3] * 0.02, 0);
+          rotateCamera(-gamepad.axes[3] * sensitivity, 0);
         }
         if (gamepad.axes[3] < -0.20) {
-          rotateCamera(-gamepad.axes[3] * 0.02, 0);
+          rotateCamera(-gamepad.axes[3] * sensitivity, 0);
         }
         if (gamepad.axes[2] < -0.20) {
-          rotateCamera(0, -gamepad.axes[2] * 0.02);
+          rotateCamera(0, -gamepad.axes[2] * sensitivity);
         }
         if (gamepad.axes[2] > 0.20) {
-          rotateCamera(0, -gamepad.axes[2] * 0.02);
+          rotateCamera(0, -gamepad.axes[2] * sensitivity);
         }
-        GamepadController.on("button16", () => {}).before("button16", () => {
-          document.dispatchEvent(new KeyboardEvent("keydown", { key: "f", code: "KeyF" }));
-        }).after("button16", () => {
-          document.dispatchEvent(new KeyboardEvent("keyup", { key: "f", code: "KeyF" }));
-        });
+        if (gamepad.axes[1] > 0.20) {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "s", code: "KeyS" }));
+        } else {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "s", code: "KeyS" }));
+        }
+        if (gamepad.axes[1] < -0.20) {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "w", code: "KeyW" }));
+        } else {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "w", code: "KeyW" }));
+        }
+        if (gamepad.axes[0] < -0.20) {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", code: "KeyA" }));
+        } else {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "a", code: "KeyA" }));
+        }
+        if (gamepad.axes[0] > 0.20) {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "d", code: "KeyD" }));
+        } else {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "d", code: "KeyD" }));
+        }
         GamepadController.on("button0", () => {}).before("button0", () => {
           document.dispatchEvent(new KeyboardEvent("keydown", { key: " ", code: "Space" }));
         }).after("button0", () => {
           document.dispatchEvent(new KeyboardEvent("keyup", { key: " ", code: "Space" }));
+        });
+        GamepadController.on("button3", () => {}).before("button3", () => {
+          keyStates["ShiftLeft"] ? document.dispatchEvent(new KeyboardEvent("keyup", { key: "Shift", code: "ShiftLeft" })) : document.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift", code: "ShiftLeft" }));
+        });
+        GamepadController.on("button4", () => {}).before("button4", () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "y", code: "KeyY" }));
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "y", code: "KeyY" }));
+        });
+        GamepadController.on("button14", () => {}).before("button14", () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "i", code: "KeyI" }));
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "i", code: "KeyI" }));
+        });
+        GamepadController.on("button16", () => {}).before("button16", () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "f", code: "KeyF" }));
+        }).after("button16", () => {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "f", code: "KeyF" }));
         });
       }
       function rotateCamera(dx, dy) {
@@ -1964,6 +1996,12 @@
           camera.rotateX(x + dx);
         }
         camera.rotation.z = 0;
+        call("turn", {
+          rotation: new THREE.Vector2(camera.rotation.x, camera.rotation.y),
+          x: camera.position.x,
+          y: camera.position.y,
+          z: camera.position.z,
+        });
       }
       function playerCollisions() {
         const result = worldOctree.capsuleIntersect(playerCollider);
