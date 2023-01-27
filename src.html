@@ -1927,7 +1927,7 @@
         window.GamepadController = controller;
       });
       function pollGamepad() {
-        let sensitivity = .025;
+        let sensitivity = .02;
         let jumped = false;
         let shooted = false;
         if (!GamepadControls.isLocked || !navigator.getGamepads()[0]) return;
@@ -1970,7 +1970,9 @@
           document.dispatchEvent(new KeyboardEvent("keyup", { key: " ", code: "Space" }));
         });
         GamepadController.on("button3", () => {}).before("button3", () => {
-          keyStates["ShiftLeft"] ? document.dispatchEvent(new KeyboardEvent("keyup", { key: "Shift", code: "ShiftLeft" })) : document.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift", code: "ShiftLeft" }));
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift", code: "ShiftLeft" }));
+        }).after("button3", () => {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "Shift", code: "ShiftLeft" }));
         });
         GamepadController.on("button4", () => {}).before("button4", () => {
           document.dispatchEvent(new KeyboardEvent("keydown", { key: "y", code: "KeyY" }));
