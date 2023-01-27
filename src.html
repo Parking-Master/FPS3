@@ -2618,6 +2618,10 @@
       utils.options.set("OtherKilled", false);
       utils.options.set("GameOver", false);
       utils.options.set("ActiveMedals", 0);
+      utils.options.set("BotStatus", {
+        health: 100,
+        grenades: 3
+      });
 
       /* Multiplayer setup */
       character = {
@@ -2854,9 +2858,11 @@
           if (document.querySelector(".before-ui").style.visibility == "hidden") {
             let bot = sandbox.models["player"].object;
             let walk = true;
+            let time = 0;
             const botCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
             bot.add(botCamera);
             setInterval(() => {
+              time++;
               botCamera.updateMatrix();
               botCamera.updateMatrixWorld();
               let frustum = new THREE.Frustum();
@@ -2867,13 +2873,24 @@
                 bot.rotation.x = 0;
                 bot.rotation.z = 0;
                 if (bot.position.distanceTo(camera.position) <= 5) {
-                  bot.translateZ(-1);
+                  bot.translateZ(-.5);
                 }
-                call("shoot", {
+                setTimeout(() => call("shoot", {
                   weapon: character.loadout[character.currentWeapon == character.primaryWeapon ? 0 : 1]
-                }, true);
+                }, true), time * 400);
               }
-              if (Math.floor(Math.random() * 40) == 0) {
+              if (bot.position.distanceTo(camera.position) <= 10 && Math.floor(Math.random() * 250) == 0) {
+                let grenade = new THREE.Mesh();
+                grenade.position.copy(camera.position);
+                grenade.position.y += -1;
+                grenade.translateX(Math.floor(Math.random() * 2) == 0 ? Math.floor(Math.random() * 4) : -Math.floor(Math.random() * 4));
+                grenade.translateZ(Math.floor(Math.random() * 2) == 0 ? Math.floor(Math.random() * 4) : -Math.floor(Math.random() * 4));
+                let status = utils.options.get("BotStatus");
+                status.grenades--;
+                utils.options.set("BotStatus", status);
+                !status.grenades <= 0 || utils.explosion(grenade, false);
+              }
+              if (Math.floor(Math.random() * 200) == 0) {
                 call("switch", {}, true);
               }
               let playerForwardTarget = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
@@ -2903,17 +2920,17 @@
                   bot.translateZ(.1);
                 }
                 if (collision(object, playerLeftTarget)) {
-                  bot.rotateY(-.05);
+                  bot.rotateY(-.01);
                 }
                 if (collision(object, playerRightTarget)) {
-                  bot.rotateY(.05);
+                  bot.rotateY(.01);
                 }
               });
               if (walk) {
-                bot.translateZ(.05);
+                bot.translateZ(.01);
                 sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).play();
               } else {
-                bot.rotateY(Math.floor(Math.random() * 2) == 0 ? -Math.random() : Math.random());
+                bot.rotateY(Math.floor(Math.random() * 2) == 0 ? -Math.random() / 2 : Math.random() / 2);
                 sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).stop();
                 sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).reset();
               }

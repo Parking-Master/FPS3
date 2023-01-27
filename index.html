@@ -438,7 +438,7 @@
           document.querySelector(".notiflix-confirm-head").querySelector("h5").textContent = "Match found!";
           document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Connecting players... (1/2)";
           setTimeout(() => document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Connecting players... (2/2)", 500);
-          setTimeout(() => location.assign("./src.html?lobby=" + lobby.get("sessionId") + "&mode=" + lobby.get("query").mode + "&map=" + lobby.get("query").map + (data.split(",")[1] ? "&bot=1" : "")), 3000);
+          setTimeout(() => location.assign("./src.html?lobby=" + lobby.get("sessionId") + "&mode=" + lobby.get("query").mode + (data.split(",")[1] ? "&map=Cargo" : "&map=" + lobby.get("query").map) + (data.split(",")[1] ? "&bot=1" : "")), 3000);
         }
         gametime.on("joined", joined);
         gametime.on("join", function(data) {
