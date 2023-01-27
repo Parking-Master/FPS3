@@ -956,7 +956,7 @@
               if (event.key == "t" && camera.position.distanceTo(e.position) <= 2) {
                 utils.weapons.pickup(newWeapon);
                 let boxes = utils.options.get("WeaponBoxes");
-                pointers[newWeapon].position.y = -10000;
+                typeof pointers[newWeapon] != "undefined" && (pointers[newWeapon].position.y = -10000);
                 scene.remove(pointers[newWeapon]);
                 delete pointers[newWeapon];
                 delete boxes[newWeapon];
@@ -2776,7 +2776,7 @@
           scene.remove(weaponBox);
           weaponBox.position.y = -10000;
         }
-        if (!isUser && action == "hit") {
+        if (((botStarted && metadata.bot) || !isUser) && action == "hit") {
           document.querySelector(".hit").style.opacity = .5;
           setTimeout(() => (document.querySelector(".hit").style.opacity = 0), 200);
           utils.camera.shake(metadata.damage / 10 >= 2 ? 2 : metadata.damage / 10);
@@ -2799,6 +2799,11 @@
               });
             });
           }
+        }
+        if (botStarted && !metadata.bot && action == "hit") {
+          let status = utils.options.get("BotStatus");
+          status.health += -metadata.damage;
+          utils.options.set("BotStatus", status);
         }
         if (!isUser && action == "explosion") {
           let object = new THREE.Mesh();
@@ -2882,14 +2887,17 @@
           sandbox.models["player"].object.rotateY(Math.PI);
         }
       });
-      function call(action, metadata, bot = false) {
+      function call(action, metadata = {}, bot = false) {
+        metadata.bot = bot;
         let parsedMetaData = JSON.stringify(metadata).replace(/(\")/gi, "'");
         let parameters = (bot ? (gametime.user.position == 1 ? 2 : 1) : gametime.user.position) + "," + action.toString() + "," + parsedMetaData;
         gametime.run("playerAction", [parameters.toString()]);
       }
 
       // Bot setup
+      let botStarted = false;
       if (new URLSearchParams(location.search).get("bot")) {
+        botStarted = true;
         sandbox.users.push({
           player: sandbox.users.length + 1,
           username: generateName()
@@ -2899,27 +2907,51 @@
             let bot = sandbox.models["player"].object;
             let walk = true;
             let time = 0;
+            let canFire = true;
             const botCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
             bot.add(botCamera);
             setInterval(() => {
               time++;
+              let status = utils.options.get("BotStatus");
+              if (status.health <= 0) {
+                call("die", {
+                  name: sandbox.users[0].username,
+                  weapon: "Assault_Rifle"
+                }, true);
+                status.health = 100;
+                utils.options.set("BotStatus", status);
+                setTimeout(() => {
+                  let spawnPoint = sandbox.mapRespawnPoints[sandbox.map][Math.floor(Math.random() * sandbox.mapRespawnPoints[sandbox.map].length)];
+                  bot.position.set(spawnPoint.x, spawnPoint.y, spawnPoint.z);
+                  bot.rotation.set(spawnPoint.rotation.x, spawnPoint.rotation.y, spawnPoint.rotation.z);
+                  bot.rotateY(Math.PI);
+                }, 4000);
+              }
+              if (sandbox.mode == "Fistfight") {
+                canFire = false;
+                !utils.options.get("Killed") && bot.position.distanceTo(camera.position) <= 1.5 && Math.floor(Math.random() * 10) == 0 && call("hit", {
+                  damage: 200
+                }, true);
+              }
               botCamera.updateMatrix();
               botCamera.updateMatrixWorld();
               let frustum = new THREE.Frustum();
               frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(botCamera.projectionMatrix, botCamera.matrixWorldInverse));
               let position = camera.position;
+              if (bot.position.distanceTo(camera.position) <= 1) {
+                bot.translateZ(-.1);
+              }
               if (frustum.containsPoint(position)) {
                 bot.lookAt(camera.position);
                 bot.rotation.x = 0;
                 bot.rotation.z = 0;
-                if (bot.position.distanceTo(camera.position) <= 5) {
-                  bot.translateZ(-.5);
-                }
-                setTimeout(() => call("shoot", {
+                utils.options.get("OtherKilled") || setTimeout(() => canFire && (call("shoot", {
                   weapon: character.loadout[character.currentWeapon == character.primaryWeapon ? 0 : 1]
-                }, true), time * 400);
+                }, true), Math.floor(Math.random() * 2) == 0 && call("hit", {
+                  damage: 10
+                }, true)), time * 300);
               }
-              if (bot.position.distanceTo(camera.position) <= 10 && Math.floor(Math.random() * 250) == 0) {
+              if (bot.position.distanceTo(camera.position) <= 10 && bot.position.distanceTo(camera.position) >= 5 && Math.floor(Math.random() * 250) == 0) {
                 let grenade = new THREE.Mesh();
                 grenade.position.copy(camera.position);
                 grenade.position.y += -1;
@@ -2945,19 +2977,19 @@
               playerBackwardTarget.rotation.copy(bot.rotation);
               playerLeftTarget.rotation.copy(bot.rotation);
               playerRightTarget.rotation.copy(bot.rotation);
-              playerForwardTarget.translateZ(1);
-              playerBackwardTarget.translateZ(-1);
-              playerLeftTarget.translateX(1);
-              playerRightTarget.translateX(-1);
+              playerForwardTarget.translateZ(.2);
+              playerBackwardTarget.translateZ(-.2);
+              playerLeftTarget.translateX(.2);
+              playerRightTarget.translateX(-.2);
               map.traverse(object => {
                 if (object.name.includes("Cube")) return;
                 if (collision(object, playerForwardTarget)) {
-                  bot.translateZ(-.1);
+                  bot.translateZ(-.05);
                   sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).stop();
                   sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).reset();
                 }
                 if (collision(object, playerBackwardTarget)) {
-                  bot.translateZ(.1);
+                  bot.translateZ(.05);
                 }
                 if (collision(object, playerLeftTarget)) {
                   bot.rotateY(-.01);
@@ -2970,17 +3002,12 @@
                 bot.translateZ(.01);
                 sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).play();
               } else {
-                bot.rotateY(Math.floor(Math.random() * 2) == 0 ? -Math.random() / 2 : Math.random() / 2);
-                sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).stop();
-                sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).reset();
+                bot.rotateY(Math.floor(Math.random() * 2) == 0 ? -Math.random() / 3 : Math.random() / 3);
               }
             });
             setInterval(() => {
               if (Math.floor(Math.random() * 20) == 0) {
-                walk = false;
                 Math.floor(Math.random() * 10) == 0 && bot.rotateY(Math.random());
-              } else {
-                walk = true;
               }
             });
             clearInterval(check);
