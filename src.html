@@ -1576,6 +1576,28 @@
             useDefaultRunAnimation: false
           },
           {
+            name: "Wire_Rifle",
+            ammo: "none",
+            rounds: Infinity,
+            minRounds: 0,
+            maxRounds: Infinity,
+            minClips: 0,
+            maxClips: Infinity,
+            clips: Infinity,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 0
+              },
+              full: {
+                sound: null,
+                time: 0,
+                useDefaultAnimation: true
+              }
+            },
+            useDefaultRunAnimation: true
+          },
+          {
             name: "Knife",
             ammo: "none",
             rounds: 0,
@@ -1617,6 +1639,13 @@
           },
           "flash": {
             srcPath: "models/assets/muzzle_flash.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "beam": {
+            srcPath: "models/assets/light_beam.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -1700,6 +1729,13 @@
           },
           "Grenade_Launcher": {
             srcPath: "models/weapons/dropped/Grenade_Launcher.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Wire_Rifle": {
+            srcPath: "models/weapons/dropped/Wire_Rifle.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -2504,9 +2540,10 @@
         sun.rotateX(1);
         scene.add(sun);
         scene.fog = new THREE.Fog(0x88ccee, 0, 100);
-        utils.weapons.create("Grenade_Launcher", new THREE.Vector3(10, 0, -8), false);
+        utils.weapons.create("Wire_Rifle", new THREE.Vector3(10, 0, -8), false);
         utils.weapons.create("Sniper_Rifle", new THREE.Vector3(9.5, 0, -16));
         utils.weapons.create("Micro_Uzi", new THREE.Vector3(14, 0, 1.5));
+        utils.weapons.create("Shotgun", new THREE.Vector3(-9.5, 0, 15));
       } else if (sandbox.map == "Storage") {
         sun = new THREE.Mesh(new THREE.CircleGeometry(10), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/sun.png"), transparent: true }));
         scene.background = new THREE.Color(0x88ccee);
@@ -2591,6 +2628,60 @@
           }
           if (weapon.name == "Grenade_Launcher") {
             utils.weapons.shoot(1);
+          }
+          if (weapon.name == "Wire_Rifle") {
+            utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+              let clip = weapon.mixer.clipAction(weapon.animations[2]);
+              clip.reset();
+              clip.loop = THREE.LoopOnce;
+              clip.play();
+              let beam = sandbox.models["beam"].object.clone();
+              new THREE.Sound("sounds/guns/Wire_Rifle/fire.mp3", sandbox.currentWeapon, () => {}, false);
+              beam.scale.set(.1, .1, .1);
+              beam.position.copy(sandbox.currentWeapon.position);
+              beam.rotation.copy(sandbox.currentWeapon.rotation);
+              beam.translateY(.11);
+              beam.rotateY(Math.PI);
+              beam.translateX(.08);
+              beam.translateZ(-.1);
+              let sticky = setInterval(() => {
+                beam.position.copy(sandbox.currentWeapon.position);
+                beam.rotation.copy(sandbox.currentWeapon.rotation);
+                beam.translateY(.11);
+                beam.rotateY(Math.PI);
+                beam.translateX(.08);
+                beam.translateZ(-.1);
+              });
+              let light = new THREE.PointLight(0x0000ff, 1, 10, 3);
+              light.position.copy(beam.position);
+              light.rotation.copy(beam.rotation);
+              scene.add(beam);
+              scene.add(light);
+              let lightClone = light.clone();
+              weaponScene.add(lightClone);
+              setTimeout(() => (scene.remove(light), weaponScene.remove(lightClone), scene.remove(beam), clearInterval(rise), clearInterval(mark)), 1000);
+              let camera1 = camera.clone();
+              let rise = setInterval(() => {
+                camera.rotateX(.002);
+                camera1.rotateX(.002);
+                if (intersection && !utils.options.get("OtherKilled")) {
+                  call("hit", {
+                    damage: 10
+                  });
+                }
+              });
+              let mark = setInterval(() => {
+                let hole = new THREE.SpotLight(0x0000ff, 100, 100, 100, .1);
+                let objects = utils.options.get("TempObjects");
+                objects.push(hole);
+                hole.rotation.copy(camera1.rotation);
+                hole.position.copy(camera1.position);
+                hole.target = camera1;
+                if (objects.length > 10) (scene.remove(objects[0]), objects.shift());
+                utils.options.set("TempObjects", objects);
+                setTimeout(() => (scene.remove(hole), delete e, delete hole), 10000), scene.add(hole),hole.penumbra = .1, hole.angle = .003, hole.translateZ(1);
+              }, 40);
+            });
           }
           if (weapon.name == "Knife") {
             if (utils.options.get("Punching")) return;
@@ -2941,15 +3032,47 @@
               if (bot.position.distanceTo(camera.position) <= 1) {
                 bot.translateZ(-.1);
               }
+              let weaponName = character.loadout[character.currentWeapon == character.primaryWeapon ? 0 : 1];
+              let weaponTime = 0;
+              if (weaponName == "Assault_Rifle") {
+                weaponTime = 200;
+              }
+              if (weaponName == "Glock_19") {
+                weaponTime = 600;
+              }
+              if (weaponName == "Sniper_Rifle") {
+                weaponTime = 1000;
+              }
+              if (weaponName == "Shotgun") {
+                weaponTime = 1200;
+              }
+              if (weaponName == "Micro_Uzi") {
+                weaponTime = 100;
+              }
+              if (weaponName == "Auto_Pistol") {
+                weaponTime = 60;
+              }
+              if (weaponName == "Light_Machine_Gun") {
+                weaponTime = 300;
+              }
+              if (weaponName == "Rocket_Pistol") {
+                weaponTime = 1500;
+              }
+              if (weaponName == "Grenade_Launcher") {
+                weaponTime = 1500;
+              }
+              if (weaponName == "Wire_Rifle") {
+                weaponTime = 4000;
+              }
               if (frustum.containsPoint(position)) {
                 bot.lookAt(camera.position);
                 bot.rotation.x = 0;
                 bot.rotation.z = 0;
-                utils.options.get("OtherKilled") || setTimeout(() => canFire && (call("shoot", {
+                (utils.options.get("OtherKilled") || utils.options.get("Killed")) || setTimeout(() => canFire && bot.position.distanceTo(camera.position) <= (Math.floor(Math.random() * 4) + 10) && (call("shoot", {
                   weapon: character.loadout[character.currentWeapon == character.primaryWeapon ? 0 : 1]
                 }, true), Math.floor(Math.random() * 2) == 0 && call("hit", {
                   damage: 10
-                }, true)), time * 300);
+                }, true)), time * weaponTime);
               }
               if (bot.position.distanceTo(camera.position) <= 10 && bot.position.distanceTo(camera.position) >= 5 && Math.floor(Math.random() * 250) == 0) {
                 let grenade = new THREE.Mesh();
@@ -2992,15 +3115,16 @@
                   bot.translateZ(.05);
                 }
                 if (collision(object, playerLeftTarget)) {
-                  bot.rotateY(-.01);
+                  bot.rotateY(-.1);
                 }
                 if (collision(object, playerRightTarget)) {
-                  bot.rotateY(.01);
+                  bot.rotateY(.1);
                 }
               });
               if (walk) {
                 bot.translateZ(.01);
                 sandbox.models["player"].mixer.clipAction(sandbox.models["player"].animations[0]).play();
+                bot.rotateY(Math.floor(Math.random() * 2) == 0 ? -Math.random() / 5 : Math.random() / 5);
               } else {
                 bot.rotateY(Math.floor(Math.random() * 2) == 0 ? -Math.random() / 3 : Math.random() / 3);
               }
@@ -3008,6 +3132,9 @@
             setInterval(() => {
               if (Math.floor(Math.random() * 20) == 0) {
                 Math.floor(Math.random() * 10) == 0 && bot.rotateY(Math.random());
+                walk = false;
+              } else {
+                walk = true;
               }
             });
             clearInterval(check);
