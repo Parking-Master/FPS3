@@ -988,13 +988,13 @@
             }
           });
         },
-        create: function(weapon = "", pos = new THREE.Vector3(), useAmmo = true) {
+        create: function(weapon = "", pos = new THREE.Vector3(), useAmmo = true, customBoxPath = null, customPointerPath = null) {
           let box = new THREE.Object3D();
-          load("models/assets/pointer.glb", function(pointer) {
+          load(customPointerPath || "models/assets/pointer.glb", function(pointer) {
             pointer = pointer.scene;
             let boxName = null;
             let newWeapon;
-            load("models/assets/weapon_box.glb", function(gltf) {
+            load(customBoxPath || "models/assets/weapon_box.glb", function(gltf) {
               box = gltf.scene;
               box.scale.set(.01, .01, .01);
               box.position.set(pos.x, pos.y, pos.z);
@@ -1281,9 +1281,6 @@
           if (sandbox.mode == "Slayer") {
             sandbox.loadout = ["Assault_Rifle", "Glock_19"];
           }
-          if (sandbox.mode == "Teams") {
-            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
-          }
           if (sandbox.mode == "Fiesta") {
             sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
           }
@@ -1325,7 +1322,6 @@
       sandbox = {
         descriptions: {
           "Slayer": "Eliminate the enemy using default or power weapons to earn points. First to the score limit wins.",
-          "Teams": "Team up in a 2v2 Slayer match to eliminate the enemy team. First team to the score limit wins.",
           "Fiesta": "Every time you spawn or respawn you will get a random loadout. First to the score limit wins.",
           "Snipers": "Snipers only match with no map weapons or equipment. First to the score limit wins.",
           "Oddball": "Hold the ball to earn points, and stay away from enemies!",
@@ -1341,6 +1337,13 @@
         users: [],
         players: 1,
         tempName: tempName,
+        ballPoints: {
+          "Cargo": new THREE.Vector3(12.5, 0, -8.5),
+          "Lihid": new THREE.Vector3(12.5, 0, -8.5),
+          "Complex": new THREE.Vector3(12.5, 0, -8.5),
+          "Storage": new THREE.Vector3(12.5, 0, -8.5),
+          "Aero": new THREE.Vector3(12.5, 0, -8.5)
+        },
         mapRespawnPoints: {
           "Cargo": [
             new THREE.Vector3(13.5, 0, -18.5, new THREE.Vector3(0, Math.PI, 0)),
@@ -1618,6 +1621,28 @@
               }
             },
             useDefaultRunAnimation: false
+          },
+          {
+            name: "Ball",
+            ammo: "none",
+            rounds: 0,
+            minRounds: 0,
+            maxRounds: 0,
+            minClips: 0,
+            maxClips: 0,
+            clips: 0,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 0
+              },
+              full: {
+                sound: null,
+                time: 0,
+                useDefaultAnimation: true
+              }
+            },
+            useDefaultRunAnimation: false
           }
         ],
         grenades: {
@@ -1653,6 +1678,13 @@
           },
           "shell": {
             srcPath: "models/assets/bullet_shell.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "ball": {
+            srcPath: "models/assets/ball.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -1743,6 +1775,13 @@
           },
           "Knife": {
             srcPath: "models/weapons/dropped/Knife.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Ball": {
+            srcPath: "models/weapons/dropped/Ball.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -2265,11 +2304,13 @@
           }
         }
       }
+      let elapsedTime = 0;
       let raycaster = new THREE.Raycaster();
       raycastTargets = [playerTarget];
       intersection = null;
       function animate() {
         requestAnimationFrame(animate);
+        elapsedTime++;
         pollGamepad();
         typeof sandbox.users[0] != "undefined" && (document.querySelector(".player1").querySelector(".username").textContent = (sandbox.users[0].username || sandbox.tempName).slice(0, 13));
         typeof sandbox.users[1] != "undefined" && (document.querySelector(".player2").querySelector(".username").textContent = (sandbox.users[1].username || sandbox.tempName).slice(0, 13));
@@ -2374,6 +2415,9 @@
         document.querySelector(".health").querySelector("span").querySelector("span").textContent = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0));
         document.querySelector(".current-grenades").textContent = sandbox.grenades.current;
         sandbox.currentWeapon && utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+          if (sandbox.mode == "Oddball" && weapon.name == "Ball") {
+            setTimeout(() => sandbox.points[(gametime.user.position || 1) - 1]++, elapsedTime * 950);
+          }
           document.querySelector(".current-ammo").textContent = (weapon.maxRounds * (weapon.maxClips + 1)) - weapon.roundsUsed;
         });
         if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null && utils.options.get("WeaponLocked")) {
@@ -2505,9 +2549,6 @@
       if (sandbox.mode == "Slayer") {
         sandbox.players = 2;
       }
-      if (sandbox.mode == "Teams") {
-        sandbox.players = 4;
-      }
       if (sandbox.mode == "Fiesta") {
         sandbox.players = 2;
         sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
@@ -2520,6 +2561,8 @@
       }
       if (sandbox.mode == "Oddball") {
         sandbox.players = 2;
+        utils.weapons.create("Ball", sandbox.ballPoints[sandbox.map], false, "models/assets/ball.glb", "models/assets/pointer1.glb");
+        sandbox.maxPoints = 100;
       }
       if (sandbox.mode == "Fistfight") {
         sandbox.players = 2;
@@ -2701,6 +2744,10 @@
               sandbox.currentWeapon.children[0].translateY(-.2);
             });
             utils.weapons.punch(200);
+          }
+          if (weapon.name == "Ball") {
+            if (utils.options.get("Punching")) return;
+            utils.weapons.punch(100);
           }
         });
       });
@@ -3063,6 +3110,9 @@
               }
               if (weaponName == "Wire_Rifle") {
                 weaponTime = 4000;
+              }
+              if (weaponName == "Ball") {
+                weaponTime = 2000;
               }
               if (frustum.containsPoint(position)) {
                 bot.lookAt(camera.position);
