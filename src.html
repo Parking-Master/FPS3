@@ -1999,6 +1999,7 @@
         weaponRenderer.setSize(window.innerWidth, window.innerHeight);
       }
       gameControl.on("connect", (controller) => {
+        if (controller.id != ((new URLSearchParams(location.search).get("gp") || "1") - 0) - 1) return window.GamepadController = { id: "Fake-Gamepad", index: 0, mapping: "", hand: "", connected: true, buttons: [], axes: [], timestamp: 0, pose: GamepadPose, hapticActuators: [] };
         window.GamepadController = controller;
       });
       function pollGamepad() {
@@ -2006,7 +2007,9 @@
         let jumped = false;
         let shooted = false;
         if (!GamepadControls.isLocked || !navigator.getGamepads()[0]) return;
-        gamepad = navigator.getGamepads()[0];
+        let gamepadIndex = ((new URLSearchParams(location.search).get("gp") || "1") - 0) - 1;
+        gamepad = navigator.getGamepads()[gamepadIndex];
+        if (!gamepad) return;
         if (gamepad.axes[3] > 0.20) {
           rotateCamera(-gamepad.axes[3] * sensitivity, 0);
         }
