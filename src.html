@@ -1177,6 +1177,76 @@
           }
         }
 		  },
+      vehicles: {
+        create: function(position = new THREE.Vector3(), rotation = new THREE.Vector3()) {
+          const deltaTime = clock.getDelta();
+          const vehicle = {
+            mesh: sandbox.models["vehicle"].object,
+            collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), .6),
+            velocity: new THREE.Vector3()
+          };
+          camera.getWorldDirection(playerDirection);
+          vehicle.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
+          const impulse = 15 + 30 * (1 - Math.exp((mouseTime - performance.now()) * 0.001));
+          vehicle.velocity.copy(playerDirection).multiplyScalar(impulse);
+          vehicle.velocity.addScaledVector(playerVelocity, 2);
+          vehicles.push(vehicle);
+          scene.add(vehicle.mesh);
+          let checkEnter = setInterval(() => {
+            if (vehicle.mesh.position.distanceTo(camera.position) <= 5) {
+              !utils.options.get("TouchingWeapon") && utils.ui.infoMarker.show("Hold [T] to get in vehicle");
+              document.onkeydown = function(e) {
+                if (e.key == "t") {
+                  utils.vehicles.enter(vehicle);
+                  clearInterval(checkEnter);
+                }
+              }
+            } else {
+              !utils.options.get("TouchingWeapon") && utils.ui.infoMarker.hide();
+              document.onkeydown = null;
+            }
+          });
+        },
+        enter: function(vehicle) {
+          weaponScene.remove(sandbox.currentWeapon);
+          utils.options.set("PlayerControls", false);
+          camera.position.copy(vehicle.mesh.position);
+          camera.translateZ(6);
+          camera.translateY(2);
+          camera.rotation.copy(vehicle.mesh.rotation);
+          setInterval(() => {
+            camera.position.copy(vehicle.mesh.position);
+            camera.translateZ(6);
+            camera.translateY(2);
+            if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
+              vehicle.velocity.z += 1.5;
+            }
+            if (keyStates["KeyA"] || keyStates["ArrowLeft"]) {
+              if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
+                vehicle.mesh.rotateY(.03);
+                vehicle.velocity.x += .2;
+              }
+              if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
+                vehicle.mesh.rotateY(-.03);
+                vehicle.velocity.x += -.2;
+              }
+            }
+            if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
+              vehicle.velocity.z += -1.5;
+            }
+            if (keyStates["KeyD"] || keyStates["ArrowRight"]) {
+              if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
+                vehicle.mesh.rotateY(-.03);
+                vehicle.velocity.x += -.2;
+              }
+              if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
+                vehicle.mesh.rotateY(.03);
+                vehicle.velocity.x += .2;
+              }
+            }
+          });
+        }
+      },
       explosion: function(obj, capture = true) {
         let explosion = sandbox.models["explosion"];
         let mixer = explosion.mixer.clipAction(explosion.animations[0]);
@@ -1662,6 +1732,15 @@
             mixer: null,
             animations: null
           },
+          "vehicle": {
+            srcPath: "models/vehicles/humvee.glb",
+            object: null,
+            callback: function(model) {
+              model.scale.set(.2, .2, .2);
+            },
+            mixer: null,
+            animations: null
+          },
           "flash": {
             srcPath: "models/assets/muzzle_flash.glb",
             object: null,
@@ -1841,11 +1920,13 @@
       document.body.appendChild(renderer.domElement);
       let GRAVITY = 50;
       let NUM_SPHERES = 2;
+      let NUM_VEHICLES = 10;
       let SPHERE_RADIUS = 0.2;
       let STEPS_PER_FRAME = 10;
       const sphereGeometry = new THREE.IcosahedronGeometry(SPHERE_RADIUS, 5);
       const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0xbbbb44 });
       const spheres = [];
+      const vehicles = [];
       let sphereIdx = 0;
       for (let i = 0; i < NUM_SPHERES; i++) {
         let loader = setInterval(() => {
@@ -2133,6 +2214,7 @@
         }
       }
       function updatePlayer(deltaTime) {
+        if (!utils.options.get("PlayerControls")) return;
         let damping = Math.exp(- 4 * deltaTime) - 1;
         if (!playerOnFloor) {
           playerVelocity.y -= GRAVITY * (deltaTime);
@@ -2162,11 +2244,44 @@
           }
         }
       }
+      function playerVehicleCollision(vehicle) {
+        const center = vector1.addVectors(playerCollider.start, playerCollider.end).multiplyScalar(0.5);
+        const vehicle_center = vehicle.collider.center;
+        const r = playerCollider.radius + vehicle.collider.radius;
+        const r2 = r * r;
+        for (const point of [playerCollider.start, playerCollider.end, center]) {
+          const d2 = point.distanceToSquared(vehicle_center);
+          if (d2 < r2) {
+            // Player hit
+          }
+        }
+      }
       function spheresCollisions() {
         for (let i = 0, length = spheres.length; i < length; i++) {
           const s1 = spheres[i];
           for (let j = i + 1; j < length; j++) {
             const s2 = spheres[j];
+            const d2 = s1.collider.center.distanceToSquared(s2.collider.center);
+            const r = s1.collider.radius + s2.collider.radius;
+            const r2 = r * r;
+            if (d2 < r2) {
+              const normal = vector1.subVectors(s1.collider.center, s2.collider.center).normalize();
+              const v1 = vector2.copy(normal).multiplyScalar(normal.dot(s1.velocity));
+              const v2 = vector3.copy(normal).multiplyScalar(normal.dot(s2.velocity));
+              s1.velocity.add(v2).sub(v1);
+              s2.velocity.add(v1).sub(v2);
+              const d = (r - Math.sqrt(d2)) / 2;
+              s1.collider.center.addScaledVector(normal, d);
+              s2.collider.center.addScaledVector(normal, - d);
+            }
+          }
+        }
+      }
+      function vehiclesCollisions() {
+        for (let i = 0, length = vehicles.length; i < length; i++) {
+          const s1 = vehicles[i];
+          for (let j = i + 1; j < length; j++) {
+            const s2 = vehicles[j];
             const d2 = s1.collider.center.distanceToSquared(s2.collider.center);
             const r = s1.collider.radius + s2.collider.radius;
             const r2 = r * r;
@@ -2206,6 +2321,31 @@
         spheresCollisions();
         for (const sphere of spheres) {
           sphere.mesh.position.copy(sphere.collider.center);
+        }
+      }
+      function updateVehicles(deltaTime) {
+        vehicles.forEach(vehicle => {
+          vehicle.collider.center.addScaledVector(vehicle.velocity, deltaTime);
+          const result = worldOctree.sphereIntersect(vehicle.collider);
+          if (result) {
+            vehicle.hits || (vehicle.hits = 0);
+            if (scene.children.indexOf(vehicle.mesh) > -1 && vehicle.hits < 4) {
+              let hits = ["ricochet1", "ricochet2", "ricochet3"];
+              vehicle.hits++;
+              new THREE.Sound("sounds/" + hits[Math.floor(Math.random() * hits.length)] + ".mp3", vehicle.mesh);
+            }
+            vehicle.velocity.addScaledVector(result.normal, - result.normal.dot(vehicle.velocity) * 1.5);
+            vehicle.collider.center.add(result.normal.multiplyScalar(result.depth));
+          } else {
+            vehicle.velocity.y -= (GRAVITY * deltaTime + .01);
+          }
+          const damping = Math.exp(- 1.5 * deltaTime) - 1.003;
+          vehicle.velocity.addScaledVector(vehicle.velocity, damping);
+          playerVehicleCollision(vehicle);
+        });
+        vehiclesCollisions();
+        for (const vehicle of vehicles) {
+          vehicle.mesh.position.copy(vehicle.collider.center);
         }
       }
       function getForwardVector() {
@@ -2442,6 +2582,7 @@
           controls(deltaTime);
           updatePlayer(deltaTime);
           updateSpheres(deltaTime);
+          updateVehicles(deltaTime);
           teleportPlayerIfOob();
         }
         renderer.render(scene, camera);
@@ -2799,6 +2940,7 @@
       utils.options.set("OtherKilled", false);
       utils.options.set("GameOver", false);
       utils.options.set("ActiveMedals", 0);
+      utils.options.set("PlayerControls", true);
       utils.options.set("BotStatus", {
         health: 100,
         grenades: 3
