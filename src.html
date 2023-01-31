@@ -1182,8 +1182,27 @@
           const deltaTime = clock.getDelta();
           const vehicle = {
             mesh: sandbox.models["vehicle"].object,
-            collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), .6),
-            velocity: new THREE.Vector3()
+            collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), .8),
+            velocity: new THREE.Vector3(),
+            collision: false,
+            wheels: [
+              {
+                position: "front-left",
+                steer: true
+              },
+              {
+                position: "front-right",
+                steer: true
+              },
+              {
+                position: "rear-left",
+                steer: false
+              },
+              {
+                position: "rear-right",
+                steer: false
+              }
+            ]
           };
           camera.getWorldDirection(playerDirection);
           vehicle.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
@@ -1206,6 +1225,7 @@
               document.onkeydown = null;
             }
           });
+          vehicle.mesh.position.copy(vehicle.collider.center);
         },
         enter: function(vehicle) {
           weaponScene.remove(sandbox.currentWeapon);
@@ -1214,34 +1234,31 @@
           camera.translateZ(6);
           camera.translateY(2);
           camera.rotation.copy(vehicle.mesh.rotation);
+          let vehicleRotation = 0;
           setInterval(() => {
             camera.position.copy(vehicle.mesh.position);
             camera.translateZ(6);
             camera.translateY(2);
             if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
-              vehicle.velocity.z += 1.5;
+              if (!vehicle.collision) vehicle.mesh.translateZ(-.1);
             }
             if (keyStates["KeyA"] || keyStates["ArrowLeft"]) {
               if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
                 vehicle.mesh.rotateY(.03);
-                vehicle.velocity.x += .2;
               }
               if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
                 vehicle.mesh.rotateY(-.03);
-                vehicle.velocity.x += -.2;
               }
             }
             if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
-              vehicle.velocity.z += -1.5;
+              if (!vehicle.collision) vehicle.mesh.translateZ(.1);
             }
             if (keyStates["KeyD"] || keyStates["ArrowRight"]) {
               if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
                 vehicle.mesh.rotateY(-.03);
-                vehicle.velocity.x += -.2;
               }
               if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
                 vehicle.mesh.rotateY(.03);
-                vehicle.velocity.x += .2;
               }
             }
           });
@@ -2286,6 +2303,7 @@
             const r = s1.collider.radius + s2.collider.radius;
             const r2 = r * r;
             if (d2 < r2) {
+              s1.collision = true;
               const normal = vector1.subVectors(s1.collider.center, s2.collider.center).normalize();
               const v1 = vector2.copy(normal).multiplyScalar(normal.dot(s1.velocity));
               const v2 = vector3.copy(normal).multiplyScalar(normal.dot(s2.velocity));
@@ -2294,6 +2312,8 @@
               const d = (r - Math.sqrt(d2)) / 2;
               s1.collider.center.addScaledVector(normal, d);
               s2.collider.center.addScaledVector(normal, - d);
+            } else {
+              s1.collision = false;
             }
           }
         }
@@ -2345,7 +2365,9 @@
         });
         vehiclesCollisions();
         for (const vehicle of vehicles) {
-          vehicle.mesh.position.copy(vehicle.collider.center);
+          if (vehicle.collision) {
+            vehicle.collider.center.copy(vehicle.mesh.position);
+          }
         }
       }
       function getForwardVector() {
