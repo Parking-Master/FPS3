@@ -902,7 +902,7 @@
             setTimeout(() => (weaponScene.remove(flash), weaponScene.remove(lightClone), scene.remove(light), clearInterval(sticky)), 25);
           }, rate);
         },
-        pickup: function(weapon) {
+        pickup: function(weapon, recieve = true) {
           utils.weapons.data(sandbox.currentWeapon).then(x => {
             let e = sandbox.models[x.name].object.clone();
             scene.add(e);
@@ -969,7 +969,7 @@
           let weaponBox = utils.options.get("WeaponBoxes")[weapon];
           scene.remove(weaponBox);
           weaponBox.position.y = -10000;
-          typeof weaponBox.getObjectByName("BoxFBX") != undefined && call("remove", {
+          typeof weaponBox.getObjectByName("BoxFBX") != undefined && recieve && call("remove", {
             id: weapon
           });
           let newWeapon = null;
@@ -988,7 +988,7 @@
             }
           });
         },
-        create: function(weapon = "", pos = new THREE.Vector3(), useAmmo = true, customBoxPath = null, customPointerPath = null) {
+        create: function(weapon = "", pos = new THREE.Vector3(), useAmmo = true, customBoxPath = null, customPointerPath = null, recieve = true, callback = () => {}) {
           let box = new THREE.Object3D();
           load(customPointerPath || "models/assets/pointer.glb", function(pointer) {
             pointer = pointer.scene;
@@ -1009,6 +1009,7 @@
               weaponArray.push(weapon);
               let id = weaponArray.count(weapon);
               newWeapon = weapon + "-" + id;
+              callback(newWeapon);
               boxName = newWeapon;
               boxes[newWeapon] = box;
               pointers[newWeapon] = pointer;
@@ -1053,7 +1054,7 @@
             });
             document.addEventListener("keydown", function(event) {
               if (event.key == "t" && camera.position.distanceTo(box.position) <= 2) {
-                utils.weapons.pickup(boxName);
+                utils.weapons.pickup(boxName, recieve);
                 let boxes = utils.options.get("WeaponBoxes");
                 pointers[boxName].position.y = -1000;
                 scene.remove(pointers[boxName]);
@@ -1179,12 +1180,13 @@
 		  },
       vehicles: {
         create: function(position = new THREE.Vector3(), rotation = new THREE.Vector3()) {
+          let turret = null;
+          utils.weapons.create("Turret", new THREE.Vector3(0, -10000, 0), false, null, null, false, (id) => turret = id);
           const deltaTime = clock.getDelta();
           const vehicle = {
             mesh: sandbox.models["vehicle"].object,
             collider: new THREE.Sphere(new THREE.Vector3(0, - 100, 0), .8),
             velocity: new THREE.Vector3(),
-            collision: false,
             wheels: [
               {
                 position: "front-left",
@@ -1202,7 +1204,10 @@
                 position: "rear-right",
                 steer: false
               }
-            ]
+            ],
+            turret: {
+              name: "MachineGun2_025"
+            }
           };
           camera.getWorldDirection(playerDirection);
           vehicle.collider.center.copy(playerCollider.end).addScaledVector(playerDirection, playerCollider.radius * 1.5);
@@ -1216,7 +1221,7 @@
               !utils.options.get("TouchingWeapon") && utils.ui.infoMarker.show("Hold [T] to get in vehicle");
               document.onkeydown = function(e) {
                 if (e.key == "t") {
-                  utils.vehicles.enter(vehicle);
+                  utils.vehicles.enter(vehicle, turret);
                   clearInterval(checkEnter);
                 }
               }
@@ -1227,7 +1232,8 @@
           });
           vehicle.mesh.position.copy(vehicle.collider.center);
         },
-        enter: function(vehicle) {
+        enter: function(vehicle, turret) {
+          utils.weapons.pickup(turret);
           weaponScene.remove(sandbox.currentWeapon);
           utils.options.set("PlayerControls", false);
           camera.position.copy(vehicle.mesh.position);
@@ -1235,31 +1241,26 @@
           camera.translateY(2);
           camera.rotation.copy(vehicle.mesh.rotation);
           let vehicleRotation = 0;
+          utils.options.set("WeaponLocked", false);
+          sandbox.currentWeapon.position.y = -10000;
           setInterval(() => {
             camera.position.copy(vehicle.mesh.position);
             camera.translateZ(6);
             camera.translateY(2);
+            vehicle.mesh.rotation.order = "YXZ";
+            vehicle.mesh.lookAt(camera.position);
+            vehicle.mesh.rotateY(Math.PI);
+            vehicle.mesh.rotation.x = 0;
+            vehicle.mesh.getObjectByName(vehicle.turret.name).lookAt(camera.position);
+            vehicle.mesh.getObjectByName(vehicle.turret.name).rotateY(Math.PI);
+            vehicle.mesh.getObjectByName(vehicle.turret.name).rotateX(-.3);
             if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
-              if (!vehicle.collision) vehicle.mesh.translateZ(-.1);
-            }
-            if (keyStates["KeyA"] || keyStates["ArrowLeft"]) {
-              if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
-                vehicle.mesh.rotateY(.03);
-              }
-              if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
-                vehicle.mesh.rotateY(-.03);
-              }
+              vehicle.velocity.x += (camera.rotation.y <= 0 ? -(camera.rotation.y + camera.rotation.x) / 5 : (camera.rotation.y + camera.rotation.x) / 5);
+              vehicle.mesh.rotation.y >= -Math.PI / 2 && vehicle.mesh.rotation.y <= Math.PI / 2 ? vehicle.velocity.z += (Math.PI - camera.rotation.y) / 5 : vehicle.velocity.z -= (Math.PI - camera.rotation.y) / 5;
             }
             if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
-              if (!vehicle.collision) vehicle.mesh.translateZ(.1);
-            }
-            if (keyStates["KeyD"] || keyStates["ArrowRight"]) {
-              if (keyStates["KeyW"] || keyStates["ArrowUp"]) {
-                vehicle.mesh.rotateY(-.03);
-              }
-              if (keyStates["KeyS"] || keyStates["ArrowDown"]) {
-                vehicle.mesh.rotateY(.03);
-              }
+              vehicle.velocity.x += (camera.rotation.y <= 0 ? (camera.rotation.y + camera.rotation.x) / 5 : -(camera.rotation.y + camera.rotation.x) / 5);
+              vehicle.mesh.rotation.y >= -Math.PI / 2 && vehicle.mesh.rotation.y <= Math.PI / 2 ? vehicle.velocity.z -= (Math.PI - camera.rotation.y) / 5 : vehicle.velocity.z += (Math.PI - camera.rotation.y) / 5;
             }
           });
         }
@@ -1688,6 +1689,28 @@
             useDefaultRunAnimation: true
           },
           {
+            name: "Turret",
+            ammo: "heavy",
+            rounds: Infinity,
+            minRounds: 0,
+            maxRounds: Infinity,
+            minClips: 0,
+            maxClips: Infinity,
+            clips: Infinity,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 0
+              },
+              full: {
+                sound: null,
+                time: 0,
+                useDefaultAnimation: true
+              }
+            },
+            useDefaultRunAnimation: true
+          },
+          {
             name: "Knife",
             ammo: "none",
             rounds: 0,
@@ -1864,6 +1887,13 @@
           },
           "Wire_Rifle": {
             srcPath: "models/weapons/dropped/Wire_Rifle.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Turret": {
+            srcPath: "models/weapons/dropped/Turret.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -2365,9 +2395,7 @@
         });
         vehiclesCollisions();
         for (const vehicle of vehicles) {
-          if (vehicle.collision) {
-            vehicle.collider.center.copy(vehicle.mesh.position);
-          }
+          vehicle.mesh.position.copy(vehicle.collider.center);
         }
       }
       function getForwardVector() {
@@ -2892,6 +2920,9 @@
               }, 40);
             });
           }
+          if (weapon.name == "Turret") {
+            utils.options.set("RapidFire", true);
+          }
           if (weapon.name == "Knife") {
             if (utils.options.get("Punching")) return;
             let swing1;
@@ -2941,6 +2972,13 @@
           });
         }
       }, 100);
+      let rapidFire3 = setInterval(function() {
+        if (utils.options.get("RapidFire")) {
+          utils.weapons.data(sandbox.currentWeapon).then(x => {
+            if (x.name == "Turret") utils.weapons.shoot();
+          });
+        }
+      }, 130);
       utils.options.set("CanFire", true);
       utils.options.set("Reloading", false);
       utils.options.set("HealthRegenerator", null);
@@ -3277,6 +3315,9 @@
               }
               if (weaponName == "Wire_Rifle") {
                 weaponTime = 4000;
+              }
+              if (weaponName == "Wire_Rifle") {
+                weaponTime = 400;
               }
               if (weaponName == "Ball") {
                 weaponTime = 2000;
