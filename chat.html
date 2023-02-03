@@ -299,7 +299,6 @@
             });
             if (i.toLowerCase() != oldmsg) return Notiflix.Notify.info("For everyones safety, we block inaproppriate messages. We're trying to make the chat a safer place.\n\nError: Could not submit message.");
           }
-          console.log(msg)
           if (document.querySelectorAll("li").length >= 6) {
             document.querySelector("li").remove();
             chat.truncate(6);
@@ -307,12 +306,12 @@
           msg = msg.replace(/[\<\>]/gi, "");
           msg = msg.replace(/(\:bold\:)/g, "<b>").replace(/(\:endbold\:)/g, "</b>").replace(/(\:italic\:)/g, "<i>").replace(/(\:enditalic\:)/g, "</i>").replace(/(\:link (.*))/g, "<a $1").replace(/(\:endlink\:)/g, "</a>").replace(/(href\=.(.*).\:)/, "href=\"$2\">").replace(":link", "").trim();
           var item = document.createElement("li");
-          item.innerHTML = msg.replace(/\<\>/gi,"").split("(|-star-|)").join("&ast;");
           messages.appendChild(item);
           window.scrollTo(0, document.body.scrollHeight);
+          msg = msg.replace("<b>", "<a href='#' onclick='userOptions(this, btoa(encodeURIComponent(this.textContent.trim())), event)' style='color: #000 !important; font-weight: bold'>").replace("</b>", "</a>").replace("javascript:", "");
+          item.innerHTML = msg.replace(/\<\>/gi,"").split("(|-star-|)").join("&ast;");
           chat.add(msg);
           gametime.run("message", [gametime.user.position + "," + btoa(encodeURIComponent(msg))]);
-          console.log(msg)
           return true;
         }
         var messages = document.getElementById("messages");
