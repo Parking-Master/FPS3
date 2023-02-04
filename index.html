@@ -286,6 +286,14 @@
         top: 0;
         right: 0;
       }
+      .decal-0 {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 40%;
+        z-index: 99999;
+        margin: 10px;
+      }
     </style>
     <script src="js/user/user.js"></script>
     <script src="js/help/help.js"></script>
@@ -299,7 +307,7 @@
     </div>
     <div class="wrapper">
       <img class="options" src="images/icons/hamburger.png" style="position: absolute; left: 2%; top: 2%; width: 50px; cursor: pointer; pointer-events: all !important" onclick="dropdown(this)">
-      <div class="poll" style="position: absolute; left: 6.5%; top: 1.2%; width: 55px; cursor: pointer; pointer-events: all !important; display: inline-block; pointer-events: all !important">
+      <div class="poll" style="position: absolute; margin-left: 70px; left: 2%; top: 2%; width: 55px; cursor: pointer; pointer-events: all !important; display: inline-block; pointer-events: all !important">
         <img src="images/other/poll.png" style="width: 100%; pointer-events: all !important" onclick="poll(this)">
       </div>
       <h2 style="margin-top: 2%" class="main-title">FPS</h2>
@@ -307,6 +315,7 @@
       <div class="strike str-left"></div>
       <div class="strike str-right"></div>
       <img src="images/html/mastery.png" class="main-image" style="margin-top: -60px">
+      <img src="images/html/gun.png" class="decal-0" style="margin-top: -60px">
       <div style="margin-top: -100px">
         <button style="position: absolute" class="hidden-list button">
           <br>
@@ -317,7 +326,7 @@
           <br>
           <a class="mini-button" style="margin: 0; font-family: monospace" onclick="start()">Start</a>
         </button>
-        <button onclick="play(this)" class="button">play</button>
+        <button onclick="play(this)" class="button"><img src="images/html/play.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> play</button>
         <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important;position:absolute" class="hidden-list button">
           <br>
           <br>
@@ -327,12 +336,12 @@
           <br>
           <a style="font-family: Arial, Helvetica, sans-serif !important; font-weight: bold; font-size: 12px" href="javascript:users()">See all users</a>
         </button>
-        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize(this)" class="button">options</button>
+        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize(this)" class="button"><img src="images/html/options.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> options</button>
         <br>
-        <button onclick="store(this)" class="button">store</button>
-        <button onclick="help()" style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" class="button">help</button>
+        <button onclick="store(this)" class="button"><img src="images/html/credit.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> store</button>
+        <button onclick="help()" style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" class="button"><img src="images/html/help.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> help</button>
       </div>
-      <p class="copyright" style="position: absolute; text-align: center; margin: 0; top: 90%; font-size: 20px; width: 300px; left: 50%; margin-left: -150px; padding: 0">&copy; 2023 Parking-Master</p>
+      <p class="copyright" style="position: absolute; text-align: center; margin: 0; top: 90%; font-size: 20px; width: 300px; left: 50%; margin-left: -150px; padding: 0">&copy; 2023 <a href="https://github.com/Parking-Master">Parking-Master</a></p>
     </div>
     <script>
       /* importers */
@@ -445,7 +454,7 @@
         let i = document.createElement("i");
         i.className = "arrow";
         i.style = "transform: rotate(-45deg); transition: transform .2s; margin-left: 10px";
-        button.appendChild(i);
+        !button.querySelector(".arrow") && button.appendChild(i);
         button.previousElementSibling.style.height = "150px";
         button.previousElementSibling.style.visibility = "visible";
         setTimeout(() => {
@@ -650,7 +659,7 @@
         let i = document.createElement("i");
         i.className = "arrow";
         i.style = "transform: rotate(-45deg); transition: transform .2s; margin-left: 10px";
-        button.appendChild(i);
+        !button.querySelector(".arrow") && button.appendChild(i);
         button.previousElementSibling.style.height = "150px";
         button.previousElementSibling.style.visibility = "visible";
         setTimeout(() => {
@@ -844,8 +853,8 @@
             });
           }
         });
-        document.querySelector(".swal-content").innerHTML += `
-        <small><i>You will only earn points if you are logged in.</i></small>
+        document.querySelector(".swal-text").innerHTML += `
+        <br><br><small><i><span style="color: #ff0000">*</span>Points are only awarded if you are logged in.</i></small>
         `;
       }
       function pollOption() {
