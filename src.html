@@ -3344,41 +3344,54 @@
               }
               let weaponName = character.loadout[character.currentWeapon == character.primaryWeapon ? 0 : 1];
               let weaponTime = 0;
+              let damage = 0;
               if (weaponName == "Assault_Rifle") {
-                weaponTime = 200;
+                weaponTime = 120;
+                damage = Math.floor(Math.random() * 2) == 0 ? 5 : 10;
               }
               if (weaponName == "Glock_19") {
                 weaponTime = 600;
+                damage = 100;
               }
               if (weaponName == "Sniper_Rifle") {
                 weaponTime = 1000;
+                damage = Math.floor(Math.random() * 2) == 0 ? 50 : 100;
               }
               if (weaponName == "Shotgun") {
-                weaponTime = 1200;
+                weaponTime = 1000;
+                damage = 50;
               }
               if (weaponName == "Micro_Uzi") {
                 weaponTime = 100;
+                damage = 5;
               }
               if (weaponName == "Auto_Pistol") {
                 weaponTime = 60;
+                damage = 100;
               }
               if (weaponName == "Light_Machine_Gun") {
-                weaponTime = 300;
+                weaponTime = 150;
+                damage = 10;
               }
               if (weaponName == "Rocket_Pistol") {
-                weaponTime = 1500;
+                weaponTime = 2000;
+                damage = 100;
               }
               if (weaponName == "Grenade_Launcher") {
                 weaponTime = 1500;
+                damage = 0;
               }
               if (weaponName == "Wire_Rifle") {
-                weaponTime = 4000;
+                weaponTime = 3000;
+                damage = 100;
               }
-              if (weaponName == "Wire_Rifle") {
-                weaponTime = 400;
+              if (weaponName == "Turret") {
+                weaponTime = 200;
+                damage = 10;
               }
               if (weaponName == "Ball") {
                 weaponTime = 2000;
+                damage = 100;
               }
               if (frustum.containsPoint(position)) {
                 bot.lookAt(camera.position);
@@ -3387,7 +3400,7 @@
                 (utils.options.get("OtherKilled") || utils.options.get("Killed")) || setTimeout(() => canFire && bot.position.distanceTo(camera.position) <= (Math.floor(Math.random() * 4) + 10) && (call("shoot", {
                   weapon: character.loadout[character.currentWeapon == character.primaryWeapon ? 0 : 1]
                 }, true), Math.floor(Math.random() * 2) == 0 && call("hit", {
-                  damage: 10
+                  damage: damage
                 }, true)), time * weaponTime);
               }
               if (bot.position.distanceTo(camera.position) <= 10 && bot.position.distanceTo(camera.position) >= 5 && Math.floor(Math.random() * 250) == 0) {
