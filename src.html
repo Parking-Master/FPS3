@@ -1366,8 +1366,14 @@
         });
         if (show) {
           new THREE.Sound("sounds/load.mp3", null, () => {}, false);
+          let loadout = null;
+          if (userMan.isLoggedIn) {
+            loadout = userMan.get("metadata").preferences.loadout.split("-");
+          } else {
+            loadout = ["Assault_Rifle", "Glock_19"];
+          }
           if (sandbox.mode == "Slayer") {
-            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+            sandbox.loadout = loadout;
           }
           if (sandbox.mode == "Fiesta") {
             sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
@@ -1408,6 +1414,7 @@
       }
       let tempName = generateName();
       sandbox = {
+        otherCharacter: "Steve",
         descriptions: {
           "Slayer": {
             title: "FFA Slayer",
@@ -1963,6 +1970,9 @@
           }
         }
       };
+      window.addEventListener("load", () => {
+        sandbox.models["player"].srcPath = sandbox.models["player"].srcPath.replace("Steve", sandbox.otherCharacter);
+      });
       const clock = new THREE.Clock();
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -2768,6 +2778,11 @@
 
       // Game setup
       if (sandbox.mode == "Slayer") {
+        if (userMan.isLoggedIn) {
+          sandbox.loadout = userMan.get("metadata").preferences.loadout.split("-");
+        } else {
+          sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+        }
         sandbox.players = 2;
       }
       if (sandbox.mode == "Fiesta") {
@@ -3101,6 +3116,7 @@
             loadout: character.loadout
           });
           character.loadout = metadata.loadout;
+          sandbox.otherCharacter = metadata.character;
         }
         if (!isUser && action == "switch") {
           if (character.currentWeapon == character.primaryWeapon) {
@@ -3279,7 +3295,8 @@
         botStarted = true;
         sandbox.users.push({
           player: sandbox.users.length + 1,
-          username: generateName()
+          username: generateName(),
+          character: "Steve"
         });
         let check = setInterval(() => {
           if (document.querySelector(".before-ui").style.visibility == "hidden") {
@@ -3634,10 +3651,12 @@
       });
       gametime.onconnect = function() {
         let username = userMan.isLoggedIn ? userMan.get("username") : sandbox.tempName;
+        let character = userMan.isLoggedIn ? userMan.get("metadata").preferences.character : "Steve";
         for (let i = 0; i < 2; i++) {
           call("info", {
             username: username,
-            loadout: sandbox.loadout
+            loadout: sandbox.loadout,
+            character: character
           });
         }
       };

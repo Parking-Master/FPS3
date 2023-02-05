@@ -771,8 +771,16 @@
           `;
         }
       }
+      function clearMail() {
+        userMan.set("mail", [], () => {
+          document.querySelectorAll(".mail-body").forEach(x => x.remove());
+        }, ["tuser", "tpass"]);
+      }
       function mail() {
         let content = document.createElement("div");
+        content.innerHTML = `
+        <a href="javascript:clearMail()">Delete everything</a>
+        `;
         let style = "transition: transform 1s; background-image: url(images/other/mail.png); background-size: 300px; background-repeat: no-repeat; background-position: center; width: 300px; height: 150px";
         userMan.get("mail").forEach(mail => {
           content.innerHTML += `
@@ -794,7 +802,7 @@
         },
         {
           title: "What is your favorite part of the game?",
-          options: ["Style", "Misc", "Peformance", "Graphics", "Simpleness"]
+          options: ["Style", "Misc", "Peformance", "Graphics", "Simpleness", "Everything"]
         },
         {
           title: "What is your favorite mode?",
