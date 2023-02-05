@@ -402,6 +402,15 @@
         if (type.includes("Character.Gary")) {
           return "Gary is a very rare soldier with the lengendary armor set and a free heavy loadout.";
         }
+        if (type.includes("Bot.Default")) {
+          return "The default bot configuration. Will act like your average AI.";
+        }
+        if (type.includes("Bot.Random")) {
+          return "The random bot configuration will select a variety of sets randomly.";
+        }
+        if (type.includes("Bot.Difficult")) {
+          return "The difficult bot configuration is built for pros who are up for a challenge.";
+        }
       }
       window.addEventListener("load", function() {
         new THREE.GLTFLoader().load("models/characters/" + userMan.get("metadata").preferences.character + "/scene.gltf", (e) => {
@@ -519,6 +528,9 @@
           "Character.Steve": "Steve soldier",
           "Character.Max": "Max soldier",
           "Character.Gary": "Gary soldier",
+          "Bot.Default": "Default CONFIG",
+          "Bot.Random": "Random CONFIG",
+          "Bot.Difficult": "Difficult CONFIG"
         };
         document.querySelectorAll(".card").forEach(x => {
           if (x.dataset.item != "Bots") {
@@ -532,13 +544,24 @@
             items.forEach(o => {
               if (x.dataset.item.trim() != o.split(".")[0].trim()) return;
               content.innerHTML += `
-              <div class="item${userMan.get("metadata").preferences[x.dataset.item.toLowerCase().trim()] == o.split(".")[1].trim() ? " selected" : ""}" data-item="${o}"><img src="images/store/${o.split(".")[0].toLowerCase().trim() + "s/" + o.split(".").splice(1).join(".") + ".png"}" style="width: 30px"> ${definitions[o]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('${o}'), 'Close')">i</button><div>
+              <div class="item${userMan.get("metadata").preferences[x.dataset.item.toLowerCase().trim()] == o.split(".")[1].trim() ? " selected" : ""}" data-item="${o}"><img src="images/store/${o.split(".")[0].toLowerCase().trim() + "s/" + o.split(".").splice(1).join(".") + ".png"}" style="width: 30px"> ${definitions[o]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('${o}'), 'Close')">i</button></div>
               `;
               content.querySelectorAll("div.item").forEach(i => i.addEventListener("click", function() {
                 i.textContent.trim().split(/\bi\b$/)[0].trim() != definitions[x.dataset.item + "." + userMan.get("metadata").preferences[x.dataset.item.toLowerCase()]] ? (document.querySelector(".swal-button--confirm").disabled = "") : (document.querySelector(".swal-button--confirm").disabled = "disabled");
                 content.querySelectorAll("div.item").forEach(x => (x == this ? x.classList.add("selected") : x.classList.remove("selected")));
               }));
             });
+            if (x.dataset.item == "Bots") {
+              content.innerHTML = `
+              <div class="item${userMan.get("metadata").preferences.bot == "Default" ? " selected" : ""}" data-item="Bot.Default"><img src="images/store/bots/Default.png" style="width: 30px"> ${definitions["Bot.Default"]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('Bot.Default'), 'Close')">i</button></div>
+              <div class="item${userMan.get("metadata").preferences.bot == "Random" ? " selected" : ""}" data-item="Bot.Random"><img src="images/store/bots/Random.png" style="width: 30px"> ${definitions["Bot.Random"]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('Bot.Random'), 'Close')">i</button></div>
+              <div class="item${userMan.get("metadata").preferences.bot == "Difficult" ? " selected" : ""}" data-item="Bot.Difficult"><img src="images/store/bots/Difficult.png" style="width: 30px"> ${definitions["Bot.Difficult"]} <button class="info" onclick="Notiflix.Confirm.show('Item information', info('Bot.Difficult'), 'Close')">i</button></div>
+              `;
+              content.querySelectorAll("div.item").forEach(i => i.addEventListener("click", function() {
+                i.textContent.trim().split(/\bi\b$/)[0].trim() != definitions["Bot." + userMan.get("metadata").preferences.bot] ? (document.querySelector(".swal-button--confirm").disabled = "") : (document.querySelector(".swal-button--confirm").disabled = "disabled");
+                content.querySelectorAll("div.item").forEach(x => (x == this ? x.classList.add("selected") : x.classList.remove("selected")));
+              }));
+            }
             swal({
               text: "Change " + x.dataset.item.toLowerCase(),
               content: content,
@@ -547,7 +570,7 @@
               if (e) {
                 let metadata = userMan.get("metadata");
                 let preferences = metadata.preferences;
-                preferences[x.dataset.item.toLowerCase().trim()] = ((e) => { let u = null; Object.keys(definitions).forEach(x => definitions[x] == e ? u = x : void(0)); return u })(content.querySelector(".item.selected").textContent.trim().split(/\bi\b$/)[0].trim()).split(".")[1];
+                preferences[x.dataset.item == "Bots" ? "bot" : x.dataset.item.toLowerCase().trim()] = ((e) => { let u = null; Object.keys(definitions).forEach(x => definitions[x] == e ? u = x : void(0)); return u })(content.querySelector(".item.selected").textContent.trim().split(/\bi\b$/)[0].trim()).split(".")[1];
                 let t = true;
                 userMan.set("metadata", metadata, () => {
                   swal.close();
@@ -555,7 +578,7 @@
                   setTimeout(() => location.reload(), 1500);
                 });
               }
-            })
+            });
             document.querySelector(".swal-button--confirm").disabled = "disabled";
           });
           let items1 = userMan.get("metadata").preferences.items;

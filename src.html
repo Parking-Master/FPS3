@@ -351,7 +351,7 @@
     <script src="https://cdn.jsdelivr.net/gh/alvaromontoro/gamecontroller.js@latest/dist/gamecontroller.min.js"></script>
     <audio src="sounds/walking.mp3" id="walkingSound" loop></audio>
     <div class="banner">
-      <p style="text-align: center; margin-top: 10%; font-size: 2em; font-weight: bold; font-family: Arial, Helvetica, sans-serif !important">[FFA Slayer] - 10 points</span></p>
+      <p style="text-align: center; margin-top: 10%; font-size: 2em; font-weight: bold; font-family: Arial, Helvetica, sans-serif !important">[<span class="title">FFA Slayer</span>] - <span class="points">10</span> points</span></p>
       <div class="users"></div>
     </div>
     <div class="loading">
@@ -1366,8 +1366,14 @@
         });
         if (show) {
           new THREE.Sound("sounds/load.mp3", null, () => {}, false);
+          let loadout = null;
+          if (userMan.isLoggedIn) {
+            loadout = userMan.get("metadata").preferences.loadout.split("-");
+          } else {
+            loadout = ["Assault_Rifle", "Glock_19"];
+          }
           if (sandbox.mode == "Slayer") {
-            sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+            sandbox.loadout = loadout;
           }
           if (sandbox.mode == "Fiesta") {
             sandbox.loadout = [sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name, sandbox.weapons[Math.floor(Math.random() * sandbox.weapons.length)].name];
@@ -1408,14 +1414,36 @@
       }
       let tempName = generateName();
       sandbox = {
+        otherCharacter: "Steve",
         descriptions: {
-          "Slayer": "Eliminate the enemy using default or power weapons to earn points. First to the score limit wins.",
-          "Fiesta": "Every time you spawn or respawn you will get a random loadout. First to the score limit wins.",
-          "Snipers": "Snipers only match with no map weapons or equipment. First to the score limit wins.",
-          "Oddball": "Hold the ball to earn points, and stay away from enemies!",
-          "Fistfight": "Knives only match with no map weapons or equipment. First to the score limit wins.",
-          "CTF": "(Capture the flag): Capture the enemy flag to earn a point.",
-          "KOTH": "(King of the Hill): Capture the specified zone to earn points."
+          "Slayer": {
+            title: "FFA Slayer",
+            description: "Eliminate the enemy using default or power weapons to earn points. First to the score limit wins."
+          },
+          "Fiesta": {
+            title: "Fiesta 1v1",
+            description: "Every time you spawn or respawn you will get a random loadout. First to the score limit wins."
+          },
+          "Snipers": {
+            title: "Snipers 1v1",
+            description: "Snipers only match with no map weapons or equipment. First to the score limit wins."
+          },
+          "Oddball": {
+            title: "FFA Oddball",
+            description: "Hold the ball to earn points, and stay away from enemies!"
+          },
+          "Fistfight": {
+            title: "Fistfight 1v1",
+            description: "Knives only match with no map weapons or equipment. First to the score limit wins."
+          },
+          "CTF": {
+            title: "Capture the Flag",
+            description: "(Capture the flag): Capture the enemy flag to earn a point."
+          },
+          "KOTH": {
+            title: "King of the Hill",
+            description: "(King of the Hill): Capture the specified zone to earn points."
+          }
         },
         tempName: tempName,
         medals: [],
@@ -1458,6 +1486,12 @@
             new THREE.Vector3(42, 0, -14.5, new THREE.Vector3(0, Math.PI / 2, 0))
           ],
           "Aero": [
+            new THREE.Vector3(245, -13, -11.5, new THREE.Vector3(0, Math.PI / 2, 0)),
+            new THREE.Vector3(161, -11.5, -132.5, new THREE.Vector3(0, Math.PI / 2, 0)),
+            new THREE.Vector3(301, 0, 170.5, new THREE.Vector3(0, 0, 0)),
+            new THREE.Vector3(420, 6, 80, new THREE.Vector3(0, -Math.PI, 0))
+          ],
+          "Venus": [
             new THREE.Vector3(245, -13, -11.5, new THREE.Vector3(0, Math.PI / 2, 0)),
             new THREE.Vector3(161, -11.5, -132.5, new THREE.Vector3(0, Math.PI / 2, 0)),
             new THREE.Vector3(301, 0, 170.5, new THREE.Vector3(0, 0, 0)),
@@ -1936,6 +1970,9 @@
           }
         }
       };
+      window.addEventListener("load", () => {
+        sandbox.models["player"].srcPath = sandbox.models["player"].srcPath.replace("Steve", sandbox.otherCharacter);
+      });
       const clock = new THREE.Clock();
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -2600,7 +2637,7 @@
         if (utils.options.get("PlayerWalkingRight")) {
           sandbox.models["player"].object.translateX(-(clock.getDelta() * 35));
         }
-        sun.position.set(camera.position.x, 50, camera.position.z);
+        sandbox.map == "Venus" ? (sun.position.copy(camera.position), sun.translateZ(-30), sun.lookAt(camera.position)) : sun.position.set(camera.position.x, 50, camera.position.z);
         utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
         document.querySelector(".run-health").style.width = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth")) + "%";
         document.querySelector(".run-health").querySelector("span").querySelector("span").textContent = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth"));
@@ -2695,7 +2732,7 @@
         space.position.copy(camera.position);
         space.rotateY(.00025);
         space.rotateX(.0001);
-        sun.position.set(camera.position.x, 50, camera.position.z);
+        sandbox.map == "Venus" ? (sun.position.copy(camera.position), sun.translateZ(-30), sun.lookAt(camera.position)) : sun.position.set(camera.position.x, 50, camera.position.z);
         weaponCamera.position.copy(camera.position);
         weaponCamera.rotation.copy(camera.rotation);
         if (sandbox.primaryWeapon != null && sandbox.secondaryWeapon != null && utils.options.get("WeaponLocked")) {
@@ -2741,6 +2778,11 @@
 
       // Game setup
       if (sandbox.mode == "Slayer") {
+        if (userMan.isLoggedIn) {
+          sandbox.loadout = userMan.get("metadata").preferences.loadout.split("-");
+        } else {
+          sandbox.loadout = ["Assault_Rifle", "Glock_19"];
+        }
         sandbox.players = 2;
       }
       if (sandbox.mode == "Fiesta") {
@@ -2820,6 +2862,15 @@
         space.material.side = THREE.DoubleSide;
         scene.add(space);
         scene.fog = null;
+      } else if (sandbox.map == "Venus") {
+        sun = new THREE.Mesh(new THREE.CircleGeometry(12), new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/sun.png"), transparent: true }));
+        scene.background = new THREE.Color(0xcaaf7e);
+        sun.position.set(0, 50, 0);
+        sun.rotateX(1);
+        scene.add(sun);
+        sun.material.color = new THREE.Color(0xeeeeff);
+        GRAVITY = 200;
+        scene.fog = new THREE.Fog(0xcaaf7e, 0, 300);
       } else if (sandbox.map == "Complex") {
         let sphere = new THREE.SphereGeometry(500, 60, 40);
         sky = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/clouds.png") }));
@@ -3065,6 +3116,7 @@
             loadout: character.loadout
           });
           character.loadout = metadata.loadout;
+          sandbox.otherCharacter = metadata.character;
         }
         if (!isUser && action == "switch") {
           if (character.currentWeapon == character.primaryWeapon) {
@@ -3243,7 +3295,8 @@
         botStarted = true;
         sandbox.users.push({
           player: sandbox.users.length + 1,
-          username: generateName()
+          username: generateName(),
+          character: "Steve"
         });
         let check = setInterval(() => {
           if (document.querySelector(".before-ui").style.visibility == "hidden") {
@@ -3547,17 +3600,35 @@
         if (loadedModels >= ((Object.values(sandbox.models).length - 1) + sandbox.weapons.length) && map != null) {
           document.querySelector(".loading").style.opacity = 0;
           document.querySelector(".loading").style.width = "100%";
+          let users = [];
           sandbox.users.forEach(x => {
+            users.push(x);
+            users = [...new Set(users)];
             document.querySelector(".users").innerHTML += `
             <div class="column">${x.player} - ${x.username} <div class="spin"></div>
             `;
           });
-          sandbox.users.push({});
+          let userCheck = setInterval(() => {
+            users.forEach(user => {
+              if (sandbox.users.indexOf(user) > -1) return;
+              document.querySelector(".users").innerHTML += "";
+              sandbox.users.forEach(x => {
+                users.push(x);
+                users = [...new Set(e)];
+                document.querySelector(".users").innerHTML += `
+                <div class="column">${x.player} - ${x.username} <div class="spin"></div>
+                `;
+              });
+            });
+          });
           document.querySelector(".description-header").textContent = sandbox.mode;
-          document.querySelector(".description-text").textContent = sandbox.descriptions[sandbox.mode];
+          document.querySelector(".description-text").textContent = sandbox.descriptions[sandbox.mode].description;
+          document.querySelector(".banner").querySelector(".title").textContent = sandbox.descriptions[sandbox.mode].title;
+          document.querySelector(".banner").querySelector(".points").textContent = sandbox.maxPoints;
           utils.respawn(false);
           let playerLoader = setInterval(() => {
-            if (sandbox.users.length >= sandbox.players) {
+            if (sandbox.users.length + 1 >= sandbox.players) {
+              clearInterval(userCheck);
               weaponScene.remove(sandbox.currentWeapon);
               document.querySelector(".ui").style.visibility = "hidden";
               utils.respawn(false);
@@ -3593,10 +3664,12 @@
       });
       gametime.onconnect = function() {
         let username = userMan.isLoggedIn ? userMan.get("username") : sandbox.tempName;
+        let character = userMan.isLoggedIn ? userMan.get("metadata").preferences.character : "Steve";
         for (let i = 0; i < 2; i++) {
           call("info", {
             username: username,
-            loadout: sandbox.loadout
+            loadout: sandbox.loadout,
+            character: character
           });
         }
       };

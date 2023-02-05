@@ -79,11 +79,6 @@
       document.querySelector(".swal-button").classList.remove("gamepad-focus");
     }
   });
-  swal = function() {
-    e.apply(this, arguments);
-    document.querySelectorAll(".gamepad-focus").forEach(x => x.classList.remove("gamepad-focus"));
-    document.querySelector(".swal-button").classList.add("gamepad-focus");
-  }
   swal.close = function() {
     d.apply(this, arguments);
     document.querySelector(".swal-button").classList.remove("gamepad-focus");

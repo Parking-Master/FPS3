@@ -209,7 +209,7 @@
       .disabled {
         cursor: not-allowed !important;
       }
-      .options {
+      .options, .poll img {
         filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .3)) contrast(120%) brightness(150%) !important;
       }
       .swal-overlay {
@@ -238,12 +238,14 @@
         border-bottom: 2px solid #333;
       }
       .mail-body {
-        width: 90%;
         background: #f1f1f1;
         border: .2px solid #999;
         box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
         margin: 10px;
         padding: 4px;
+        position: relative;
+        left: 50%;
+        margin-left: -160px !important;
       }
       [id^="NotiflixNotify-"] {
         box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24);
@@ -260,6 +262,38 @@
       .gamepad-focus {
         outline: 5px solid #fbf719c4;
       }
+      .poll-option {
+        border: 1px solid #333;
+        color: #333;
+        margin: 5px;
+        font-size: 18px;
+        padding: 10px;
+        cursor: pointer;
+      }
+      .poll-option:hover {
+        background: #efefef;
+      }
+      .poll-option:active {
+        background: #ddd;
+      }
+      .button__badge {
+        background: #fa3e3e;
+        border-radius: 2px;
+        color: #fff;
+        padding: 1px 3px;
+        font-size: 10px;
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+      .decal-0 {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 40%;
+        z-index: 99999;
+        margin: 10px;
+      }
     </style>
     <script src="js/user/user.js"></script>
     <script src="js/help/help.js"></script>
@@ -273,11 +307,15 @@
     </div>
     <div class="wrapper">
       <img class="options" src="images/icons/hamburger.png" style="position: absolute; left: 2%; top: 2%; width: 50px; cursor: pointer; pointer-events: all !important" onclick="dropdown(this)">
+      <div class="poll" style="position: absolute; margin-left: 70px; left: 2%; top: 2%; width: 55px; cursor: pointer; pointer-events: all !important; display: inline-block; pointer-events: all !important">
+        <img src="images/other/poll.png" style="width: 100%; pointer-events: all !important" onclick="poll(this)">
+      </div>
       <h2 style="margin-top: 2%" class="main-title">FPS</h2>
       <h1 style="margin-top: -2%" class="secondary-title">3</h1>
       <div class="strike str-left"></div>
       <div class="strike str-right"></div>
       <img src="images/html/mastery.png" class="main-image" style="margin-top: -60px">
+      <img src="images/html/gun.png" class="decal-0" style="margin-top: -60px">
       <div style="margin-top: -100px">
         <button style="position: absolute" class="hidden-list button">
           <br>
@@ -288,7 +326,7 @@
           <br>
           <a class="mini-button" style="margin: 0; font-family: monospace" onclick="start()">Start</a>
         </button>
-        <button onclick="play(this)" class="button">play</button>
+        <button onclick="play(this)" class="button"><img src="images/html/play.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> play</button>
         <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important;position:absolute" class="hidden-list button">
           <br>
           <br>
@@ -298,12 +336,12 @@
           <br>
           <a style="font-family: Arial, Helvetica, sans-serif !important; font-weight: bold; font-size: 12px" href="javascript:users()">See all users</a>
         </button>
-        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize(this)" class="button">options</button>
+        <button style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" onclick="customize(this)" class="button"><img src="images/html/options.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> options</button>
         <br>
-        <button onclick="store(this)" class="button">store</button>
-        <button onclick="help()" style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" class="button">help</button>
+        <button onclick="store(this)" class="button"><img src="images/html/credit.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> store</button>
+        <button onclick="help()" style="margin-left:0;position:absolute;margin-right:5%!important;right:0!important" class="button"><img src="images/html/help.png" style="width: 8%; vertical-align: middle; margin-top: -4px"> help</button>
       </div>
-      <p class="copyright" style="position: absolute; text-align: center; margin: 0; top: 90%; font-size: 20px; width: 300px; left: 50%; margin-left: -150px; padding: 0">&copy; 2023 Parking-Master</p>
+      <p class="copyright" style="position: absolute; text-align: center; margin: 0; top: 90%; font-size: 20px; width: 300px; left: 50%; margin-left: -150px; padding: 0">&copy; 2023 <a href="https://github.com/Parking-Master">Parking-Master</a></p>
     </div>
     <script>
       /* importers */
@@ -314,7 +352,7 @@
       gametime.set("channel", "world");
 
       availableModes = ["Slayer", "Fiesta", "Snipers", "Oddball", "Fistfight", "CTF", "KOTH"];
-      availableMaps = ["Cargo", "Storage", "Complex", "Lihid", "Aero"];
+      availableMaps = ["Cargo", "Storage", "Complex", "Lihid", "Aero", "Venus"];
       currentMode = availableModes[0];
 
       function loader(rate = 200) {
@@ -416,7 +454,7 @@
         let i = document.createElement("i");
         i.className = "arrow";
         i.style = "transform: rotate(-45deg); transition: transform .2s; margin-left: 10px";
-        button.appendChild(i);
+        !button.querySelector(".arrow") && button.appendChild(i);
         button.previousElementSibling.style.height = "150px";
         button.previousElementSibling.style.visibility = "visible";
         setTimeout(() => {
@@ -621,7 +659,7 @@
         let i = document.createElement("i");
         i.className = "arrow";
         i.style = "transform: rotate(-45deg); transition: transform .2s; margin-left: 10px";
-        button.appendChild(i);
+        !button.querySelector(".arrow") && button.appendChild(i);
         button.previousElementSibling.style.height = "150px";
         button.previousElementSibling.style.visibility = "visible";
         setTimeout(() => {
@@ -708,17 +746,141 @@
           window.dispatchEvent(new Event("load"));
         });
       }
+      function openMail(mail, style, element) {
+        mail = JSON.parse(atob(mail));
+        style = decodeURIComponent(atob(style));
+        element.style = "transition: transform 1s; transform: scale(2); position: absolute; z-index: 9999999999999; border: 1px solid #000; top: 35%; background-image: none; background: #fff; width: 200px; margin-left: -110px !important";
+        let close = document.createElement("span");
+        close.style = "cursor: pointer; position: relative; float: left; top: 0; margin: 0";
+        let e = element.getAttribute("onclick");
+        element.onclick = (e) => event.preventDefault();
+        close.onclick = function() {
+          element.style = style;
+          element.querySelector("p").textContent = mail.message.slice(0, 15) + "...";
+          element.removeChild(close);
+          setTimeout(() => element.onclick = new Function(e), 500);
+        }
+        close.innerHTML = "&times;";
+        element.insertBefore(close, element.firstChild);
+        element.querySelector("p").textContent = mail.message;
+        if (mail.sender.toLowerCase().trim() == "friend request") {
+          element.querySelector("p").innerHTML += `
+          <br>
+          <br>
+          <a href="#">Decline</a> - <a href="#">Accept</a>
+          `;
+        }
+      }
+      function clearMail() {
+        userMan.set("mail", [], () => {
+          document.querySelectorAll(".mail-body").forEach(x => x.remove());
+        }, ["tuser", "tpass"]);
+      }
       function mail() {
         let content = document.createElement("div");
+        content.innerHTML = `
+        <a href="javascript:clearMail()">Delete everything</a>
+        `;
+        let style = "transition: transform 1s; background-image: url(images/other/mail.png); background-size: 300px; background-repeat: no-repeat; background-position: center; width: 300px; height: 150px";
         userMan.get("mail").forEach(mail => {
           content.innerHTML += `
-          <div class="mail-body"><h3>${mail.sender}</h3><p>${mail.message.slice(0, 15)}...</p></div>
+          <div class="mail-body" onclick="openMail('${btoa(JSON.stringify(mail))}', '${btoa(encodeURIComponent(style))}', this)" style="${style}">
+            <h3 style="font-size: 14px">${mail.sender}</h3>
+            <p style="font-size: 12px">${mail.message.slice(0, 15)}...</p>
+          </div>
           `;
         })
         swal({
           title: "Mail",
           content: content
         });
+      }
+      polls = [
+        {
+          title: "What is your favorite heavy weapon?",
+          options: ["Rocket Pistol", "Grenade Launcher", "Turret", "Vehicle"]
+        },
+        {
+          title: "What is your favorite part of the game?",
+          options: ["Style", "Misc", "Peformance", "Graphics", "Simpleness", "Everything"]
+        },
+        {
+          title: "What is your favorite mode?",
+          options: availableModes
+        },
+        {
+          title: "What is your favorite map?",
+          options: availableMaps
+        },
+        {
+          title: "Do you like bots/AI?",
+          options: ["Yes", "No"]
+        },
+        {
+          title: "How would you rate this game?",
+          options: ["Awesome!", "Very good", "Good", "Not great", "Bad", "Very bad"]
+        },
+        {
+          title: "If you had infinite credits, what would you do with them?",
+          options: ["Buy out everything", "Keep earning", "Give them away", "Nothing"]
+        },
+        {
+          title: "How difficuly is this game?",
+          options: ["Simple", "Easy", "Normal", "Difficult", "Hard"]
+        }
+      ];
+      if (!(localStorage["pollAnswered"] && Math.round((new Date((new Date()).toLocaleDateString("en-US").split("/")[2], (new Date()).toLocaleDateString("en-US").split("/")[0] - 1, (new Date()).toLocaleDateString("en-US").split("/")[1]) - new Date(localStorage["pollAnswered"].split("/")[2], localStorage["pollAnswered"].split("/")[0] - 1, localStorage["pollAnswered"].split("/")[1])) / (1000 * 60 * 60 * 24)) <= 0)) {
+        document.querySelector(".poll").innerHTML += `
+        <span class="button__badge">1</span>
+        `;
+      }
+      function poll() {
+        if (localStorage["pollAnswered"] && Math.round((new Date((new Date()).toLocaleDateString("en-US").split("/")[2], (new Date()).toLocaleDateString("en-US").split("/")[0] - 1, (new Date()).toLocaleDateString("en-US").split("/")[1]) - new Date(localStorage["pollAnswered"].split("/")[2], localStorage["pollAnswered"].split("/")[0] - 1, localStorage["pollAnswered"].split("/")[1])) / (1000 * 60 * 60 * 24)) <= 0) {
+          return swal({
+            title: "Oops!",
+            text: "You've already answered today's poll. Come back tomorrow for more!"
+          });
+        }
+        swal({
+          title: "Daily poll",
+          text: "Earn 100 credits from answering daily poll",
+          buttons: ["Cancel", "Start"]
+        }).then(e => {
+          if (e) {
+            let poll = polls[Math.floor(Math.random() * polls.length)];
+            let content = document.createElement("div");
+            poll.options.forEach(x => {
+              content.innerHTML += `
+              <div class="poll-option" onclick="pollOption()">${x}</div>
+              `;
+            });
+            swal({
+              title: poll.title,
+              content: content,
+              button: false
+            });
+          }
+        });
+        document.querySelector(".swal-text").innerHTML += `
+        <br><br><small><i><span style="color: #ff0000">*</span>Points are only awarded if you are logged in.</i></small>
+        `;
+      }
+      function pollOption() {
+        Notiflix.Block.circle(".swal-modal");
+        metadata = userMan.get("metadata");
+        metadata.points = BigInt((metadata.points - 0) + 100).toString();
+        userMan.set("metadata", metadata, () => {}, ["tuser", "tpass"]);
+        setTimeout(() => {
+          if (!userMan.isLoggedIn) return swal({
+            title: "Thank you!",
+            text: "Thank you for answering the daily poll"
+          });
+          swal({
+            title: "Congrats!",
+            text: "You earned 100 credits"
+          }).then(() => location.reload());
+        }, 2000);
+        localStorage.setItem("pollAnswered", (new Date()).toLocaleDateString("en-US"));
       }
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
