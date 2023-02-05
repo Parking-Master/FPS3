@@ -419,6 +419,7 @@
 
 	  // Game asset variables
 	  otherPlayer = new THREE.Mesh();
+    synced = false;
 	  gunHolder = new THREE.Group();
     gunHolder.rotation.set(1.5, .5, 2.9);
     gunHolder.position.set(2.4475877079089363, 22.013294147805205, 1.5569827148359332);
@@ -3129,6 +3130,9 @@
             character.currentWeapon = character.primaryWeapon;
           }
         }
+        if (!isUser && action == "sync") {
+          synced = true;
+        }
         if (!isUser && action == "shoot") {
           let flash = sandbox.models["flash"].object.clone();
           new THREE.Sound("sounds/guns/" + metadata.weapon + "/fire.mp3", sandbox.currentWeapon, () => {}, false);
@@ -3298,6 +3302,7 @@
           username: generateName(),
           character: "Steve"
         });
+        synced = true;
         let check = setInterval(() => {
           if (document.querySelector(".before-ui").style.visibility == "hidden") {
             let bot = sandbox.models["player"].object;
@@ -3626,22 +3631,29 @@
                 weaponCamera.updateProjectionMatrix();
                 utils.respawn(false);
               }, 2000);
+              call("sync", {});
+              call("sync", {});
               setTimeout(() => {
-                document.querySelector(".banner").style.opacity = 0;
-                document.querySelector(".before-ui").style.visibility = "visible";
-                let t = 10;
-                let timer = setInterval(() => {
-                  if (t <= 0) {
-                    new THREE.Sound("sounds/load.mp3", null, () => {}, false);
-                    new THREE.Sound("sounds/ambience.mp3", null, () => {}, false, true);
-                    document.querySelector(".before-ui").style.visibility = "hidden";
-                    return clearInterval(timer);
+                let wait = setInterval(() => {
+                  if (synced) {
+                    document.querySelector(".banner").style.opacity = 0;
+                    document.querySelector(".before-ui").style.visibility = "visible";
+                    let t = 10;
+                    let timer = setInterval(() => {
+                      if (t <= 0) {
+                        new THREE.Sound("sounds/load.mp3", null, () => {}, false);
+                        new THREE.Sound("sounds/ambience.mp3", null, () => {}, false, true);
+                        document.querySelector(".before-ui").style.visibility = "hidden";
+                        return clearInterval(timer);
+                      }
+                      t--;
+                      t < 4 && new THREE.Sound("sounds/tick.mp3", null, () => {}, false);
+                      document.querySelector(".counter").textContent = t;
+                    }, 950);
+                    utils.options.set("Starting", true);
+                    clearInterval(wait);
                   }
-                  t--;
-                  t < 4 && new THREE.Sound("sounds/tick.mp3", null, () => {}, false);
-                  document.querySelector(".counter").textContent = t;
-                }, 950);
-                utils.options.set("Starting", true);
+                });
               }, 4000);
               clearInterval(playerLoader);
             }
@@ -3662,6 +3674,7 @@
       };
 
       if (new URLSearchParams(location.search).get("freeplay")) {
+        synced = true;
         utils.respawn = () => {};
         sandbox.players = 1;
         sandbox.users.push({
