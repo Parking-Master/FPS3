@@ -294,8 +294,32 @@
         z-index: 99999;
         margin: 10px;
       }
+      .center {
+        display: inline-flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      .reward-item {
+        position: relative;
+        border: 2px solid gold;
+        border-radius: 1px;
+        cursor: pointer;
+        width: 200px;
+        padding: 5px;
+        left: 50%;
+        margin-left: -100px;
+      }
+      .reward-item:hover {
+        border-color: #999;
+      }
+      .reward-item:active {
+        border-color: #777;
+        background: #eee;
+      }
     </style>
     <script src="js/user/user.js"></script>
+    <script src="js/user/rewards.js"></script>
     <script src="js/help/help.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   </head>
@@ -307,6 +331,7 @@
     </div>
     <div class="wrapper">
       <img class="options" src="images/icons/hamburger.png" style="position: absolute; left: 2%; top: 2%; width: 50px; cursor: pointer; pointer-events: all !important" onclick="dropdown(this)">
+      <img class="rewards" src="images/other/star.png" style="position: absolute; right: 2%; top: 2%; width: 50px; cursor: pointer; pointer-events: all !important" onclick="rewards(this)">
       <div class="poll" style="position: absolute; margin-left: 70px; left: 2%; top: 2%; width: 55px; cursor: pointer; pointer-events: all !important; display: inline-block; pointer-events: all !important">
         <img src="images/other/poll.png" style="width: 100%; pointer-events: all !important" onclick="poll(this)">
       </div>
@@ -867,20 +892,71 @@
       }
       function pollOption() {
         Notiflix.Block.circle(".swal-modal");
-        metadata = userMan.get("metadata");
-        metadata.points = BigInt((metadata.points - 0) + 100).toString();
-        userMan.set("metadata", metadata, () => {}, ["tuser", "tpass"]);
+        if (userMan.isLoggedIn) {
+          metadata = userMan.get("metadata");
+          metadata.points = BigInt((metadata.points - 0) + 100).toString();
+          userMan.set("metadata", metadata, () => {}, ["tuser", "tpass"]);
+        }
         setTimeout(() => {
+          document.querySelector(".button__badge").remove();
           if (!userMan.isLoggedIn) return swal({
             title: "Thank you!",
-            text: "Thank you for answering the daily poll"
+            text: "Thank you for answering the daily poll."
           });
           swal({
             title: "Congrats!",
             text: "You earned 100 credits"
-          }).then(() => location.reload());
+          });
         }, 2000);
         localStorage.setItem("pollAnswered", (new Date()).toLocaleDateString("en-US"));
+      }
+      function rewards() {
+        if (!userMan.isLoggedIn) return swal({
+          title: "No rewards",
+          text: "To view rewards, you must be signed in.",
+          button: "Close"
+        });
+        let content = document.createElement("div");
+        content.innerHTML = `
+        <div style="padding-top: 10px; position: relative; left: 50%; margin-left: -150px; width: 300px; height: 150px; border: 3px solid #ddd; border-radius: 3px">
+        </div>
+        `;
+        swal({
+          title: "Your rewards",
+          text: "Welcome! When you earn special rewards, they'll appear here.",
+          content: content,
+          button: "Close"
+        });
+        if (userMan.get("metadata").rewards.length < 1) {
+          content.querySelector("div").innerHTML = "<i>No rewards available</i>";
+        } else {
+          userMan.get("metadata").rewards.forEach(reward => {
+            content.querySelector("div").innerHTML += `
+            <div class="reward-item" style="margin-bottom: 5px">
+              <img src="${reward.gift.type == "points" ? "images/html/credit.png" : `images/store/${reward.gift.item.split(".")[0].toLowerCase().trim() + "s"}/${reward.gift.item.split(".")[1].trim()}.png`}" style="width: 4%">
+              <b onclick="openReward('${btoa(encodeURIComponent(JSON.stringify(reward)))}', this.parentElement)">${reward.title}</b>
+            </div>
+            `;
+          });
+        }
+      }
+      function openReward(reward, item) {
+        reward = JSON.parse(decodeURIComponent(atob(reward)));
+        if (reward.gift.type == "points") {
+          metadata = userMan.get("metadata");
+          metadata.points = BigInt((metadata.points - 0) + (reward.gift.value - 0)).toString();
+          Notiflix.Confirm.show("Reward redeemed", "You earned " + reward.gift.value + " points!", "OK");
+          item.remove();
+          metadata.rewards.splice(metadata.rewards.indexOf(reward), 1);
+          userMan.set("metadata", metadata, () => {}, ["tuser", "tpass"]);
+        } else {
+          metadata = userMan.get("metadata");
+          !(metadata.preferences.items.indexOf(reward.gift.item) > -1) && metadata.preferences.items.push(reward.gift.item);
+          Notiflix.Confirm.show("Reward redeemed", "You earned " + (reward.gift.value == 1 ? "a" : reward.gift.value) + " " + reward.gift.item.split(".")[1].replace(/_/, " ") + " " + reward.gift.item.split(".")[0].toLowerCase().trim() + (reward.gift.value == 1 ? "" : "s") + "!", "OK");
+          item.remove();
+          metadata.rewards.splice(metadata.rewards.indexOf(reward), 1);
+          userMan.set("metadata", metadata, () => {}, ["tuser", "tpass"]);
+        }
       }
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
