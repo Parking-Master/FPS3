@@ -721,9 +721,14 @@
           <span class="disabled"><a href="javascript:logout()" ${!userMan.isLoggedIn ? "disabled" : ""}>Log out user</a></span>
           <br>
           <a href="javascript:mail()">Mail inbox</a>
+          <br>
+          <a href="javascript:profile()">My profile</a>
         </div>
         `;
         document.body.appendChild(box);
+      }
+      function profile() {
+        new Frame("profile.html");
       }
       window.addEventListener("load", function() {
         if (userMan.isLoggedIn) {
