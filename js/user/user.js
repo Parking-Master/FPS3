@@ -92,7 +92,7 @@
     let parsed = type == "object" ? JSON.parse(data) : type == "number" ? data - 0 : data;
     return parsed;
   }
-  userMan.set = function(key, value, callback, colums = ["username", "password"]) {
+  userMan.set = function(key, value, callback, colums = ["username", "password"], error = () => {}) {
     if (key == "password") {
       return;
     }
@@ -101,7 +101,10 @@
     Parse.User.logOut();
     let user = Parse.User.logIn(username, password).then(function(user) {
       user.set(key.toString().trim(), value);
-      user.save();
+      user.save().then(() => {}).catch(err => {
+        error(err.code);
+        callback = () => {};
+      });
       Object.keys(localStorage).forEach(x => {
         if (!x.startsWith("userman")) return;
         localStorage.setItem("userman-" + x.split("-")[1].trim(), (typeof user.get(x.split("-")[1]) == "object" ? JSON.stringify(user.get(x.split("-")[1])) : user.get(x.split("-")[1])) + "." + typeof user.get(x.split("-")[1]));
