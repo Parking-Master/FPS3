@@ -175,7 +175,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>Old password</label>
-                    <input type="password" class="form-control">
+                    <input type="password" class="form-control old-password">
                   </div>
                 </div>
               </div>
@@ -183,18 +183,18 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>New password</label>
-                    <input type="password" class="form-control">
+                    <input type="password" class="form-control new-password">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>Confirm new password</label>
-                    <input type="password" class="form-control">
+                    <input type="password" class="form-control confirm-password">
                   </div>
                 </div>
               </div>
               <div>
-                <button class="btn btn-primary">Update</button>
+                <button class="btn btn-primary" onclick="update('password')">Update</button>
                 <button class="btn btn-light">Cancel</button>
               </div>
             </div>
@@ -232,20 +232,15 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" value="" id="app-check">
-                      <label class="form-check-label" for="app-check">Disable performance settings</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" value="" id="defaultCheck2" >
-                      <label class="form-check-label" for="defaultCheck2" style="color: red">Delete my account</label>
-                    </div>
+                    <button class="btn btn-primary">Disable performance</button>
+                    <br>
+                    <br>
+                    <button class="btn btn-primary" style="background: red !important">Delete my account</button>
+                    <br>
+                    <br>
+                    <button class="btn btn-primary" style="background: red !important">Reset my account</button>
                   </div>
                 </div>
-              </div>
-              <div>
-                <button class="btn btn-primary">Update</button>
-                <button class="btn btn-light">Cancel</button>
               </div>
             </div>
             <div class="tab-pane fade" id="notification" role="tabpanel" aria-labelledby="notification-tab">
@@ -337,6 +332,40 @@
           }
           if (newBio.trim() != oldBio.trim()) {
             userMan.set("bio", newBio, () => {}, ["tuser", "tpass"]);
+          }
+        } else if (type == "password") {
+          let newPassword = document.querySelector("#password").querySelector(".new-password").value;
+          let confirmPassword = document.querySelector("#password").querySelector(".confirm-password").value;
+          let oldPassword = document.querySelector("#password").querySelector(".old-password").value;
+          if (!newPassword.trim()) return swal("Please enter a password.");
+          if (oldPassword === userMan.get("tpass")) {
+            if (newPassword === confirmPassword) {
+              (async () => {
+                let e = !1;
+                const t = Parse.Object.extend("User");
+                const n = new Parse.Query(t);
+                const s = await n.find();
+                let lobbies = [];
+                let pause = false;
+                for (let t = 0; t < s.length; t++) {
+                  let ot = t;
+                  const n = Parse.Object.extend("User");
+                  new Parse.Query(n).get(s[t].id).then((t => {
+                    if (t.get("temail") == userMan.get("temail")) {
+                      let user = t;
+                      user.set("tpass", newPassword);
+                      user.set("password", newPassword);
+                      user.save();
+                      swal("Password successfully changed. You will need log in again.").then(() => location.replace("login.html?return=profile.html"));
+                    }
+                  }));
+                }
+              })();
+            } else {
+              swal("Please make sure the passwords match.");
+            }
+          } else {
+            swal("Incorrect password.");
           }
         }
       }
