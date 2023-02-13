@@ -146,9 +146,12 @@
           <div class="form__padding-right">
             <form onsubmit="event.preventDefault()">
               <h1 class="form__title">Member Login</h1>
-              <input class="form__email" type="text" placeholder="Username">
-              <input class="form__password" type="text" placeholder="Password">
-              <input class="form__submit-btn" type="submit" value="Login">
+              <div class="inputs">
+                <input class="form__email" type="text" placeholder="Username">
+                <input class="form__password" type="text" placeholder="Password">
+              </div>
+              <input class="form__submit-btn" type="submit" value="Login" style="width: 89%; display: inline-block">
+              <input class="form__submit-btn" type="button" value="" style="width: 10%; display: inline-block; background: #333 url(images/icons/key.png); background-size: 20px; background-repeat: no-repeat; background-position: center" onclick="useKey()">
             </form>
             <p><a class="form__link reset" href="#">Forgot your password?</a></p>
             <p><a class="form__link" href="signup.html">Don't have an account?</a></p>
@@ -158,6 +161,14 @@
     </div>
     <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
     <script>
+      function useKey() {
+        let input = document.querySelector(".form__email").cloneNode();
+        input.className = "form__key";
+        input.placeholder = "Login key";
+        document.querySelector(".form__email").parentElement.insertBefore(input, document.querySelector(".form__email").parentElement.firstChild);
+        document.querySelector(".form__email").remove();
+        document.querySelector(".form__password").remove();
+      }
       (function() {
         let h = setInterval(() => userMan && (userMan.logOut(false), clearInterval(h)));
         if (location.hash == "password_changed") swal({ text: "Password successfully changed", button: false }), setTimeout(() => swal.close(), 1500);
@@ -228,6 +239,46 @@
             localStorage.removeItem("credentials");
           });
         }
+        const d = (e) => {
+          if (e.target == document.querySelector(".form__submit-btn")) {
+            e.preventDefault();
+            let event = e;
+            let users = [];
+            (async () => {
+              const t = Parse.Object.extend("User");
+              const n = new Parse.Query(t);
+              const s = await n.find();
+              for (let t = 0; t < s.length; t++) {
+                const n = Parse.Object.extend("User");
+                new Parse.Query(n).get(s[t].id).then((t => {
+                  let user = t;
+                  if (user.get("key") == document.querySelector(".form__key").value) {
+                    users.push(user);
+                  }
+                }));
+              }
+            })();
+            Notiflix.Block.hourglass("form", "Please wait...");
+            setTimeout(() => {
+              if (users.length > 0) {
+                let user = users[0];
+                userMan.logIn(user.get("tuser"), user.get("tpass"), (d) => {
+                  Notiflix.Block.hourglass("form", "Please wait...");
+                  if (d == "Logged in. Redirecting...") {
+                    document.querySelector(".notiflix-block-message").textContent = "Logged in!";
+                    setTimeout(() => location.replace(new URLSearchParams(location.search).get("return") || "/", 1500));
+                  }
+                }, () => {
+                  document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
+                  setTimeout(() => Notiflix.Block.remove("form"), 1500);
+                }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail", "picture", "createdAt", "bio", "key"], new URLSearchParams(location.search).get("return") || null);
+              } else {
+                document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
+                setTimeout(() => Notiflix.Block.remove("form"), 1500);
+              }
+            }, 1500);
+          }
+        };
         const i = (e) => {
           if (e.target == document.querySelector(".form__link.reset")) {
             e.preventDefault();
@@ -292,11 +343,11 @@
             }, () => {
               document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
               setTimeout(() => Notiflix.Block.remove("form"), 1500);
-            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail", "picture", "createdAt", "bio"], new URLSearchParams(location.search).get("return") || null);
+            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail", "picture", "createdAt", "bio", "key"], new URLSearchParams(location.search).get("return") || null);
           }
         };
         document.body.addEventListener("click", (e) => {
-          i(e);
+          document.querySelector(".form__key") ? d(e) : i(e);
         });
       })();
     </script>

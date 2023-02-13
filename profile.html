@@ -203,27 +203,18 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>Email</label>
-                    <input type="text" class="form-control">
+                    <label>Login key<br><small><i>Use your login key incase of lost information.</i></small></label>
+                    <input type="text" class="form-control key">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>Login key</label>
-                    <input type="text" class="form-control">
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" value="" id="recovery">
-                      <label class="form-check-label" for="recovery">Remove email address</label>
-                    </div>
+                    <button class="btn btn-primary" for="recovery" onclick="document.querySelector('.key').value = uuidv4()">&circlearrowleft;</button>
                   </div>
                 </div>
               </div>
               <div>
-                <button class="btn btn-primary">Update</button>
+                <button class="btn btn-primary" onclick="update('security')">Update</button>
                 <button class="btn btn-light">Cancel</button>
               </div>
             </div>
@@ -273,6 +264,9 @@
       </div>
     </section>
     <script>
+      function uuidv4() {
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+      }
       window.addEventListener("load", () => {
         document.querySelectorAll(".username").forEach(x => (x.textContent = userMan.get("tuser"), x.value = userMan.get("tuser")));
         document.querySelectorAll(".email").forEach(x => (x.textContent = userMan.get("temail"), x.value = userMan.get("temail")));
@@ -280,6 +274,7 @@
         document.querySelectorAll(".image").forEach(x => x.src = userMan.get("picture"));
         document.querySelectorAll(".date").forEach(x => (x.textContent = new Date(userMan.get("createdAt")).toLocaleString(), x.value = new Date(userMan.get("createdAt")).toLocaleString()));
         document.querySelectorAll(".bio").forEach(x => (x.textContent = userMan.get("bio"), x.value = userMan.get("bio")));
+        document.querySelectorAll(".key").forEach(x => (x.textContent = userMan.get("key"), x.value = userMan.get("key")));
         if (new URLSearchParams(location.search).get("ne")) {
           let newEmail = decodeURIComponent(atob(new URLSearchParams(location.search).get("nq")));
           let run = false;
@@ -366,6 +361,12 @@
             }
           } else {
             swal("Incorrect password.");
+          }
+        } else if (type == "security") {
+          if (document.querySelector(".key").value != userMan.get("key")) {
+            userMan.set("key", document.querySelector(".key").value, () => {
+              swal("Your login key has been changed. Please take note of it and use it in an emergency in case you can't log in. DO NOT give away this key.");
+            }, ["tuser", "tpass"]);
           }
         }
       }
