@@ -351,7 +351,7 @@
       </div>
     </div>
     <div class="wrapper">
-      <p style="font-size: 30px">User info for "<span class="username"></span>"</p>
+      <p style="font-size: 30px">User <b class="username"></b></p>
       <hr>
       <img class="profilepicture" src="https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png" style="width: 80px; border: 2px solid #333; border-radius: 100%; margin: 20px; margin-left: -30%">
       <hr class="seperator" style="position: absolute; display: inline-block; width: 8vw; left: 50%; margin-left: -10vw; margin-top: 50px; box-shadow: none; background: #333; border-radius: 0">
@@ -362,11 +362,15 @@
       <p style="font-size: 20px">Achievements</p>
       <div class="center-h">
         <div class="medals">
-          <img class="medal" src="images/store/failed.png" style="width: 50px; border: 2px solid #333; border-radius: 100%; margin: 10px">
         </div>
         <br>
-        <p><span class="kills">0</span> total kills</p>
-        <p><span class="medalsearned">0</span> medal(s) earned</p>
+        <p><span class="kills" style="font-size: 30px">0</span> total kills</p>
+        <p><span class="medalsearned"  style="font-size: 30px">0</span> medal(s) earned</p>
+        <p><span class="pointsearned" style="font-size: 30px">0</span> point(s)</p>
+        <br>
+        <div style="transform: scale(2)">
+          <img src="images/icons/medals/kill.png" style="width: 2%"> <b>Tier 1</b>
+        </div>
       </div>
       <script>
         function traverse(obj, callback) {
@@ -399,8 +403,10 @@
                     if (user.get("username").trim() == decodeURIComponent(new URLSearchParams(location.search).get("q")).trim()) {
                       document.querySelectorAll(".username").forEach(x => x.textContent = user.get("username"));
                       document.querySelectorAll(".profilepicture").forEach(x => x.src = user.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png");
-                      document.querySelectorAll(".kills").forEach(x => x.textContent = user.get("metadata").history.kills || 0);
-                      document.querySelectorAll(".medalsearned").forEach(x => x.textContent = user.get("metadata").history.medals.length);
+                      document.querySelectorAll(".kills").forEach(x => x.textContent = (user.get("metadata").history.kills || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,","));
+                      document.querySelectorAll(".medalsearned").forEach(x => x.textContent = user.get("metadata").history.medals.length.toString().replace(/\B(?=(\d{3})+(?!\d))/g,","));
+                      document.querySelectorAll(".pointsearned").forEach(x => x.textContent = user.get("metadata").points.toString().replace(/\B(?=(\d{3})+(?!\d))/g,","));
+                      document.querySelector(".bio").textContent = user.get("bio");
                       if (user.get("metadata").history.medals.length < 1) {
                         document.querySelector(".medals").innerHTML = `
                         <i style="color: #999">This user has not earned any medals.</i>

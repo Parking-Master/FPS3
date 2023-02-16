@@ -88,9 +88,11 @@
         background: rgba(10, 10, 10, .3);
       }
       .swal-content {
-        height: 200px;
         overflow-y: scroll;
-        border-bottom: 2px solid #333;
+      }
+      .swal-content__input {
+        outline: none;
+        border: 1px solid red !important;
       }
 	  </style>
   </head>
@@ -102,7 +104,7 @@
             <div class="p-4">
               <div class="img-circle text-center mb-3">
                 <img src="https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png" alt="My profile" class="shadow image">
-                <i class="button__badge fa fa-edit" style="display: none"></i>
+                <i class="button__badge fa fa-edit" style="display: none" onclick="update('picture')"></i>
               </div>
               <h4 class="text-center username"></h4>
             </div>
@@ -223,13 +225,13 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <button class="btn btn-primary">Disable performance</button>
+                    <button class="btn btn-primary" onclick="update('performance')">Disable performance</button>
                     <br>
                     <br>
-                    <button class="btn btn-primary" style="background: red !important">Delete my account</button>
+                    <button class="btn btn-primary" style="background: red !important" onclick="update('delete')">Delete my account</button>
                     <br>
                     <br>
-                    <button class="btn btn-primary" style="background: red !important">Reset my account</button>
+                    <button class="btn btn-primary" style="background: red !important" onclick="update('reset')">Reset my account</button>
                   </div>
                 </div>
               </div>
@@ -268,6 +270,9 @@
         return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
       }
       window.addEventListener("load", () => {
+        if (!userMan.get("performance")) {
+          document.querySelector("button[onclick=\"update('performance')\"]").textContent = "Enable performance";
+        }
         document.querySelectorAll(".username").forEach(x => (x.textContent = userMan.get("tuser"), x.value = userMan.get("tuser")));
         document.querySelectorAll(".email").forEach(x => (x.textContent = userMan.get("temail"), x.value = userMan.get("temail")));
         document.querySelectorAll(".password").forEach(x => (x.textContent = userMan.get("tpass"), x.value = userMan.get("tpass")));
@@ -368,7 +373,207 @@
               swal("Your login key has been changed. Please take note of it and use it in an emergency in case you can't log in. DO NOT give away this key.");
             }, ["tuser", "tpass"]);
           }
+        } else if (type == "delete") {
+          swal({
+            icon: "error",
+            text: "WARNING: You will lose your ENTIRE account. If you're really sure, type in \"DELETE\" in all caps below:",
+            content: "input",
+            closeOnEnterKey: false,
+            closeOnEsc: false,
+            closeOnSpaceKey: false,
+            closeOnClickOutside: false,
+            allowEnterKey: false,
+            buttons: ["Cancel", "Continue"]
+          });
+          document.querySelector(".swal-button--confirm").addEventListener("click", () => {
+            swal({
+              text: "Deleting account in 20 seconds... Please think before you go",
+              button: "ABORT"
+            }).then(() => {
+              swal.close();
+              clearInterval(countdown);
+            });
+            let seconds = 20;
+            let countdown = setInterval(() => {
+              if (seconds <= 0) return (function() {
+                (async () => {
+                  let e = !1;
+                  const t = Parse.Object.extend("User");
+                  const n = new Parse.Query(t);
+                  const s = await n.find();
+                  let users = [];
+                  for (let t = 0; t < s.length; t++) {
+                    let ot = t;
+                    const n = Parse.Object.extend("User");
+                    new Parse.Query(n).get(s[t].id).then((t => {
+                      let user = t;
+                      if (user.get("tuser") === userMan.get("tuser")) {
+                        (async () => {
+                          await user.destroy();
+                          userMan.logOut();
+                          location.replace("/");
+                        })();
+                      }
+                    }));
+                  }
+                })();
+              })(), clearInterval(countdown);
+              seconds--;
+              document.querySelector(".swal-text").textContent = document.querySelector(".swal-text").textContent.replace(new RegExp(seconds + 1, ""), seconds);
+            }, 1000);
+          });
+          document.querySelector(".swal-button--confirm").disabled = "disabled";
+          document.querySelector(".swal-content__input").addEventListener("keyup", function(e) {
+            if (this.value == "DELETE") {
+              document.querySelector(".swal-button--confirm").disabled = "";
+            } else {
+              document.querySelector(".swal-button--confirm").disabled = "disabled";
+            }
+          });
+        } else if (type == "reset") {
+          let options = {
+            "key": uuidv4(),
+            "username": userMan.get("tuser"),
+            "tuser": userMan.get("tuser"),
+            "email": userMan.get("temail"),
+            "tpass": userMan.get("tpass"),
+            "temail": userMan.get("temail"),
+            "picture": "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png",
+            "metadata": {
+              "points": userMan.get("metadata").points,
+              "preferences": {
+                "theme": "Default",
+                "loadout": "Assault_Rifle-Glock_19",
+                "character": "Steve",
+                "bot": "Default",
+                "items": [
+                  "Theme.Default",
+                  "Character.Steve",
+                  "Loadout.Assault_Rifle-Glock_19",
+                  "Ammo.Heavy",
+                  "Ammo.Sniper"
+                ]
+              },
+              "history": {
+                "medals": [],
+                "kills": 0
+              },
+              "rewards": [
+                {
+                  "title": "Sign up reward",
+                  "description": "You've earned your first reward for signing up!",
+                  "gift": {
+                    "type": "points",
+                    "item": "",
+                    "value": 150
+                  }
+                }
+              ]
+            },
+            "mail": [
+              {
+                "sender": "System",
+                "message": ""
+              }
+            ],
+            "bio": "No information available for this user."
+          };
+          swal({
+            text: "WARNING: All of your information (except your points) will be reset. Do you want to continue?",
+            closeOnEnterKey: false,
+            closeOnEsc: false,
+            closeOnSpaceKey: false,
+            closeOnClickOutside: false,
+            allowEnterKey: false,
+            buttons: ["Cancel", "Continue"]
+          });
+          document.querySelector(".swal-button--confirm").addEventListener("click", () => {
+            (async () => {
+              let e = !1;
+              const t = Parse.Object.extend("User");
+              const n = new Parse.Query(t);
+              const s = await n.find();
+              let users = [];
+              for (let t = 0; t < s.length; t++) {
+                let ot = t;
+                const n = Parse.Object.extend("User");
+                new Parse.Query(n).get(s[t].id).then((t => {
+                  let user = t;
+                  if (user.get("tuser") === userMan.get("tuser")) {
+                    (async () => {
+                      await user.destroy();
+                      userMan.signUp(options.username, options.tpass, options, () => {
+                        userMan.update(["tuser", "tpass"], function(key, value) {});
+                      }, (e) => console.log(e));
+                    })();
+                  }
+                }));
+              }
+            })();
+          });
+        } else if (type == "performance") {
+          if (document.querySelector("button[onclick=\"update('performance')\"]").textContent.includes("Enable")) {
+            swal({
+              text: "Automatic performance settings will adjust the amount of graphics and processing the game uses automatically. You can always disable this in Settings > Application > Disable performance",
+              closeOnEnterKey: false,
+              closeOnEsc: false,
+              closeOnSpaceKey: false,
+              closeOnClickOutside: false,
+              allowEnterKey: false,
+              buttons: ["OK", "Cancel"]
+            }).then(() => {
+              userMan.set("performance", true, () => {
+                document.querySelector("button[onclick=\"update('performance')\"]").textContent = "Disable performance";
+              }, ["tuser", "tpass"]);
+            });
+            return;
+          }
+          swal({
+            text: "Note: Automatic performance settings will be disabled after this.",
+            closeOnEnterKey: false,
+            closeOnEsc: false,
+            closeOnSpaceKey: false,
+            closeOnClickOutside: false,
+            allowEnterKey: false,
+            buttons: ["OK", "Cancel"]
+          }).then(() => {
+            userMan.set("performance", false, () => {}, ["tuser", "tpass"]);
+          });
+        } else if (type == "picture") {
+          let content = document.createElement("div");
+          content.innerHTML = `
+          <input type="file" accept=".png,.jpg,.jpeg,.ico,.svg" onchange="uploadImage(this)">
+          `;
+          swal({
+            icon: userMan.get("picture"),
+            title: "Change profile picture",
+            text: "Upload any of the following images: .png, .jpg, .jpeg, .ico, or .svg:",
+            content: content,
+            button: "Cancel"
+          });
+          document.querySelector(".swal-icon img").style.width = "100px";
+          document.querySelector(".swal-icon img").style.borderRadius = "100%";
+          document.querySelector(".swal-icon img").style.border = "2px solid #333";
         }
+      }
+      function uploadImage(element) {
+        let file = element.files[0];
+        if ((file.size / 100000) > 10) return swal({
+          text: "Image size is too large. Try uploading something smaller than 10MB",
+          button: "Try again"
+        }).then(() => update("picture"));
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+          let image = reader.result;
+          document.querySelector(".swal-icon img").src = image;
+          document.querySelector(".swal-button").textContent = "Change";
+          document.querySelector(".swal-button").addEventListener("click", () => {
+            userMan.set("picture", image, () => {
+              document.querySelectorAll(".image").forEach(x => x.src = userMan.get("picture"));
+            }, ["tuser", "tpass"]);
+          });
+        };
       }
     </script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>

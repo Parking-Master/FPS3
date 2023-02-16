@@ -422,6 +422,16 @@
         }, rate);
       }
       window.addEventListener("load", () => {
+        if (userMan.isLoggedIn) {
+          if (localStorage["daily-reward"] && !(Math.round((new Date((new Date()).toLocaleDateString("en-US").split("/")[2], (new Date()).toLocaleDateString("en-US").split("/")[0] - 1, (new Date()).toLocaleDateString("en-US").split("/")[1]) - new Date(localStorage["daily-reward"].split("/")[2], localStorage["daily-reward"].split("/")[0] - 1, localStorage["daily-reward"].split("/")[1])) / (1000 * 60 * 60 * 24)) <= 0)) {
+            localStorage.removeItem("daily-reward");
+          }
+          if (!localStorage["daily-reward"]) {
+            let reward = dailyRewards[Math.floor(Math.random() * dailyRewards.length)];
+            new Reward("Daily reward", "Here is your daily gift from us!", reward, reward == "points" ? 100 : null);
+            localStorage.setItem("daily-reward", new Date().toLocaleDateString("en-US"));
+          }
+        }
         loader();
         Session.clearCache();
         Notiflix.Notify.init({
@@ -747,6 +757,7 @@
             oldRewards.points += rewards.points;
             oldRewards.history.kills += rewards.kills || 0;
             userMan.set("metadata", oldRewards, () => {});
+            console.log(userMan.get("metadata").history)
             localStorage.removeItem("temp-rewards");
             Notiflix.Notify.info("Congrats! You earned " + rewards.points + " points.");
           }
@@ -964,6 +975,7 @@
           userMan.set("metadata", metadata, () => {}, ["tuser", "tpass"]);
         }
       }
+      dailyRewards = ["points", "points", "points", "points", "points", "Loadout.Sniper_Rifle-Shotgun", "points", "points", "points", "points", "points", "points", "Character.Max"];
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
   </body>

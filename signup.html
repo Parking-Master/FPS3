@@ -95,11 +95,40 @@
       a:hover {
         text-decoration: underline;
       }
+      .swal-overlay {
+        z-index: 99999999999999 !important;
+      }
+      [class^="swal"] {
+        animation: none !important;
+        transition: none !important;
+      }
+      .swal-button {
+        background: #333 !important;
+        color: #fff;
+        border-radius: 2px;
+        box-shadow: none !important;
+      }
+      .swal-modal {
+        border-radius: 1px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.24) !important;
+      }
+      .swal-overlay {
+        background: rgba(10, 10, 10, .3);
+      }
+      .swal-content__input {
+        border: 1px solid #333 !important;
+        outline: none;
+      }
+      .g-recaptcha > div {
+        transform: scale(.98);
+      }
     </style>
+    <script src="https://www.google.com/recaptcha/api.js?onload=onReady"></script>
   </head>
   <script src="js/user/user.js"></script>
   <script src="js/user/InfoVerifier.js"></script>
   <script src="https://simplemailer.loca.lt/js/sDmgyoxPUVduX4dmhQ9NVWhPbQWa8eipQq247JGfdB4daPhSjnQEo51HOqUd3HXAW/mailer.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   <body>
     <div class="form">
       <div class="form__box">
@@ -115,6 +144,7 @@
               <input class="form__email" type="text" placeholder="Email">
               <input class="form__username" type="text" placeholder="Username">
               <input class="form__password" type="text" placeholder="Password">
+              <div class="g-recaptcha" data-theme="light" data-sitekey="6LfBoIgkAAAAAOAb7YAlLXiaEPVGp0HvD4upxtqN" style="height: 100px !important; overflow: hidden; display: inline-block"></div>
               <input class="form__submit-btn" type="submit" value="Submit">
             </form>
             <p><a class="form__link" href="login.html">Already have an account?</a></p>
@@ -128,6 +158,16 @@
         function uuidv4() {
           return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
         }
+        window.addEventListener("load", () => {
+          if (document.getElementsByClassName("g-recaptcha").length > 0) {
+            let parentWidth = document.getElementsByClassName("g-recaptcha")[0].parentNode.clientWidth;
+            let childWidth = document.getElementsByClassName("g-recaptcha")[0].firstChild.clientWidth;
+            let scale = parentWidth / childWidth;
+            let new_width = childWidth * scale;
+            document.getElementsByClassName("g-recaptcha")[0].style.transform = "scale(" + scale + ")";
+            document.getElementsByClassName("g-recaptcha")[0].style.transformOrigin = "0 0";
+          }
+        });
         if (new URLSearchParams(location.search).get("id") && new URLSearchParams(location.search).get("e") && new URLSearchParams(location.search).get("p") && new URLSearchParams(location.search).get("u")) {
           let id = new URLSearchParams(location.search).get("id");
           let email = atob(new URLSearchParams(location.search).get("e"));
@@ -143,6 +183,7 @@
               "key": uuidv4(),
               "username": username,
               "tuser": username,
+              "performance": true,
               "email": email,
               "tpass": password,
               "temail": email,
@@ -205,13 +246,13 @@
             Notiflix.Block.hourglass("form", "Verifying...");
             InfoVerifier("username", document.querySelector(".form__username").value, (e) => (document.querySelector(".notiflix-block-message").textContent = e, setTimeout(() => Notiflix.Block.remove("form"), 1500)), () => {
               InfoVerifier("password", document.querySelector(".form__password").value, (e) => (document.querySelector(".notiflix-block-message").textContent = e, setTimeout(() => Notiflix.Block.remove("form"), 1500)), () => {
+                if (!grecaptcha || !(grecaptcha.getResponse().length > 0)) return (Notiflix.Block.remove("form"), swal("Please verify the captcha"));
                 document.querySelector(".notiflix-block-message").textContent = "Success! Look for a verification email in your inbox.";
                 let id1 = btoa(Math.random().toString() + Math.random().toString());
                 let email1 = btoa(document.querySelector(".form__email").value);
                 let username1 = btoa(document.querySelector(".form__username").value);
                 let password1 = btoa(document.querySelector(".form__password").value);
                 let link = (location.protocol + "//" + location.host + location.pathname) + `?e=${email1}&u=${username1}&p=${password1}&id=${id1}`;
-                console.log(link)
                 localStorage.setItem("verify-id", id1);
                 localStorage.setItem("verify-email", email1);
                 localStorage.setItem("verify-username", username1);
