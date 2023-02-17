@@ -726,6 +726,11 @@
               depleteRounds && cweapon.rounds--;
               depleteRounds && cweapon.roundsUsed++;
               let ammo = cweapon.ammo;
+              spheres.forEach(x => {
+                if (intersection && typeof x.mesh.getObjectByName(intersection.object.name) != "undefined") {
+                  x.explode();
+                }
+              });
               if (ammo == "heavy") {
                 damage = 5;
               }
@@ -1136,19 +1141,24 @@
             sphere.velocity.addScaledVector(playerVelocity, 2);
             sphereIdx = (sphereIdx + 1) % spheres.length;
             !(scene.children.indexOf(sphere.mesh) > -1) && scene.add(sphere.mesh);
+            function explode() {
+              let mark = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ transparent: true, map: new THREE.TextureLoader().load("images/textures/mark.png") }));
+              scene.add(mark);
+              mark.position.copy(sphere.mesh.position);
+              mark.rotateX(-Math.PI / 2);
+              mark.position.y += -.15;
+              mark.scale.set(4, 4, 4);
+              utils.explosion(sphere.mesh);
+              scene.remove(sphere.mesh);
+              new THREE.Sound("sounds/explosion.mp3", sphere.mesh, () => {}, true, 20);
+              sphere.hits = 0;
+            }
+            raycastTargets.push(sphere.mesh);
+            sphere.explode = explode;
             let collided = setInterval(() => {
               if (worldOctree.sphereIntersect(sphere.collider)) {
                 setTimeout(() => {
-                  let mark = new THREE.Mesh(new THREE.CircleGeometry(1), new THREE.MeshBasicMaterial({ transparent: true, map: new THREE.TextureLoader().load("images/textures/mark.png") }));
-                  scene.add(mark);
-                  mark.position.copy(sphere.mesh.position);
-                  mark.rotateX(-Math.PI / 2);
-                  mark.position.y += -.15;
-                  mark.scale.set(4, 4, 4);
-                  utils.explosion(sphere.mesh);
-                  scene.remove(sphere.mesh);
-                  new THREE.Sound("sounds/explosion.mp3", sphere.mesh, () => {}, true, 20);
-                  sphere.hits = 0;
+                  explode();
                 }, 1000);
                 clearInterval(collided);
               }
@@ -1765,6 +1775,28 @@
               }
             },
             useDefaultRunAnimation: false
+          },
+          {
+            name: "Tactical_Shotgun",
+            ammo: "shotgun",
+            rounds: 2,
+            minRounds: 0,
+            maxRounds: 2,
+            minClips: 0,
+            maxClips: 0,
+            clips: 0,
+            reloads: {
+              easy: {
+                sound: null,
+                time: 2000
+              },
+              full: {
+                sound: null,
+                time: 2200,
+                useDefaultAnimation: false
+              }
+            },
+            useDefaultRunAnimation: true
           }
         ],
         grenades: {
@@ -1920,6 +1952,13 @@
           },
           "Ball": {
             srcPath: "models/weapons/dropped/Ball.glb",
+            object: null,
+            callback: function() {},
+            mixer: null,
+            animations: null
+          },
+          "Tactical_Shotgun": {
+            srcPath: "models/weapons/dropped/Tactical_Shotgun.glb",
             object: null,
             callback: function() {},
             mixer: null,
@@ -2597,7 +2636,7 @@
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
         let intersections = raycaster.intersectObjects(raycastTargets);
         (intersection = intersections[0] || null);
-        if (intersection) {
+        if (intersection && intersection.object == playerTarget) {
           if (utils.options.get("Zoomed")) {
             !document.querySelector(".crosshair").src.includes("crosshair_zoomed_intersected.png") && (document.querySelector(".crosshair").src = "images/icons/ui/crosshair_zoomed_intersected.png");
           } else {
@@ -2892,12 +2931,14 @@
             utils.options.set("RapidFire", true);
           }
           if (weapon.name == "Shotgun") {
-            utils.weapons.shoot(8, false, false, 10);
-            new THREE.Sound("sounds/guns/Shotgun/fire.mp3", sandbox.currentWeapon, () => {}, false);
-            utils.weapons.data(sandbox.currentWeapon).then(weapon => {
-              weapon.rounds--;
-              weapon.roundsUsed++;
-            });
+            if (weapon.rounds > 0) {
+              utils.weapons.shoot(8, false, false, 10);
+              new THREE.Sound("sounds/guns/Shotgun/fire.mp3", sandbox.currentWeapon, () => {}, false);
+              utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+                weapon.rounds--;
+                weapon.roundsUsed++;
+              });
+            }
           }
           if (weapon.name == "Rocket_Pistol") {
             utils.weapons.shoot(1);
@@ -2984,6 +3025,16 @@
           if (weapon.name == "Ball") {
             if (utils.options.get("Punching")) return;
             utils.weapons.punch(100);
+          }
+          if (weapon.name == "Tactical_Shotgun") {
+            if (weapon.rounds > 0) {
+              utils.weapons.shoot(4, false, false, 10);
+              new THREE.Sound("sounds/guns/Tactical_Shotgun/fire.mp3", sandbox.currentWeapon, () => {}, false);
+              utils.weapons.data(sandbox.currentWeapon).then(weapon => {
+                weapon.rounds--;
+                weapon.roundsUsed++;
+              });
+            }
           }
         });
       });
@@ -3383,6 +3434,10 @@
               if (weaponName == "Ball") {
                 weaponTime = 2000;
                 damage = 100;
+              }
+              if (weaponName == "Tactical_Shotgun") {
+                weaponTime = 1000;
+                damage = 20;
               }
               if (frustum.containsPoint(position)) {
                 bot.lookAt(camera.position);
