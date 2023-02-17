@@ -274,11 +274,10 @@
         availableMaps = ["Cargo", "Storage", "Complex", "Lihid", "Aero"];
         words = [];
         fetch("words.json").then((e) => e.json()).then((e) => words = (e.words));
-        gametime.set("key", "pub-c-1ed2f84f-762b-4211-84f9-617b19be2b23", "sub-c-1521e0cc-f132-41e5-9d46-6b06a7d09f90");
+        gametime.set("key", "pub-c-3966cf29-008f-4688-ac89-2cf840f8974f", "sub-c-b3276aef-d662-471a-8122-5a324b36e7d9");
         gametime.set("channel", "world");
         gametime.make("message");
         function sendMessage(msg = "", isInvite = false) {
-          console.log(msg)
           if (!msg.trim()) return false;
           if (selectedUser) {
             msg = "From :bold:" + (userMan.isLoggedIn ? userMan.get("username") : "Guest") + ":endbold:, to :bold:" + selectedUser + ":endbold: at " + date.js.time() + ": " + msg;

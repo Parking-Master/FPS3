@@ -333,20 +333,14 @@
   </head>
   <body>
     <script src="https://threejs.org/build/three.min.js"></script>
-    <script src="js/FontLoader.min.js"></script>
     <script src="js/GLTFLoader.min.js"></script>
-    <script src="js/TextGeometry.min.js"></script>
     <script src="js/fflate.min.js"></script>
     <script src="js/Capsule.min.js"></script>
     <script src="js/Octree.min.js"></script>
-    <script src="https://mrgoonie.github.io/three.confetti.explosion.js/js/helper.js"></script>
     <script src="js/PointerLockControls.min.js"></script>
     <script src="js/GamepadControls.min.js"></script>
     <script src="js/TouchControls.min.js"></script>
     <script src="js/UI.js"></script>
-    <script src="js/ExplosionConfetti.min.js"></script>
-    <script src="https://unpkg.com/@seregpie/three.text-texture"></script>
-    <script src="https://unpkg.com/@seregpie/three.text-sprite"></script>
     <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/alvaromontoro/gamecontroller.js@latest/dist/gamecontroller.min.js"></script>
     <audio src="sounds/walking.mp3" id="walkingSound" loop></audio>
@@ -359,9 +353,6 @@
       <div class="center"><h1 class="map shadow" style="text-align: center; font-size: 5em; z-index: 99999999999999999; background: rgba(255, 255, 255, .1); backdrop-filter: blur(5px); padding: 10px; border-radius: 5px; border-bottom: .5px solid #fff">LOADING...</h1></div>
       <div class="loading-bar" style="width: 1%"></div>
       <p style="position: absolute; left: 20px; top: 25px"><span class="loading-progress">0</span> %</p>
-      <div class="loading-info">
-      <b class="mode">Slayer</b> on <b class="map">Cargo</b> - <span class="points">10</span> points
-      <div>
     </div>
     <div class="before-ui">
       <div class="spin spin-large center-origin" style="position: absolute; left: 20px; top: 20px">
@@ -445,23 +436,6 @@
         }
       }
       return counter;
-    }
-    function confetti(obj) {
-      let confetti = new ExplosionConfetti({
-        rate: 4,
-        amount: 10,
-        radius: 100,
-        areaWidth: 5,
-        areaHeight: 0,
-        fallingHeight: 1,
-        fallingSpeed: 1,
-        colors: [0x999999, 0xaaaaaa, 0xcfcfcf]
-      });
-      confetti.object.position.copy(obj.position);
-      scene.add(confetti.object);
-      confetti.object.scale.set(.02, .02, .02);
-      let h = setInterval(() => (confetti.object.traverse((x) => (x.position.y = 0, x.material && (x.material.opacity += -.02))), confetti.update()));
-      setTimeout((() => (confetti.dispose(), clearInterval(h))), 1000);
     }
 
 	  THREE.Sound = function Sound(source = null, object = new THREE.Object3D, callback = function(sound) {}, preserve3d = true, volume = 5, loop) {
@@ -2548,6 +2522,14 @@
         pollGamepad();
         typeof sandbox.users[0] != "undefined" && (document.querySelector(".player1").querySelector(".username").textContent = (sandbox.users[0].username || sandbox.tempName).slice(0, 13));
         typeof sandbox.users[1] != "undefined" && (document.querySelector(".player2").querySelector(".username").textContent = (sandbox.users[1].username || sandbox.tempName).slice(0, 13));
+        if (typeof userMan != "undefined") {
+          if (typeof sandbox.users[0] != "undefined" && (userMan.isLoggedIn ? userMan.get("tuser") : sandbox.tempName) == sandbox.users[0].username) {
+            document.querySelector(".leaderboard .player2 .username").style = "color: #ff0000 !important;";
+          }
+          if (typeof sandbox.users[1] != "undefined" && (userMan.isLoggedIn ? userMan.get("tuser") : sandbox.tempName) == sandbox.users[1].username) {
+            document.querySelector(".leaderboard .player1 .username").style = "color: #ff0000 !important;";
+          }
+        }
         document.querySelector(".player1").querySelector(".score").textContent = sandbox.points[0];
         document.querySelector(".player2").querySelector(".score").textContent = sandbox.points[1];
         if (sandbox.points[0] >= sandbox.maxPoints) {
@@ -2630,23 +2612,25 @@
         }
         typeof playerTarget != "undefined" && sandbox.models["player"].object != null && playerTarget.position.copy(sandbox.models["player"].object.position);
         if (utils.options.get("PlayerWalkingForward")) {
-          sandbox.models["player"].object.translateZ(clock.getDelta() * 35);
+          sandbox.models["player"].object.translateZ(clock.getDelta() * 45);
         }
         if (utils.options.get("PlayerWalkingBackward")) {
-          sandbox.models["player"].object.translateZ(-(clock.getDelta() * 35));
+          sandbox.models["player"].object.translateZ(-(clock.getDelta() * 45));
         }
         if (utils.options.get("PlayerWalkingLeft")) {
-          sandbox.models["player"].object.translateX(clock.getDelta() * 35);
+          sandbox.models["player"].object.translateX(clock.getDelta() * 45);
         }
         if (utils.options.get("PlayerWalkingRight")) {
-          sandbox.models["player"].object.translateX(-(clock.getDelta() * 35));
+          sandbox.models["player"].object.translateX(-(clock.getDelta() * 45));
         }
         sandbox.map == "Venus" ? (sun.position.copy(camera.position), sun.translateZ(-30), sun.lookAt(camera.position)) : sun.position.set(camera.position.x, 50, camera.position.z);
         utils.options.get("RunHealth") >= 100 ? utils.options.set("RunHealth", 100) : keyStates["ShiftLeft"] || utils.options.set("RunHealth", utils.options.get("RunHealth") + 1);
         document.querySelector(".run-health").style.width = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth")) + "%";
         document.querySelector(".run-health").querySelector("span").querySelector("span").textContent = (utils.options.get("RunHealth") <= 0 ? 0 : utils.options.get("RunHealth"));
-        document.querySelector(".health").style.width = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0)) + "%";
-        document.querySelector(".health").querySelector("span").querySelector("span").textContent = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0));
+        if (utils.options.get("Health")) {
+          document.querySelector(".health").style.width = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0)) + "%";
+          document.querySelector(".health").querySelector("span").querySelector("span").textContent = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0));
+        }
         document.querySelector(".current-grenades").textContent = sandbox.grenades.current;
         sandbox.currentWeapon && utils.weapons.data(sandbox.currentWeapon).then(weapon => {
           if (sandbox.mode == "Oddball" && weapon.name == "Ball") {
@@ -2777,12 +2761,12 @@
 	    weaponRenderer.setPixelRatio(1.1);
 
 	    // Multiplayer setup
-      gametime.set("key", "pub-c-3740053e-fec0-4122-bfc4-9214ccfff37d", "sub-c-e4d0d472-66a4-49dc-b796-830b9e56a653");
+      gametime.set("key", "pub-c-3966cf29-008f-4688-ac89-2cf840f8974f", "sub-c-b3276aef-d662-471a-8122-5a324b36e7d9");
       gametime.set("channel", new URLSearchParams(location.search).get("lobby"));
 
       // Game setup
       if (sandbox.mode == "Slayer") {
-        if (userMan.isLoggedIn) {
+        if (typeof userMan != "undefined" && userMan.isLoggedIn) {
           sandbox.loadout = userMan.get("metadata").preferences.loadout.split("-");
         } else {
           sandbox.loadout = ["Assault_Rifle", "Glock_19"];
@@ -3224,8 +3208,12 @@
           TouchControls.isLocked = false;
           GamepadControls.isLocked = false;
           document.querySelector(".ui").style.visibility = "hidden";
+          document.querySelector("body").append(document.querySelector(".leaderboard"));
+          document.querySelector(".leaderboard").style.zIndex = 99999999;
           utils.ui.dialog("You died", "You were killed by " + metadata.name + " using " + metadata.weapon.replace(/_/gi, " "), 4000);
           setTimeout(() => {
+            document.querySelector(".ui").prepend(document.querySelector(".leaderboard"));
+            document.querySelector(".leaderboard").style.zIndex = "";
             utils.respawn();
             utils.options.set("Killed", false);
           }, 4000);
@@ -3629,6 +3617,16 @@
               });
             });
           });
+          setTimeout(() => {
+            if (sandbox.users.length < sandbox.players) {
+              sandbox.users.push({
+                player: sandbox.users.length + 1,
+                username: generateName(),
+                loadout: ["Assault_Rifle", "Glock_19"],
+                character: "Steve"
+              });
+            }
+          }, 5000);
           document.querySelector(".description-header").textContent = sandbox.mode;
           document.querySelector(".description-text").textContent = sandbox.descriptions[sandbox.mode].description;
           document.querySelector(".banner").querySelector(".title").textContent = sandbox.descriptions[sandbox.mode].title;
@@ -3665,7 +3663,7 @@
                       t--;
                       t < 4 && new THREE.Sound("sounds/tick.mp3", null, () => {}, false);
                       document.querySelector(".counter").textContent = t;
-                    }, 950);
+                    }, 1000);
                     utils.options.set("Starting", true);
                     clearInterval(wait);
                   }
