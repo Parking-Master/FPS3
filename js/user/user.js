@@ -89,7 +89,7 @@
     if (!localStorage["userman-" + row.trim()]) return null;
     let type = localStorage["userman-" + row.trim()].split(".").pop();
     let data = localStorage["userman-" + row.trim()].split(".").reverse().splice(1).reverse().join(".");
-    let parsed = type == "object" ? JSON.parse(data) : type == "number" ? data - 0 : data;
+    let parsed = type == "object" ? JSON.parse(data) : type == "number" ? data - 0 : type == "boolean" ? (data == "true") : data;
     return parsed;
   }
   userMan.set = function(key, value, callback, colums = ["username", "password"], error = () => {}) {

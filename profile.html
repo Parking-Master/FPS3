@@ -57,6 +57,7 @@
       .img-circle img:hover {
         transition: opacity .2s;
         opacity: .6;
+        cursor: pointer;
       }
       .button__badge {
         position: absolute;
@@ -65,7 +66,6 @@
         background: #fff;
         border-radius: 3px;
         padding: 3px;
-        cursor: pointer;
       }
       .swal-overlay {
         z-index: 999 !important;
@@ -103,8 +103,8 @@
           <div class="profile-tab-nav border-right">
             <div class="p-4">
               <div class="img-circle text-center mb-3">
-                <img src="https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png" alt="My profile" class="shadow image">
-                <i class="button__badge fa fa-edit" style="display: none" onclick="update('picture')"></i>
+                <img src="https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png" alt="My profile" class="shadow image" onclick="update('picture')">
+                <i class="button__badge fa fa-edit" style="display: none"></i>
               </div>
               <h4 class="text-center username"></h4>
             </div>
@@ -168,7 +168,7 @@
               </div>
               <div>
                 <button class="btn btn-primary" onclick="update('account')">Update</button>
-                <button class="btn btn-light">Cancel</button>
+                <button class="btn btn-light" onclick="update('cancel')">Cancel</button>
               </div>
             </div>
             <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
@@ -197,7 +197,7 @@
               </div>
               <div>
                 <button class="btn btn-primary" onclick="update('password')">Update</button>
-                <button class="btn btn-light">Cancel</button>
+                <button class="btn btn-light" onclick="update('cancel')">Cancel</button>
               </div>
             </div>
             <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
@@ -217,7 +217,7 @@
               </div>
               <div>
                 <button class="btn btn-primary" onclick="update('security')">Update</button>
-                <button class="btn btn-light">Cancel</button>
+                <button class="btn btn-light" onclick="update('cancel')">Cancel</button>
               </div>
             </div>
             <div class="tab-pane fade" id="application" role="tabpanel" aria-labelledby="application-tab">
@@ -246,19 +246,19 @@
               </div>
               <div class="form-group">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="" id="notification2" >
+                  <input class="form-check-input" type="checkbox" value="" id="notification2">
                   <label class="form-check-label" for="notification2">Email me updates and newsletters</label>
                 </div>
               </div>
               <div class="form-group">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="" id="notification3" >
-                  <label class="form-check-label" for="notification3">Unsubscribe from weekly newsletter</label>
+                  <input class="form-check-input" type="checkbox" value="" id="notification3" hidden>
+                  <a class="form-check-label" for="notification3" href="#" onclick="event.preventDefault(), update('unsubscribe')">Unsubscribe from weekly newsletter</label>
                 </div>
               </div>
               <div>
-                <button class="btn btn-primary">Update</button>
-                <button class="btn btn-light">Cancel</button>
+                <button class="btn btn-primary" onclick="event.preventDefault(), update('emails')">Update</button>
+                <button class="btn btn-light" onclick="update('cancel')">Cancel</button>
               </div>
             </div>
           </div>
@@ -272,6 +272,18 @@
       window.addEventListener("load", () => {
         if (!userMan.get("performance")) {
           document.querySelector("button[onclick=\"update('performance')\"]").textContent = "Enable performance";
+        }
+        if (userMan.get("emails") == 1) {
+          document.querySelector("#notification").querySelectorAll("input[type=checkbox]")[0].checked = true;
+          document.querySelector("#notification").querySelectorAll("input[type=checkbox]")[1].checked = false;
+        }
+        if (userMan.get("emails") == 2) {
+          document.querySelector("#notification").querySelectorAll("input[type=checkbox]")[0].checked = false;
+          document.querySelector("#notification").querySelectorAll("input[type=checkbox]")[1].checked = true;
+        }
+        if (userMan.get("emails") == 3) {
+          document.querySelector("#notification").querySelectorAll("input[type=checkbox]")[0].checked = true;
+          document.querySelector("#notification").querySelectorAll("input[type=checkbox]")[1].checked = true;
         }
         document.querySelectorAll(".username").forEach(x => (x.textContent = userMan.get("tuser"), x.value = userMan.get("tuser")));
         document.querySelectorAll(".email").forEach(x => (x.textContent = userMan.get("temail"), x.value = userMan.get("temail")));
@@ -542,7 +554,8 @@
         } else if (type == "picture") {
           let content = document.createElement("div");
           content.innerHTML = `
-          <input type="file" accept=".png,.jpg,.jpeg,.ico,.svg" onchange="uploadImage(this)">
+          <input id="image" type="file" accept=".png,.jpg,.jpeg,.ico,.svg" onchange="uploadImage(this)" hidden>
+          <label for="image" class="btn btn-primary" style="cursor: pointer">Upload</label>
           `;
           swal({
             icon: userMan.get("picture"),
@@ -554,6 +567,62 @@
           document.querySelector(".swal-icon img").style.width = "100px";
           document.querySelector(".swal-icon img").style.borderRadius = "100%";
           document.querySelector(".swal-icon img").style.border = "2px solid #333";
+        } else if (type == "emails") {
+          let boxes = document.querySelector("#notification").querySelectorAll("input[type=checkbox]");
+          let input = 0;
+          if (boxes[0].checked) {
+            input = 1;
+          }
+          if (boxes[1].checked) {
+            input = 2;
+          }
+          if (boxes[0].checked && boxes[1].checked) {
+            input = 3;
+          }
+          if (input == userMan.get("emails")) return;
+          userMan.set("emails", input, () => swal("Email settings updated successfully."), ["tuser", "tpass"]);
+          input == 2 || input == 3 && (async () => {
+            let e = !1;
+            const t = Parse.Object.extend("MailList");
+            const n = new Parse.Query(t);
+            const s = await n.find();
+            let lobbies = [];
+            let pause = false;
+            for (let t = 0; t < s.length; t++) {
+              let ot = t;
+              const n = Parse.Object.extend("MailList");
+              new Parse.Query(n).get(s[t].id).then((t => {
+                let emails = t.get("emails");
+                if (emails.indexOf(userMan.get("temail")) > -1) return;
+                emails.push(userMan.get("temail"));
+                t.set("emails", emails);
+                t.save();
+              }));
+            }
+          })();
+        } else if (type == "unsubscribe") {
+          userMan.set("emails", 1, () => swal("Email settings updated successfully."), ["tuser", "tpass"]);
+          (async () => {
+            let e = !1;
+            const t = Parse.Object.extend("MailList");
+            const n = new Parse.Query(t);
+            const s = await n.find();
+            let lobbies = [];
+            let pause = false;
+            for (let t = 0; t < s.length; t++) {
+              let ot = t;
+              const n = Parse.Object.extend("MailList");
+              new Parse.Query(n).get(s[t].id).then((t => {
+                let emails = t.get("emails");
+                if (!(emails.indexOf(userMan.get("temail")) > -1)) return;
+                emails.splice(emails.indexOf(userMan.get("temail")), 1);
+                t.set("emails", emails);
+                t.save();
+              }));
+            }
+          })();
+        } else if (type == "cancel") {
+          location.reload();
         }
       }
       function uploadImage(element) {

@@ -271,7 +271,7 @@
                 }, () => {
                   document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
                   setTimeout(() => Notiflix.Block.remove("form"), 1500);
-                }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail", "picture", "createdAt", "bio", "key", "performance"], new URLSearchParams(location.search).get("return") || null);
+                }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail", "picture", "createdAt", "bio", "key", "performance", "emails"], new URLSearchParams(location.search).get("return") || null);
               } else {
                 document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
                 setTimeout(() => Notiflix.Block.remove("form"), 1500);
@@ -343,7 +343,7 @@
             }, () => {
               document.querySelector(".notiflix-block-message").textContent = "Verification failed!";
               setTimeout(() => Notiflix.Block.remove("form"), 1500);
-            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail", "picture", "createdAt", "bio", "key"], new URLSearchParams(location.search).get("return") || null);
+            }, ["metadata", "email", "temail", "password", "tpass", "username", "tuser", "mail", "picture", "createdAt", "bio", "key", "performance", "emails"], new URLSearchParams(location.search).get("return") || null);
           }
         };
         document.body.addEventListener("click", (e) => {

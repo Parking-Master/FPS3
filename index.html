@@ -44,10 +44,11 @@
         font-size: 9em;
         margin: 0;
         color: #fff;
-        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
         z-index: 5;
         font-family: "Game", Arial, Helvetica, sans-serif !important;
         padding: 10px 0;
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .25));
       }
       h2 {
         position: relative;
@@ -55,14 +56,13 @@
         font-size: 6em;
         margin: 0;
         color: #fff;
-        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
-        /* background: #fefefe; */
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .25));
         z-index: 500 !important;
         width: 350px;
         left: 50%;
         margin-left: -175px;
         font-family: "Game", Arial, Helvetica, sans-serif !important;
-        font-style: italic;
       }
       .main-image {
         width: 45vh;
@@ -112,6 +112,7 @@
       button.button:active {
         transition: box-shadow .3s;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.2);
+        background: #eee;
       }
       [class^="loader-"] {
         background: #333;
