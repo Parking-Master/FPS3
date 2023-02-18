@@ -727,7 +727,7 @@
               depleteRounds && cweapon.roundsUsed++;
               let ammo = cweapon.ammo;
               spheres.forEach(x => {
-                if (intersection && typeof x.mesh.getObjectByName(intersection.object.name) != "undefined") {
+                if (intersection && typeof x.mesh.getObjectByName(intersection.object.name) != "undefined" && intersection.object != playerTarget) {
                   x.explode();
                 }
               });
@@ -3262,6 +3262,12 @@
           document.querySelector("body").append(document.querySelector(".leaderboard"));
           document.querySelector(".leaderboard").style.zIndex = 99999999;
           utils.ui.dialog("You died", "You were killed by " + metadata.name + " using " + metadata.weapon.replace(/_/gi, " "), 4000);
+          let lookAt = setInterval(() => {
+            camera.lookAt(sandbox.models["player"].position);
+          });
+          setTimeout(() => {
+            clearInterval(lookAt);
+          }, 3000);
           setTimeout(() => {
             document.querySelector(".ui").prepend(document.querySelector(".leaderboard"));
             document.querySelector(".leaderboard").style.zIndex = "";
