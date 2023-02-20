@@ -340,7 +340,7 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://unpkg.com/tippy.js@6"></script>
-    <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
+    <script id="gametimejs" src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
     <script src="js/GamepadMenuControls.js"></script>
   </head>
   <body>
@@ -571,7 +571,7 @@
         Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel");
         let botWaitTime = (((Math.floor(Math.random() * 10) + Math.floor(Math.random() * 10)) + 24) / 1.3).toFixed(0) - 0;
         setTimeout(() => {
-          joined([currentObjectId, true].join())
+          joined([currentObjectId, true].join());
         }, (botWaitTime + (Math.floor(Math.random() * 2) == 0 ? (Math.floor(Math.random() * 4)) : -(Math.floor(Math.random() * 4)))) * 1000);
         document.querySelector(".notiflix-confirm-head").querySelector("div").innerHTML += "<br><br><a href='./src.html?freeplay=true&mode=" + currentMode + "&map=" + availableMaps[Math.floor(Math.random() * availableMaps.length)] + "'>Free play</a><br><p>Estimated wait time: " + botWaitTime + " seconds</p>";
         document.querySelector("#NXConfirmButtonOk").onclick = () => {
@@ -597,13 +597,73 @@
           return null;
         }
       }
-      function getCode() {
+      function getCode(type = "host", setCode) {
+        gametime.make("start");
+        gametime.make("join");
+        gametime.on("start", function(data) {
+          let map = data.split(",")[0];
+          let mode = data.split(",")[1];
+          let code = data.split(",")[2];
+          document.querySelector(".notiflix-confirm-head").querySelector("h5").textContent = "Match found!";
+          document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Connecting players... (1/2)";
+          setTimeout(() => document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Connecting players... (2/2)", 500);
+          let link = `./src.html?lobby=${code}&map=${map}&mode=${mode}`;
+          setTimeout(() => location.assign(link), 3000);
+        });
+        gametime.on("join", function(data) {
+          let user = data.split(",")[0];
+          let code = data.split(",")[1];
+          if (user != gametime.user.position) {
+            gametime.run("start", [[currentMap, currentMode, code].join()]);
+          }
+        });
+        if (type == "join") {
+          return (() => {
+            pubnub.subscribe({
+              channels: [setCode],
+              timetoken: getCookie("pubnub-time-token"),
+              message: function(e) {
+                if ("unsubscribe" == e.type) return pubnub.unsubscribe({
+                  channel: e.channel
+                });
+              },
+              withPresence: true
+            });
+            gametime.run("join", [[gametime.user.position, setCode].join()]);
+          })();
+        }
         let code = (Math.random().toFixed(6).split("").reverse().join("")).replace(/=/gi, "").split(".")[0];
-        gametime.channel = code;
+        pubnub.subscribe({
+          channels: [code],
+          timetoken: getCookie("pubnub-time-token"),
+          message: function(e) {
+            if ("unsubscribe" == e.type) return pubnub.unsubscribe({
+              channel: e.channel
+            });
+          },
+          withPresence: true
+        });
         swal({
           text: "Your code is " + code + ". Invite a player via your friends list, world chat or someone you know, and have them enter this code in the dropdown."
         }).then(() => {
           Notiflix.Confirm.show("Waiting for player(s)...", "Invite a player using code \"" + code + "\"", "Cancel");
+        });
+      }
+      function joinCode() {
+        swal({
+          text: "Enter room code (XXXXXX):",
+          content: "input"
+        }).then((code) => {
+          Notiflix.Confirm.show("Searching rooms...", "If this room exists, it will automatically connect. Please wait...", "Cancel");
+          setTimeout(() => {
+            getCode("join", code);
+            setTimeout(() => {
+              if (!document.querySelector(".notiflix-confirm-head").querySelector("div").textContent.includes("Connecting")) {
+                document.querySelector(".notiflix-confirm-head").querySelector("div").textContent = "Error: Could not connect, invalid code";
+                document.querySelector("#NXConfirmButtonOk").textContent = "Close";
+              }
+            }, 1000);
+          }, 1000)
         });
       }
       function switchMode(element, type) {
@@ -936,6 +996,10 @@
         {
           title: "How difficuly is this game?",
           options: ["Simple", "Easy", "Normal", "Difficult", "Hard"]
+        },
+        {
+          title: "What is your favorite in-game weapon?",
+          options: ["Assault Rifle", "Glock 19", "Sniper Rifle", "Micro Uzi", "Auto Pistol", "Light Machine Gun", "Shotgun", "Rocket Pistol", "Grenade Launcher", "Wire_Rifle", "Turret", "Knife", "Ball", "Tactical Shotgun", "Humvee", "Hand Grenade"]
         }
       ];
       if (!(localStorage["pollAnswered"] && Math.round((new Date((new Date()).toLocaleDateString("en-US").split("/")[2], (new Date()).toLocaleDateString("en-US").split("/")[0] - 1, (new Date()).toLocaleDateString("en-US").split("/")[1]) - new Date(localStorage["pollAnswered"].split("/")[2], localStorage["pollAnswered"].split("/")[0] - 1, localStorage["pollAnswered"].split("/")[1])) / (1000 * 60 * 60 * 24)) <= 0)) {
@@ -1042,7 +1106,7 @@
           userMan.set("metadata", metadata, () => {}, ["tuser", "tpass"]);
         }
       }
-      dailyRewards = ["points", "points", "points", "points", "points", "Loadout.Sniper_Rifle-Shotgun", "points", "points", "points", "points", "points", "points", "Character.Max"];
+      dailyRewards = ["points", "points", "points", "points", "points", "Loadout.Sniper_Rifle-Shotgun", "points", "points", "points", "points", "points", "points", "Character.Max", "points", "points", "points", "points", "Theme.Auto"];
       room = {
         type: 1,
         content: document.querySelector(".hidden-list").cloneNode()
@@ -1059,7 +1123,7 @@
           </span>
           <div style="transform: scale(.6); margin: 0">Mode: <a id="mode" onclick="event.preventDefault()" class="carousel"><span class="arrow-holder" onclick="switchMode(this, 'back')"><i class="arrow" style="transform: rotate(135deg)"></i></span> <span class="holder">Slayer</span> <span class="arrow-holder" onclick="switchMode(this, 'go')"><i class="arrow" style="transform: rotate(-45deg)"></i></span></a></div>
           <div style="transform: scale(.6); margin: 0">Map: <a id="mode" onclick="event.preventDefault()" class="carousel"><span class="arrow-holder" onclick="switchMap(this, 'back')"><i class="arrow" style="transform: rotate(135deg)"></i></span> <span class="holder">Cargo</span> <span class="arrow-holder" onclick="switchMap(this, 'go')"><i class="arrow" style="transform: rotate(-45deg)"></i></span></a></div>
-          <a class="mini-button" style="transform: scale(.8); margin: 0; font-family: monospace" onclick="getCode()">Get code</a>
+          <a class="mini-button" style="transform: scale(.7); margin: 0; font-family: monospace" onclick="getCode()">Get code</a> | <a class="mini-button" style="transform: scale(.7); margin: 0; font-family: monospace" onclick="joinCode()">Join code</a>
           `;
           room = {
             type: 0,
