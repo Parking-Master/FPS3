@@ -225,6 +225,255 @@ __FPS3:__ 90/100
 
 [What do you think of our comparison?](https://github.com/Parking-Master/FPS3/discussions/1)
 
+## The game
+The actual game has a lot to surprise you with.
+
+Here's what will be listed:
+
+> Weapons, Vehicles, Grenades, Ammo, Characters, Themes, Loadouts, and AI.
+
+### Weapons (13)
+###### _Note: Items are listed from oldest added to newly added._
+#### Assault Rifle
+
+The full auto AK-47 makes a good starter weapon with how much ammo it can hold and how much damage it can produce.
+
+<img src="images/assets/weapons/Assault_Rifle.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 5/100
+- __Ammunition Range__ (per dist/un): 0.25/10
+- __Recoil__ (single fire): 7/100
+- __Recoil__ (burst fire): 15/100
+- __Recoil__ (rapid fire): 19/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*10)_</sub>
+
+#### Glock 19
+
+The 19th variant of Glock pistols (Glock 19) has almost no damage but can be used as a mid-range gun.
+
+<img src="images/assets/weapons/Glock_19.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 3/100
+- __Ammunition Range__ (per dist/un): 0.15/10
+- __Recoil__ (single fire): 4/100
+- __Recoil__ (burst fire): 10/100
+- __Recoil__ (rapid fire): 12/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*6)_</sub>
+
+#### Sniper Rifle
+
+The Sniper Rifle has ultimate power with a 10x zoom scope, laser sights and 75/100 average damage/range.
+
+<img src="images/assets/weapons/Sniper_Rifle.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 50/100
+- __Ammunition Range__ (per dist/un): 5/10
+- __Recoil__ (single fire): 10/100
+- __Recoil__ (burst fire): 16/100
+- __Recoil__ (rapid fire): 22/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*18)_</sub>
+
+#### Micro Uzi
+
+The Micro Uzi uses a 3-round-burst system that can instantly fire 3 rounds at a time, making it a damaging weapon.
+
+<img src="images/assets/weapons/Micro_Uzi.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 3/100
+- __Ammunition Range__ (per dist/un): 0.15/10
+- __Recoil__ (single fire): 2/100
+- __Recoil__ (burst fire): 5/100
+- __Recoil__ (rapid fire): 9/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*15)_</sub>
+
+#### Auto Pistol
+
+The Auto Pistol is a machine pistol that is so fast it can fire 20 rounds in the time you can blink (40ms).
+
+<img src="images/assets/weapons/Auto_Pistol.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 50/100
+- __Ammunition Range__ (per dist/un): 5/10
+- __Recoil__ (single fire): 10/100
+- __Recoil__ (burst fire): 16/100
+- __Recoil__ (rapid fire): 22/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*18)_</sub>
+
+#### Light Machine Gun
+
+The LMG (Light Machine Gun) is an all-in-one assault rifle machine gun, able to carry by hand. Its only downside is the slow firing.
+
+<img src="images/assets/weapons/Light_Machine_Gun.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 5/100
+- __Ammunition Range__ (per dist/un): 0.25/10
+- __Recoil__ (single fire): 10/100
+- __Recoil__ (burst fire): 14/100
+- __Recoil__ (rapid fire): 20/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*11)_</sub>
+
+#### Shotgun
+
+This 12-guage Shotgun can be very damaging or very delicate, it basically depends on where you aim it.
+
+<img src="images/assets/weapons/Shotgun.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 30/100
+- __Ammunition Range__ (per dist/un): 7/10
+- __Recoil__ (single fire): 15/100
+- __Recoil__ (burst fire): 30/100
+- __Recoil__ (rapid fire): 55/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*20)_</sub>
+
+#### Rocket Pistol
+
+This pistol really makes a thump once you find out it fires tiny rockets.
+
+<img src="images/assets/weapons/Rocket_Pistol.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 100/100
+- __Ammunition Range__ (per dist/un): 3/10
+- __Recoil__ (single fire): 10/100
+- __Recoil__ (burst fire): 20/100
+- __Recoil__ (rapid fire): 26/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*3)_</sub>
+
+#### Grenade Launcher
+
+The Grenade Launcher is a reliable weapon, but only good when fighting in big battlefields.
+
+<img src="images/assets/weapons/Grenade_Launcher.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 100/100
+- __Ammunition Range__ (per dist/un): 4/10
+- __Recoil__ (single fire): 10/100
+- __Recoil__ (burst fire): 11/100
+- __Recoil__ (rapid fire): 11/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*9)_</sub>
+
+#### Wire Rifle
+
+The Wire Rifle gets its name because it shoots a stream of 7,000°f fire (also called wire).
+
+<img src="images/assets/weapons/Wire_Rifle.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 100/100
+- __Ammunition Range__ (per dist/un): 10/10
+- __Recoil__ (single fire): 91/100
+- __Recoil__ (burst fire): 200/100
+- __Recoil__ (rapid fire): ∞/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*18)_</sub>
+
+#### Turret
+
+The Turret is a well known MG that can also be attached/detached from some vehicles.
+
+<img src="images/assets/weapons/Turret.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 5/100
+- __Ammunition Range__ (per dist/un): 5/10
+- __Recoil__ (single fire): 10/100
+- __Recoil__ (burst fire): 20/100
+- __Recoil__ (rapid fire): 25/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*10)_</sub>
+
+#### Knife
+
+The Knife is the basic melee weapon with an FPS-style shape and feature to it.
+
+<img src="images/assets/weapons/Knife.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 100/100
+- __Ammunition Range__ (per dist/un): 1/10
+- __Recoil__ (single fire): 2/100
+- __Recoil__ (burst fire): 2/100
+- __Recoil__ (rapid fire): 2/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*1)_</sub>
+
+#### Tactical Shotgun
+
+The Tactical Shotgun is basically just an extremely sawed-off double-barrel Shotgun, that looks like a pistol.
+
+<img src="images/assets/weapons/Tactical_Shotgun.png" style="width: 200px">
+<br>
+
+- __Ammunition Damage__ (per shot): 10/100
+- __Ammunition Range__ (per dist/un): 6/10
+- __Recoil__ (single fire): 10/100
+- __Recoil__ (burst fire): 15/100
+- __Recoil__ (rapid fire): 17/100
+- __Sound__ (decibals): d/v <sub>_(v=volume_rate\*100,d=volume\*12)_</sub>
+
+### Maps (6)
+#### Cargo
+The Cargo-Shipment map has been in every FPS game in the series. It is well known for how many players it can fit, and its performance.
+<kbd>
+  <img src="images/assets/maps/Cargo.png" style="width:100%">
+</kbd>
+
+#### Storage
+The Storage map is an airplane-hangar based map with different hiding spots, rooms and places to climb.
+<kbd>
+  <img src="images/assets/maps/Storage.png" style="width:100%">
+</kbd>
+
+#### Complex
+As a city-style map, Complex is known for how big it is. It has been in FPS2 but has been remade for style, performance and area.
+<kbd>
+  <img src="images/assets/maps/Complex.png" style="width:100%">
+</kbd>
+
+#### Lihid
+Lihid was once used as a storage facility for gold mining in the desert. It was abandoned and many have lost its location.
+<kbd>
+  <img src="images/assets/maps/Lihid.png" style="width:100%">
+</kbd>
+
+#### Aero
+As you can tell, Aero is on the moon because earth is right next to it. Its rocky large surface and craters make a great FPS map.
+<kbd>
+  <img src="images/assets/maps/Aero.png" style="width:100%">
+</kbd>
+
+#### Venus
+Venus is the 2nd planet from the sun. Due to its thick atmosphere, it traps heat and radiation making it well over 800°f.
+<kbd>
+  <img src="images/assets/maps/Venus.png" style="width:100%">
+</kbd>
+
+### Characters (2)
+#### Steve
+Steve the Soldier is a basic character that every account comes with for free.
+<br>
+<kbd>
+  <img src="images/store/characters/Steve.png" style="width:200px">
+</kbd>
+
+#### Max
+Max is a legendary soldier that likes heavy weapons and big equipment.
+<br>
+<kbd>
+  <img src="images/store/characters/Max.png" style="width:200px">
+</kbd>
+
+### Vehicles (1)
+#### Humvee
+The Humvee is a military vehicle based on the Hummer H1 model. It was chosen because of its war-based capabilties like wideness, heaviness and strength. It is also equipped with the Turret MG.
+<br>
+<kbd><img src="images/assets/vehicles/Humvee.png" style="width:100%"></kbd>
+
 ## Contributions
 - @Parking-Master
 
