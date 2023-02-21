@@ -597,6 +597,8 @@
           return null;
         }
       }
+      let isHost = false;
+      let hostCode = null;
       function getCode(type = "host", setCode) {
         gametime.make("start");
         gametime.make("join");
@@ -614,7 +616,7 @@
           let user = data.split(",")[0];
           let code = data.split(",")[1];
           if (user != gametime.user.position) {
-            gametime.run("start", [[currentMap, currentMode, code].join()]);
+            if (isHost && code == hostCode) gametime.run("start", [[currentMap, currentMode, code].join()]);
           }
         });
         if (type == "join") {
@@ -633,6 +635,8 @@
           })();
         }
         let code = (Math.random().toFixed(6).split("").reverse().join("")).replace(/=/gi, "").split(".")[0];
+        hostCode = code;
+        isHost = true;
         pubnub.subscribe({
           channels: [code],
           timetoken: getCookie("pubnub-time-token"),
@@ -663,7 +667,7 @@
                 document.querySelector("#NXConfirmButtonOk").textContent = "Close";
               }
             }, 1000);
-          }, 1000)
+          }, 1000);
         });
       }
       function switchMode(element, type) {
@@ -994,7 +998,7 @@
           options: ["Buy out everything", "Keep earning", "Give them away", "Nothing"]
         },
         {
-          title: "How difficuly is this game?",
+          title: "How difficult is this game?",
           options: ["Simple", "Easy", "Normal", "Difficult", "Hard"]
         },
         {
