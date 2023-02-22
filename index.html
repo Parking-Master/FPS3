@@ -332,6 +332,19 @@
       .change-room:active {
         transform: scale(.9);
       }
+      .picture {
+        border-radius: 100%;
+        border: 2px solid #333;
+        width: 50px;
+        height: 50px;
+      }
+      .friend {
+        filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .3)) contrast(120%) brightness(150%) !important;
+      }
+      .swal-content__input {
+        border: 1px solid #333 !important;
+        outline: none !important;
+      }
     </style>
     <script src="js/user/user.js"></script>
     <script src="js/user/rewards.js"></script>
@@ -350,6 +363,7 @@
     <div class="wrapper">
       <img class="options" src="images/icons/hamburger.png" style="position: absolute; left: 2%; top: 2%; width: 50px; cursor: pointer; pointer-events: all !important" onclick="dropdown(this)">
       <img class="rewards" src="images/other/star.png" style="position: absolute; right: 2%; top: 2%; width: 50px; cursor: pointer; pointer-events: all !important" onclick="rewards(this)">
+      <img class="friends" src="images/other/add.png" style="position: absolute; right: 2%; bottom: 3%; width: 50px; cursor: pointer; pointer-events: all !important" onclick="openFriends(this)">
       <div class="poll" style="position: absolute; margin-left: 70px; left: 2%; top: 2%; width: 55px; cursor: pointer; pointer-events: all !important; display: inline-block; pointer-events: all !important">
         <img src="images/other/poll.png" style="width: 100%; pointer-events: all !important" onclick="poll(this)">
       </div>
@@ -460,6 +474,7 @@
       window.addEventListener("load", () => {
         Notiflix.Loading.init({ svgColor: "#fff" });
         if (userMan.isLoggedIn) {
+          getFriends();
           if (localStorage["daily-reward"] && !(Math.round((new Date((new Date()).toLocaleDateString("en-US").split("/")[2], (new Date()).toLocaleDateString("en-US").split("/")[0] - 1, (new Date()).toLocaleDateString("en-US").split("/")[1]) - new Date(localStorage["daily-reward"].split("/")[2], localStorage["daily-reward"].split("/")[0] - 1, localStorage["daily-reward"].split("/")[1])) / (1000 * 60 * 60 * 24)) <= 0)) {
             localStorage.removeItem("daily-reward");
           }
@@ -568,9 +583,9 @@
             gametime.run("joined", [data.split(",")[2]]);
           }
         });
-        Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel");
+        Notiflix.Confirm.show("Searching for a match...", "Please wait for the game to start.", "Cancel", () => clearTimeout(botJoin));
         let botWaitTime = (((Math.floor(Math.random() * 10) + Math.floor(Math.random() * 10)) + 24) / 1.3).toFixed(0) - 0;
-        setTimeout(() => {
+        let botJoin = setTimeout(() => {
           joined([currentObjectId, true].join());
         }, (botWaitTime + (Math.floor(Math.random() * 2) == 0 ? (Math.floor(Math.random() * 4)) : -(Math.floor(Math.random() * 4)))) * 1000);
         document.querySelector(".notiflix-confirm-head").querySelector("div").innerHTML += "<br><br><a href='./src.html?freeplay=true&mode=" + currentMode + "&map=" + availableMaps[Math.floor(Math.random() * availableMaps.length)] + "'>Free play</a><br><p>Estimated wait time: " + botWaitTime + " seconds</p>";
@@ -669,6 +684,7 @@
             }, 1000);
           }, 1000);
         });
+        document.querySelector(".swal-content").style = "height: unset; border: none;";
       }
       function switchMode(element, type) {
         let index = availableModes.indexOf(currentMode);
@@ -908,7 +924,8 @@
           document.body.appendChild(style);
         }
       });
-      function refresh() {
+      function refresh(cache = false) {
+        if (!cache) return location.replace("/");
         fetch("/").then(function(response) {
           return response.text();
         }).then(function(body) {
@@ -940,7 +957,7 @@
           element.querySelector("p").innerHTML += `
           <br>
           <br>
-          <a href="#">Decline</a> - <a href="#">Accept</a>
+          <a href="#" onclick="(this.parentElement.parentElement.remove(), deleteMail('TW9ua2V5eiUyMHdhbnRzJTIwdG8lMjBhZGQlMjB5b3UlMjBhcyUyMGZyaWVuZA=='))">Decline</a> - <a href="#" onclick="addFriend('${mail.message.split(" ")[0].trim()}', () => (this.parentElement.parentElement.remove(), deleteMail('${btoa(encodeURIComponent(mail.message))}')))">Accept</a>
           `;
         }
       }
@@ -948,6 +965,18 @@
         userMan.set("mail", [], () => {
           document.querySelectorAll(".mail-body").forEach(x => x.remove());
         }, ["tuser", "tpass"]);
+      }
+      function deleteMail(mail) {
+        mail = decodeURIComponent(atob(mail));
+        let oldMail = userMan.get("mail");
+        userMan.get("mail").forEach(x => {
+          if (x.message == mail) {
+            oldMail.splice(oldMail.indexOf(x), 1);
+          }
+        });
+        setTimeout(() => {
+          userMan.set("mail", oldMail, () => {}, ["tuser", "tpass"]);
+        }, 200);
       }
       function mail() {
         let content = document.createElement("div");
@@ -1141,6 +1170,68 @@
             content: oldContent
           };
         }
+      }
+      let friendsList = [];
+      function addFriend(newFriend, callback = () => {}) {
+        let oldFriends = JSON.parse(JSON.stringify(friendsList));
+        oldFriends.push(newFriend);
+        userMan.set("friends", oldFriends, () => callback(), ["tuser", "tpass"]);
+        (async () => {
+          const t = Parse.Object.extend("User");
+          const n = new Parse.Query(t);
+          const s = await n.find();
+          for (let t = 0; t < s.length; t++) {
+            const n = Parse.Object.extend("User");
+            new Parse.Query(n).get(s[t].id).then((t => {
+              if (t.get("tuser").trim() == newFriend.trim()) {
+                Parse.User.logIn(t.get("username"), t.get("tpass")).then(user => {
+                  let oldFriends = user.get("friends");
+                  oldFriends.push(userMan.get("tuser"));
+                  user.set("friends", oldFriends);
+                  user.save();
+                });
+              }
+            }));
+          }
+        })();
+      }
+      function getFriends() {
+        let friends = userMan.get("friends");
+        friends.forEach(x => typeof x == "string" && friendsList.push(x));
+      }
+      function openFriends() {
+        let content = document.createElement("div");
+        (async () => {
+          const t = Parse.Object.extend("User");
+          const n = new Parse.Query(t);
+          const s = await n.find();
+          for (let t = 0; t < s.length; t++) {
+            const n = Parse.Object.extend("User");
+            new Parse.Query(n).get(s[t].id).then((t => {
+              if (friendsList.indexOf(t.get("tuser").trim()) > -1) {
+                Parse.User.logIn(t.get("username"), t.get("tpass")).then(user => {
+                  content.innerHTML += `
+                  <div class="friend friend-${friendsList.indexOf(user.get("tuser").trim())}" style="position: absolute; margin-left: 30px; left: ${friendsList.indexOf(user.get("tuser").trim()) * 12}%; top: 25%; width: 55px; cursor: pointer; pointer-events: all !important; display: inline-block; pointer-events: all !important" data-user="${user.get("tuser")}">
+                    <img src="${user.get("picture")}" class="picture">
+                    <span class="button__badge" style="background: #00ff00">&plus;</span>
+                  </div>
+                  `;
+                  content.querySelectorAll(".friend").forEach(x => {
+                    tippy(x, {
+                      theme: "fps",
+                      content: x.dataset.user,
+                      placement: "bottom"
+                    });
+                  });
+                });
+              }
+            }));
+          }
+        })();
+        swal({
+          title: "My friends",
+          content: content
+        });
       }
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
