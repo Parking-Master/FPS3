@@ -3757,6 +3757,10 @@
           player: 1,
           username: (userMan.isLoggedIn ? userMan.get("username") : generateName())
         });
+        sandbox.users.push({
+          player: 2,
+          username: sandbox.tempName
+        });
         gametime.make = () => {};
         gametime.on = () => {};
         gametime.run = () => {};
