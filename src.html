@@ -672,6 +672,39 @@
           });
         }
       },
+      powerups: {
+        cache: {
+          "jetpack": {},
+        },
+        jetpack: {
+          start: function() {
+            GRAVITY = 3;
+            if (utils.options.get("PowerUpFuel") <= 0) return (() => {
+              keyStates["KeyL"] = false;
+              utils.powerups.jetpack.stop();
+              if (utils.options.get("PowerUpRecharge")) return;
+              utils.options.set("PowerUpRecharge", setTimeout(() => {
+                let rc = 0;
+                let j = setInterval(() => {
+                  if (rc >= 100) return (utils.options.set("PowerUpRecharge", null), clearInterval(j));
+                  rc++;
+                  utils.options.set("PowerUpFuel", rc);
+                });
+              }, 1000));
+            })();
+            if (utils.powerups.cache.jetpack.run != null) clearInterval(utils.powerups.cache.jetpack.run);
+            utils.powerups.cache.jetpack.run = setInterval(() => {
+              playerVelocity.y += .5;
+              utils.options.set("PowerUpRecharge", utils.options.get("PowerUpRecharge") - .5);
+            });
+          },
+          stop: function() {
+            GRAVITY = DF_GRAVITY;
+            clearInterval(utils.powerups.cache.jetpack.run || 0);
+            utils.powerups.cache.jetpack.run = null;
+          }
+        }
+      },
 	    weapons: {
         punch: function(damage = 50) {
           if (utils.options.get("Punching")) return;
@@ -2021,6 +2054,7 @@
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       document.body.appendChild(renderer.domElement);
       let GRAVITY = 50;
+      let DF_GRAVITY = 50;
       let NUM_SPHERES = 2;
       let NUM_VEHICLES = 10;
       let SPHERE_RADIUS = 0.2;
@@ -2132,6 +2166,9 @@
         if (keyStates["KeyM"] && !event.repeat) {
           utils.weapons.grenades.throw();
         }
+        if (keyStates["KeyL"] && !event.repeat) {
+          utils.powerups[sandbox.powerup].start();
+        }
       });
       document.addEventListener("keyup", (event) => {
         call("walk", {
@@ -2140,6 +2177,9 @@
         if (!PointerControls.isLocked) return;
         clearInterval(utils.options.get("Bobbing"));
         utils.options.set("Bobbing", null);
+        if (keyStates["KeyL"]) {
+          utils.powerups[sandbox.powerup].stop();
+        }
         sandbox.weapons.forEach(weapon => {
           weapon.mixer.clipAction(weapon.animations[6]).stop(), weapon.mixer.clipAction(weapon.animations[6]).crossFadeFrom(weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]), .4), weapon.mixer.clipAction(weapon.animations[weapon.useDefaultRunAnimation ? 7 : 9]).play();
           if ((keyStates["KeyW"] || keyStates["KeyS"] || keyStates["KeyA"] || keyStates["KeyD"]) || (keyStates["ArrowUp"] || keyStates["ArrowDown"] || keyStates["ArrowLeft"] || keyStates["ArrowRight"])) {
@@ -2508,6 +2548,10 @@
       }
       function teleportPlayerIfOob() {
         if (camera.position.y <= -25 && !utils.options.get("Starting")) {
+          call("die", {
+            name: sandbox.users[sandbox.users.map(x => x.username != (userMan.isLoggedIn ? userMan.get("username") : sandbox.tempName)).indexOf(true)].username,
+            weapon: Object.keys(sandbox.models)[Object.keys(sandbox.models).map(x => x == (character.currentWeapon == character.primaryWeapon ? character.loadout[0] : character.loadout[1])).indexOf(true)]
+          });
           playerCollider.start.set(13.5, 0.35, -18.5);
           playerCollider.end.set(13.5, 1, -18.5);
           playerCollider.radius = 0.35;
@@ -2881,6 +2925,7 @@
         utils.weapons.create("Micro_Uzi", new THREE.Vector3(28, -.4, 7.5));
       } else if (sandbox.map == "Aero") {
         GRAVITY = 10;
+        DF_GRAVITY = 10;
         let sphere = new THREE.SphereGeometry(500, 60, 40);
         space = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("images/textures/space.png") }));
         space.material.map.generateMipmaps = false;
@@ -2897,7 +2942,7 @@
         sun.rotateX(1);
         scene.add(sun);
         sun.material.color = new THREE.Color(0xeeeeff);
-        GRAVITY = 200;
+        DF_GRAVITY = 200;
         scene.fog = new THREE.Fog(0xcaaf7e, 0, 300);
       } else if (sandbox.map == "Complex") {
         let sphere = new THREE.SphereGeometry(500, 60, 40);
@@ -3096,6 +3141,8 @@
         health: 100,
         grenades: 3
       });
+      utils.options.set("PowerUpFuel", 100);
+      utils.options.set("PowerUpRecharge", null);
 
       /* Multiplayer setup */
       character = {
