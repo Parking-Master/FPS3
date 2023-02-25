@@ -34,9 +34,11 @@
         margin-bottom: 20px;
         border-bottom: 3px solid #333;
         transition: box-shadow .3s;
+        margin-bottom: -30px !important;
       }
       .picture {
-        width: 40px;
+        width: 45px;
+        height: 45px;
         border-radius: 100%;
         border: 1px solid #333;
       }
@@ -153,7 +155,8 @@
         font-size: 9em;
         margin: 0;
         color: #fff;
-        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .25));
         z-index: 5;
         font-family: "Game", Arial, Helvetica, sans-serif !important;
         padding: 10px 0;
@@ -164,19 +167,20 @@
         font-size: 6em;
         margin: 0;
         color: #fff;
-        text-shadow: 2.5px 2.5px 10px rgba(0, 0, 0, 0.25);
-        /* background: #fefefe; */
         z-index: 500 !important;
         width: 350px;
         left: 50%;
         margin-left: -175px;
         font-family: "Game", Arial, Helvetica, sans-serif !important;
         font-style: italic;
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, .25));
       }
       input {
         border: 2px solid #333;
         padding: 10px;
-      }      @keyframes spin {
+      }
+      @keyframes spin {
         0% {
           transform: rotate(0deg);
         }
@@ -363,11 +367,11 @@
               relatedItems++;
             }
           });
-          let isRelated = relatedItems >= 2;
+          let isRelated = relatedItems >= 3;
           document.querySelector(".top-users.container").querySelectorAll(".card").length > 3 || (document.querySelector(".top-users.container").innerHTML += `
           <div onclick="location.assign('./user.html?q=${encodeURIComponent(user.get("username"))}')">
             <div class="card">
-              <b><span id="username">${user.get("username")}</span></b>
+              <b><span id="username">#${document.querySelector(".top-users.container").querySelectorAll(".card").length} - <span style="font-size: ${(((100 / ("....." + user.get("name")).length) * 2).toFixed(0) - 1).toString()}px">${user.get("username")}</span></span></b>
               <br>
               <br>
               <img src="${user.get("picture") || "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png"}" class="picture">
