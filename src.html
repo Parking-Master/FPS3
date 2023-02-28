@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>FPS3 Prototype</title>
+    <title>FPS3 1v1 - Multiplayer match</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
@@ -333,7 +333,7 @@
     <script src="js/analytics.js"></script>
   </head>
   <body>
-    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="js/three.min.js"></script>
     <script src="js/GLTFLoader.min.js"></script>
     <script src="js/fflate.min.js"></script>
     <script src="js/Capsule.min.js"></script>
@@ -368,6 +368,9 @@
       <div class="leaderboard">
         <p class="player1"><span class="score">0</span> - <b class="username"></b></p>
         <p class="player2"><span class="score">0</span> - <b class="username"></b></p>
+      </div>
+      <div class="spin spin-large center-origin powerup" style="position: absolute; left: 20px; top: 50%; margin-top: -30px; animation: none; border: 2px solid #eee; opacity: .8; transform: scale(1.5)">
+        <p class="spin-reverse counter" style="display: inline-block; animation: none"><svg class="center" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" style="fill: #fff; box-shadow: 0 0 5px 2px #fff; border-radius: 100%"><path d="M13 9h9l-14 15 3-9h-9l14-15-3 9zm-8.699 5h8.086l-1.987 5.963 9.299-9.963h-8.086l1.987-5.963-9.299 9.963z"/></svg></p>
       </div>
       <img class="hit" src="images/other/hit.png" style="transition: opacity .2s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0; opacity: 0;">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
@@ -675,6 +678,8 @@
       powerups: {
         cache: {
           "jetpack": {},
+          "recharge": {},
+          "backpack": {},
         },
         jetpack: {
           start: function() {
@@ -690,20 +695,88 @@
                   rc++;
                   utils.options.set("PowerUpFuel", rc);
                 });
-              }, 1000));
+              }, 2000));
             })();
             if (utils.powerups.cache.jetpack.run != null) clearInterval(utils.powerups.cache.jetpack.run);
             utils.powerups.cache.jetpack.run = setInterval(() => {
+              if (utils.options.get("PowerUpFuel") <= 0) return;
               playerVelocity.y += .5;
-              utils.options.set("PowerUpRecharge", utils.options.get("PowerUpRecharge") - .5);
+              utils.options.set("PowerUpFuel", utils.options.get("PowerUpFuel") - 1);
             });
           },
           stop: function() {
             GRAVITY = DF_GRAVITY;
             clearInterval(utils.powerups.cache.jetpack.run || 0);
             utils.powerups.cache.jetpack.run = null;
+            keyStates["KeyL"] = false;
+            if (utils.options.get("PowerUpRecharge")) return;
+            utils.options.set("PowerUpRecharge", setTimeout(() => {
+              let rc = 0;
+              let j = setInterval(() => {
+                if (rc >= 100) return (utils.options.set("PowerUpRecharge", null), clearInterval(j));
+                rc++;
+                utils.options.set("PowerUpFuel", rc);
+              });
+            }, 2000));
           }
-        }
+        },
+        recharge: {
+          start: function() {
+            if (utils.options.get("PowerUpFuel") <= 0) return (() => {
+              keyStates["KeyL"] = false;
+              utils.powerups.recharge.stop();
+              if (utils.options.get("PowerUpRecharge")) return;
+              utils.options.set("PowerUpRecharge", setTimeout(() => {
+                let rc = 0;
+                let j = setInterval(() => {
+                  if (rc >= 100) return (utils.options.set("PowerUpRecharge", null), clearInterval(j));
+                  rc++;
+                  utils.options.set("PowerUpFuel", rc);
+                });
+              }, 6000));
+            })();
+            if (utils.powerups.cache.recharge.run != null) clearInterval(utils.powerups.cache.recharge.run);
+            utils.powerups.cache.recharge.run = setInterval(() => {
+              utils.options.get("Health") >= 100 ? utils.options.set("Health", 100) : utils.options.set("Health", utils.options.get("Health") + 1);
+              utils.options.set("PowerUpFuel", utils.options.get("PowerUpFuel") - 1);
+            });
+          },
+          stop: function() {
+            clearInterval(utils.powerups.cache.recharge.run || 0);
+            utils.powerups.cache.recharge.run = null;
+            keyStates["KeyL"] = false;
+            if (utils.options.get("PowerUpRecharge")) return;
+            utils.options.set("PowerUpRecharge", setTimeout(() => {
+              let rc = 0;
+              let j = setInterval(() => {
+                if (rc >= 100) return (utils.options.set("PowerUpRecharge", null), clearInterval(j));
+                rc++;
+                utils.options.set("PowerUpFuel", rc);
+              });
+            }, 2000));
+          }
+        },
+        backpack: {
+          start: function() {
+            if (utils.options.get("PowerUpFuel") <= 0) return (() => {
+              setTimeout(() => {
+                keyStates["KeyL"] = false;
+                utils.powerups.backpack.stop();
+                utils.options.set("PowerUpFuel", 100);
+              }, 20000);
+            })();
+            sandbox.grenades.current++;
+            sandbox.loadout.forEach(x => {
+              sandbox.weapons.forEach(i => {
+                if (i.name == x) {
+                  i.clips += (((i.maxClips / 2).toFixed(0) - 0) || 2);
+                }
+              });
+            });
+            utils.options.set("PowerUpFuel", 0);
+          },
+          stop: function() {}
+        },
       },
 	    weapons: {
         punch: function(damage = 50) {
@@ -2167,6 +2240,7 @@
           utils.weapons.grenades.throw();
         }
         if (keyStates["KeyL"] && !event.repeat) {
+          if (sandbox.powerup == "none") return;
           utils.powerups[sandbox.powerup].start();
         }
       });
@@ -2178,6 +2252,7 @@
         clearInterval(utils.options.get("Bobbing"));
         utils.options.set("Bobbing", null);
         if (keyStates["KeyL"]) {
+          if (sandbox.powerup == "none") return;
           utils.powerups[sandbox.powerup].stop();
         }
         sandbox.weapons.forEach(weapon => {
@@ -2714,6 +2789,26 @@
         if (utils.options.get("Health")) {
           document.querySelector(".health").style.width = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0)) + "%";
           document.querySelector(".health").querySelector("span").querySelector("span").textContent = (utils.options.get("Health") <= 0 ? 0 : utils.options.get("Health").toFixed(0));
+        }
+        if (utils.options.get("PowerUpFuel") >= 25) {
+          document.querySelector(".powerup").style.borderTop = "2px solid #fff";
+        } else {
+          document.querySelector(".powerup").style.borderTop = "2px solid #aaa";
+        }
+        if (utils.options.get("PowerUpFuel") >= 50) {
+          document.querySelector(".powerup").style.borderRight = "2px solid #fff";
+        } else {
+          document.querySelector(".powerup").style.borderRight = "2px solid #aaa";
+        }
+        if (utils.options.get("PowerUpFuel") >= 75) {
+          document.querySelector(".powerup").style.borderBottom = "2px solid #fff";
+        } else {
+          document.querySelector(".powerup").style.borderBottom = "2px solid #aaa";
+        }
+        if (utils.options.get("PowerUpFuel") >= 100) {
+          document.querySelector(".powerup").style.borderLeft = "2px solid #fff";
+        } else {
+          document.querySelector(".powerup").style.borderLeft = "2px solid #aaa";
         }
         document.querySelector(".current-grenades").textContent = sandbox.grenades.current;
         sandbox.currentWeapon && utils.weapons.data(sandbox.currentWeapon).then(weapon => {
