@@ -2241,6 +2241,7 @@
         }
         if (keyStates["KeyL"] && !event.repeat) {
           if (sandbox.powerup == "none") return;
+          new THREE.Sound("sounds/powerups/" + sandbox.powerup + "/start.mp3", null, () => {}, false);
           utils.powerups[sandbox.powerup].start();
         }
       });
@@ -2253,6 +2254,7 @@
         utils.options.set("Bobbing", null);
         if (keyStates["KeyL"]) {
           if (sandbox.powerup == "none") return;
+          new THREE.Sound("sounds/powerups/" + sandbox.powerup + "/end.mp3", null, () => {}, false);
           utils.powerups[sandbox.powerup].stop();
         }
         sandbox.weapons.forEach(weapon => {
