@@ -325,6 +325,39 @@
       .leaderboard * {
         color: #333 !important;
       }
+      .powerup-menu {
+        z-index: 999999999999999999;
+        position: absolute;
+        right: 30px;
+        bottom: 30px;
+        width: 200px;
+        padding: 5px;
+        border-top: 1px solid #fff;
+        border-right: 1px solid #fff;
+        border-radius: 10px;
+      }
+      .powerup-button svg {
+        position: relative;
+        left: 50%;
+        margin-left: -12px;
+      }
+      .powerup-button p {
+        text-align: center;
+      }
+      .powerup-button {
+        padding: 10px;
+        margin: 10px;
+        border: 2px solid #fff;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+        cursor: pointer;
+      }
+      .powerup-button#selected {
+        outline: 5px solid #ddd;
+      }
+      .powerup-button:hover {
+        outline: 2px solid #ddd;
+      }
     </style>
 	  <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js@latest/js/username-generator.min.js"></script>
@@ -364,13 +397,31 @@
         <div class="description-text">Eliminate enemies using default or power weapons to earn points. First to the score limit wins.</div>
       </div>
     </div>
+    <div class="powerup-menu" style="display: none">
+      <div class="powerup-button" id="selected" onclick="selectPowerup('none')">
+        <svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm9 12c0 1.94-.624 3.735-1.672 5.207l-12.535-12.535c1.472-1.048 3.267-1.672 5.207-1.672 4.962 0 9 4.038 9 9zm-18 0c0-1.94.624-3.735 1.672-5.207l12.534 12.534c-1.471 1.049-3.266 1.673-5.206 1.673-4.962 0-9-4.038-9-9z"/></svg>
+        <p>None</p>
+      </div>
+      <div class="powerup-button" onclick="selectPowerup('jetpack')">
+        <svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M8.566 17.842c-.945 2.462-3.678 4.012-6.563 4.161.139-2.772 1.684-5.608 4.209-6.563l.51.521c-1.534 1.523-2.061 2.765-2.144 3.461.704-.085 2.006-.608 3.483-2.096l.505.516zm-1.136-11.342c-1.778-.01-4.062.911-5.766 2.614-.65.649-1.222 1.408-1.664 2.258 1.538-1.163 3.228-1.485 5.147-.408.566-1.494 1.32-3.014 2.283-4.464zm5.204 17.5c.852-.44 1.61-1.013 2.261-1.664 1.708-1.706 2.622-4.001 2.604-5.782-1.575 1.03-3.125 1.772-4.466 2.296 1.077 1.92.764 3.614-.399 5.15zm11.312-23.956c-.428-.03-.848-.044-1.261-.044-9.338 0-14.465 7.426-16.101 13.009l4.428 4.428c5.78-1.855 12.988-6.777 12.988-15.993v-.059c-.002-.437-.019-.884-.054-1.341zm-5.946 7.956c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"/></svg>
+        <p>Jetpack</p>
+      </div>
+      <div class="powerup-button" onclick="selectPowerup('backpack')">
+        <svg style="fill: #fff" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M16.112 20.985h-8.217c-1.912-.062 8.217 0 8.217 0m-7.029-18.69c.29-1.242 1.408-2.275 2.904-2.295 1.454 0 2.631 1.002 2.934 2.308 2.108.516 4.063 1.824 4.722 4.939.28 1.321.539 2.995.754 4.756.8.043 1.873.262 2.107 1.585.317 1.793.496 4.021.496 5.325 0 1.646-1.128 2.053-2.001 2.122-.048 1.708-.737 2.902-2.999 2.948-1.632.033-3.812.008-5.996 0-2.185.008-4.364.033-5.996 0-2.263-.046-2.951-1.24-3-2.948-.873-.067-2.008-.471-2.008-2.121 0-1.307.18-3.54.496-5.326.234-1.327 1.314-1.544 2.114-1.585.213-1.768.466-3.439.733-4.735.649-3.154 2.59-4.465 4.74-4.973m9.917 15.693c-.012 2.008-.987 2.939-2.888 2.997-2.739.026-5.478.028-8.217 0-1.912-.062-2.882-1.188-2.895-2.997v-3.997h14v3.997zm-8-2.998v2.998c0 .553.449.999 1 .999.552 0 1-.447 1-.999v-2.998h5v2.995c0 1.438-.547 1.963-1.908 2-2.725.026-5.451.028-8.176 0-1.21-.035-1.862-.57-1.916-1.889-.024-1.035 0-2.071 0-3.106h5zm.459-9.71c-1.876.104-2.858.83-3.466 2.298-.489 1.182-.648 2.649-.729 3.915-.061.623-.953.625-.999-.019.014-.657.163-2.022.401-3.012.435-1.81 1.27-3.278 3.055-3.879 1.25-.422 3.247-.414 4.462-.037 1.92.592 2.786 2.167 3.21 4.132.2.93.323 2.155.336 2.826-.049.612-.886.648-.994.055-.101-1-.091-1.99-.485-3.325-.607-2.063-1.718-2.86-3.775-2.959l.692 2.385c.166.746-.405 1.454-1.167 1.454-.749 0-1.321-.685-1.172-1.429l.631-2.405zm.541 2.043c.33 0 .597.267.597.597 0 .329-.267.597-.597.597-.33 0-.597-.268-.597-.597 0-.33.267-.597.597-.597m1.791-5.221c-.33-.654-.994-1.102-1.797-1.102-.822.011-1.462.465-1.781 1.096 1.067-.128 2.46-.135 3.578.006"/></svg>
+        <p>Backpack</p>
+      </div>
+      <div class="powerup-button" onclick="selectPowerup('recharge')">
+        <svg style="fill: #fff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M8 24l3-9h-9l14-15-3 9h9l-14 15z"/></svg>
+        <p>Recharge</p>
+      </div>
+    </div>
     <div class="ui">
       <div class="leaderboard">
         <p class="player1"><span class="score">0</span> - <b class="username"></b></p>
         <p class="player2"><span class="score">0</span> - <b class="username"></b></p>
       </div>
-      <div class="spin spin-large center-origin powerup" style="position: absolute; left: 20px; top: 50%; margin-top: -30px; animation: none; border: 2px solid #eee; opacity: .8; transform: scale(1.5)">
-        <p class="spin-reverse counter" style="display: inline-block; animation: none"><svg class="center" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" style="fill: #fff; box-shadow: 0 0 5px 2px #fff; border-radius: 100%"><path d="M13 9h9l-14 15 3-9h-9l14-15-3 9zm-8.699 5h8.086l-1.987 5.963 9.299-9.963h-8.086l1.987-5.963-9.299 9.963z"/></svg></p>
+      <div class="spin spin-large center-origin powerup" style="position: absolute; left: 20px; top: 50%; margin-top: -30px; animation: none; border: 2px solid #eee; opacity: .8; transform: scale(1.5)" ontouchstart="document.dispatchEvent(new KeyboardEvent('keydown', { key: 'l', code: 'KeyL' }))" ontouchend="document.dispatchEvent(new KeyboardEvent('keyup', { key: 'l', code: 'KeyL' }))" ontouchcancel="document.dispatchEvent(new KeyboardEvent('keyup', { key: 'l', code: 'KeyL' }))">
+        <p class="spin-reverse counter" style="display: inline-block; animation: none"><svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" style="fill: #fff; box-shadow: 0 0 5px 2px #fff; border-radius: 100%" class="center"><path d="M13 9h9l-14 15 3-9h-9l14-15-3 9zm-8.699 5h8.086l-1.987 5.963 9.299-9.963h-8.086l1.987-5.963-9.299 9.963z"/></svg></p>
       </div>
       <img class="hit" src="images/other/hit.png" style="transition: opacity .2s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0; opacity: 0;">
       <img class="vignette" src="images/other/blurred_border.png" style="transition: opacity .15s; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: 0; padding: 0;">
@@ -413,6 +464,17 @@
         utils.cache.models[url] = model;
         callback(model);
       });
+    }
+
+    function selectPowerup(powerup) {
+      document.querySelectorAll(".powerup-button").forEach(x => {
+        if (x.querySelector("p").textContent.trim().toLowerCase() == powerup) {
+          x.id = "selected";
+        } else {
+          x.id = "";
+        }
+      });
+      sandbox.powerup = powerup;
     }
 
 	  // Game asset variables
@@ -3406,6 +3468,7 @@
           document.querySelector(".ui").style.visibility = "hidden";
           document.querySelector("body").append(document.querySelector(".leaderboard"));
           document.querySelector(".leaderboard").style.zIndex = 99999999;
+          document.querySelector(".powerup-menu").style.display = "block";
           utils.ui.dialog("You died", "You were killed by " + metadata.name + " using " + metadata.weapon.replace(/_/gi, " "), 4000);
           let lookAt = setInterval(() => {
             camera.lookAt(sandbox.models["player"].position);
@@ -3418,6 +3481,7 @@
             document.querySelector(".leaderboard").style.zIndex = "";
             utils.respawn();
             utils.options.set("Killed", false);
+            document.querySelector(".powerup-menu").style.display = "none";
           }, 4000);
           weaponScene.remove(sandbox.currentWeapon);
         }
@@ -3853,6 +3917,7 @@
               }, 2000);
               call("sync", {});
               call("sync", {});
+              document.querySelector(".powerup-menu").style.display = "block";
               setTimeout(() => {
                 let wait = setInterval(() => {
                   if (synced) {
@@ -3861,6 +3926,7 @@
                     let t = 10;
                     let timer = setInterval(() => {
                       if (t <= 0) {
+                        document.querySelector(".powerup-menu").style.display = "none";
                         new THREE.Sound("sounds/load.mp3", null, () => {}, false);
                         new THREE.Sound("sounds/ambience.mp3", null, () => {}, false, true);
                         document.querySelector(".before-ui").style.visibility = "hidden";
@@ -3908,6 +3974,7 @@
         gametime.make = () => {};
         gametime.on = () => {};
         gametime.run = () => {};
+        gametime.disconnect();
       }
     </script>
   </body>
