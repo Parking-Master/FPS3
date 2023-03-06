@@ -3917,12 +3917,12 @@
               }, 2000);
               call("sync", {});
               call("sync", {});
-              document.querySelector(".powerup-menu").style.display = "block";
               setTimeout(() => {
                 let wait = setInterval(() => {
                   if (synced) {
                     document.querySelector(".banner").style.opacity = 0;
                     document.querySelector(".before-ui").style.visibility = "visible";
+                    document.querySelector(".powerup-menu").style.display = "block";
                     let t = 10;
                     let timer = setInterval(() => {
                       if (t <= 0) {

@@ -345,6 +345,14 @@
         border: 1px solid #333 !important;
         outline: none !important;
       }
+      .coin {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #ffff00;
+        border: 1px dotted #333;
+      }
     </style>
     <script src="js/user/user.js"></script>
     <script src="js/user/rewards.js"></script>
@@ -355,6 +363,7 @@
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script id="gametimejs" src="https://cdn.jsdelivr.net/gh/Parking-Master/Gametime.js-2.0@latest/gametime.js"></script>
     <script src="js/GamepadMenuControls.js"></script>
+    <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
   </head>
   <body>
     <div class="loader">
@@ -422,6 +431,23 @@
         theme: "fps",
         content: "Other options"
       });
+
+      function coin(from, to, max, delay = 100) {
+        let coins = 0;
+        let collect = setInterval(() => {
+          if (coins >= max) return clearInterval(collect);
+          coins++;
+          let coin = $("<div class='coin'>").insertAfter($(from)).css({
+            left: $(from).offset().left,
+            top: $(from).offset().top
+          }).animate({
+            "top": $(to).offset().top,
+            "left": $(to).offset().left
+          }, 1000, function() {
+            coin.remove();
+          });
+        }, delay);
+      }
 
       gametime.set("key", "pub-c-672a6dd1-3655-4331-8913-891ad95df31f", "sub-c-6dc7d441-fc41-40f0-94b5-e0357ade8856");
       gametime.set("channel", "world");
@@ -906,7 +932,18 @@
             userMan.set("metadata", oldRewards, () => {});
             console.log(userMan.get("metadata").history)
             localStorage.removeItem("temp-rewards");
-            Notiflix.Notify.info("Congrats! You earned " + rewards.points + " points.");
+            setTimeout(() => {
+              Notiflix.Confirm.show("Level up", `You earned ${rewards.points} points and ${rewards.medals.length} medals!`, "Redeem");
+              document.querySelector("#NXConfirmButtonOk").onclick = (e) => {
+                coin(document.querySelector(".button[onclick='play(this)']"), document.querySelector(".rewards"), 300 / 10, 50);
+              };
+              document.querySelector("#NXConfirmButtonOk").style = `
+              color: goldenrod;
+              border: 2px solid goldenrod !important;
+              background: gold !important;
+              font-size: 15px;
+              `;
+            }, 2000);
           }
           let style = document.createElement("link");
           style.rel = "stylesheet";
