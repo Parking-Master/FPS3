@@ -134,6 +134,8 @@
     <script src="https://simplemailer.loca.lt/js/sDmgyoxPUVduX4dmhQ9NVWhPbQWa8eipQq247JGfdB4daPhSjnQEo51HOqUd3HXAW/mailer.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="js/analytics.js"></script>
+    <script src="js/GamepadMenuControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/TSedlar/pseudo-styler@1.0.7/pseudostyler.js"></script>
   </head>
   <body>
     <div class="form">
@@ -351,6 +353,30 @@
           document.querySelector(".form__key") ? d(e) : i(e);
         });
       })();
+      window.addEventListener("load", () => {
+        // Gamepad setup
+        GamepadControls = new GamepadMenuControls([], false, true);
+        GamepadControls.action = function(type, element) {
+          if (type == "click") {
+            if (element.textContent.trim().toLowerCase().includes("play")) {
+              if (element.previousElementSibling.style.visibility != "visible") {
+                GamepadControls.elements.splice(GamepadControls.elements.indexOf(".holder"), 1);
+                GamepadControls.elements.splice(GamepadControls.elements.indexOf(".mini-button"), 1);
+                GamepadControls.update();
+                GamepadControls.focus = 0;
+                return;
+              }
+              document.querySelector(".holder").onclick = function() {
+                document.querySelectorAll(".arrow-holder")[1].click();
+              };
+              GamepadControls.elements.splice(1, 0, ".holder");
+              GamepadControls.elements.splice(2, 0, ".mini-button");
+              GamepadControls.update();
+              GamepadControls.focus = 4;
+            }
+          }
+        }
+      });
     </script>
   </body>
 </html>

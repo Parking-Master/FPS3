@@ -1,7 +1,7 @@
 (async () => {
   await import("https://cdn.jsdelivr.net/gh/alvaromontoro/gamecontroller.js@latest/dist/gamecontroller.min.js");
   await import("https://cdn.jsdelivr.net/gh/TSedlar/pseudo-styler@1.0.7/pseudostyler.js");
-  function GamepadMenuControls(elements, inverted = false) {
+  function GamepadMenuControls(elements, inverted = false, onlyCursor = false) {
     let styler;
     (async () => {
       styler = new PseudoStyler();
@@ -59,9 +59,28 @@
       let threshold = 0;
       let controlX = inverted ? "button11" : "left0";
       let controlY = inverted ? "button12" : "right0";
-      let cursorMode = false;
+      cursorMode = onlyCursor;
+      this.toggleCursor = function() {
+        controller.buttonActions[13].before();
+      };
+      let getGamepads = null;
+      this.disable = function() {
+        getGamepads = navigator.getGamepads;
+        navigator.getGamepads = function() { return [] };
+        cursor.style.visibility = "hidden";
+      };
+      this.enable = function() {
+        navigator.getGamepads = getGamepads;
+        getGamepads = null;
+        cursor.style.visibility = "";
+      };
+      this.setCursorPosition = function(x, y) {
+        cursorX = x;
+        cursorY = y;
+      };
       controller.on("button13", () => {}).before("button13", () => {
         if (cursorMode) {
+          if (onlyCursor) return;
           document.body.removeChild(cursor);
           cursorMode = false;
         } else {
@@ -70,6 +89,9 @@
         }
       });
       let cursor = document.createElement("div");
+      if (onlyCursor) {
+        document.body.appendChild(cursor);
+      }
       cursor.className = "gamepad-cursor";
       let cursorX = 20, cursorY = 20;
       cursor.style = "width: 20px; height: 20px; z-index: 999999999999999999999; background-image: url(./images/cursors/gamepad.png); background-size: cover; background-repeat: no-repeat; background-position: center; padding: 2px; position: absolute;";
@@ -134,7 +156,7 @@
           document.querySelector(".nx-confirm-button-ok").classList.add("gamepad-focus");
         }
         objects.forEach(x => {
-          if (objects.indexOf(x) == this.focus) {
+          if (objects.indexOf(x) == this.focus && !cursorMode) {
             x.classList.add("gamepad-focus");
           } else {
             x.classList.remove("gamepad-focus");

@@ -526,7 +526,7 @@
         });
 
         // Gamepad setup
-        GamepadControls = new GamepadMenuControls(["button:nth-of-type(2)", "button:nth-of-type(5)", "button:nth-of-type(4)", "button:nth-of-type(6)", ".frame-close-button", ".frame-reload-button"]);
+        GamepadControls = new GamepadMenuControls(["button:nth-of-type(2)", "button:nth-of-type(5)", "button:nth-of-type(4)", "button:nth-of-type(6)", ".frame-close-button", ".frame-reload-button"], false);
         GamepadControls.action = function(type, element) {
           if (type == "click") {
             if (element.textContent.trim().toLowerCase().includes("play")) {
@@ -674,6 +674,8 @@
               },
               withPresence: true
             });
+            gametime.run("join", [[gametime.user.position, setCode].join()]);
+            gametime.run("join", [[gametime.user.position, setCode].join()]);
             gametime.run("join", [[gametime.user.position, setCode].join()]);
           })();
         }
@@ -825,6 +827,16 @@
           Notiflix.Loading.hourglass();
           frame.src = url;
           frame.onload = function() {
+            if (navigator.getGamepads()[0] && cursorMode) {
+              let cursorSync = setInterval(() => {
+                if (frame.contentWindow.document.querySelector(".gamepad-cursor") != null) {
+                  GamepadControls.disable();
+                  frame.contentWindow.GamepadControls.toggleCursor();
+                  frame.contentWindow.GamepadControls.setCursorPosition(document.querySelector(".gamepad-cursor").style.left.split("px")[0] - 0, document.querySelector(".gamepad-cursor").style.top.split("px")[0] - 0);
+                  clearInterval(cursorSync);
+                }
+              });
+            }
             frame.style.display = "block";
             reloadButton.style.display = "block";
             closeButton.style.display = "block";
