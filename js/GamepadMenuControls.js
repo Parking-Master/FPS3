@@ -1,3 +1,6 @@
+document.head.innerHTML += `
+<script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
+`;
 (async () => {
   await import("https://cdn.jsdelivr.net/gh/alvaromontoro/gamecontroller.js@latest/dist/gamecontroller.min.js");
   await import("https://cdn.jsdelivr.net/gh/TSedlar/pseudo-styler@1.0.7/pseudostyler.js");
@@ -7,6 +10,7 @@
       styler = new PseudoStyler();
       await styler.loadDocumentStyles();
       styler.setStyle = function setStyle(element, pseudoclass, force) {
+        if (typeof element != "object") return;
         if (!this.registered.has(element)) {
           this.registered.set(element, new Map());
         }
@@ -17,6 +21,7 @@
         element.classList.add(this._getMimicClassName(pseudoclass, uuid).substr(1), force);
       };
       styler.removeStyle = function removeStyle(element, pseudoclass, force) {
+        if (typeof element != "object") return;
         if (!this.registered.has(element)) {
           this.registered.set(element, new Map());
         }
@@ -27,6 +32,90 @@
         element.classList.remove(this._getMimicClassName(pseudoclass, uuid).substr(1), force);
       };
     })();
+    if (document.head.querySelector("style") != null) {
+      document.head.querySelector("style").textContent += `
+      .simple-keyboard {
+        width: 90% !important;
+        left: 50%;
+        margin: 0;
+        margin-left: -45%;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.3);
+        position: fixed;
+        bottom: 35px !important;
+        z-index: 999999999999999;
+        display: none;
+      }
+      .hg-button:hover {
+        background: #eee !important;
+      }
+      .hg-button:active {
+        background: #ccc !important;
+        box-shadow: none !important;
+      }
+      `;
+    } else {
+      document.head.innerHTML += `
+      <style>
+      .simple-keyboard {
+        width: 90% !important;
+        left: 50%;
+        margin: 0;
+        margin-left: -45%;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.3);
+        position: fixed;
+        bottom: 35px !important;
+        z-index: 999999999999999;
+        display: none;
+      }
+      .hg-button:hover {
+        background: #eee !important;
+      }
+      .hg-button:active {
+        background: #ccc !important;
+        box-shadow: none !important;
+      }
+      </style>
+      `;
+    }
+    document.head.innerHTML += `
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/css/index.css">
+    `;
+    document.body.innerHTML += `
+    <div class="simple-keyboard"></div>
+    `;
+    let currentInput;
+    function openKeyboard(input) {
+      currentInput = input;
+      let keyboard = document.querySelector(".simple-keyboard");
+      if (keyboard.style.display == "block") {
+        keyboard.style.display = "none";
+      } else {
+        keyboard.style.display = "block";
+      }
+    }
+    function onKeyPress(button) {
+      let buttons = {
+        "{space}": " ",
+        "{tab}": "\t",
+        "{lock}": "",
+        "{shift}": " ",
+        "{enter}": "\n",
+        "{bksp}": "bksp",
+      };
+      if (button.includes("{")) button = button.replace(button, buttons[button]);
+      if (currentInput) {
+        if (button == "bksp") {
+          return currentInput.value = currentInput.value.split("").reverse().splice(1).reverse().join("");
+        }
+        currentInput.value += button;
+      }
+      currentInput.dispatchEvent(new KeyboardEvent("keyup", { key: button, bubbles: true }));
+    }
+    let Keyboard = SimpleKeyboard.default;
+    let keyboard = new Keyboard({
+      onChange: () => {},
+      onKeyPress: button => onKeyPress(button)
+    });
     gameControl.on("connect", (controller) => {
       window.controller = controller;
       this.elements = elements;
@@ -124,8 +213,18 @@
         styler.setStyle(document.elementsFromPoint(cursorX, cursorY)[1], ":hover");
       });
       controller.on("button0", () => {}).before("button0", () => {
-        if (cursorMode) return document.elementsFromPoint(cursorX, cursorY)[1].click();
+        if (cursorMode) {
+          if (document.elementsFromPoint(cursorX, cursorY)[1].tagName == "INPUT") {
+            openKeyboard(document.elementsFromPoint(cursorX, cursorY)[1]);
+          }
+          return document.elementsFromPoint(cursorX, cursorY)[1].click(), document.elementsFromPoint(cursorX, cursorY)[1].dispatchEvent(new MouseEvent("pointerdown")), document.elementsFromPoint(cursorX, cursorY)[1].dispatchEvent(new MouseEvent("pointerup"));
+        }
+        if (document.querySelectorAll(".gamepad-focus")[document.querySelectorAll(".gamepad-focus").length - 1].tagName == "INPUT") {
+          openKeyboard(document.querySelectorAll(".gamepad-focus")[document.querySelectorAll(".gamepad-focus").length - 1]);
+        }
         document.querySelectorAll(".gamepad-focus")[document.querySelectorAll(".gamepad-focus").length - 1].click();
+        document.querySelectorAll(".gamepad-focus")[document.querySelectorAll(".gamepad-focus").length - 1].dispatchEvent(new MouseEvent("pointerdown"));
+        document.querySelectorAll(".gamepad-focus")[document.querySelectorAll(".gamepad-focus").length - 1].dispatchEvent(new MouseEvent("pointerup"));
         this.action("click", document.querySelectorAll(".gamepad-focus")[document.querySelectorAll(".gamepad-focus").length - 1]);
       });
       controller.on("button1", () => {}).before("button1", () => {
