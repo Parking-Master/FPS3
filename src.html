@@ -2427,6 +2427,15 @@
         }).after("button16", () => {
           document.dispatchEvent(new KeyboardEvent("keyup", { key: "f", code: "KeyF" }));
         });
+        GamepadController.on("button16", () => {}).before("button16", () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "f", code: "KeyF" }));
+        }).after("button16", () => {
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "f", code: "KeyF" }));
+        });
+        GamepadController.on("button7", () => {}).before("button7", () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "r", code: "KeyR" }));
+          document.dispatchEvent(new KeyboardEvent("keyup", { key: "r", code: "KeyR" }));
+        });
       }
       function rotateCamera(dx, dy) {
         let x = camera.rotation.x;
@@ -3920,6 +3929,7 @@
               setTimeout(() => {
                 let wait = setInterval(() => {
                   if (synced) {
+                    if (new URLSearchParams(location.search).get("freeplay")) gametime.disconnect();
                     document.querySelector(".banner").style.opacity = 0;
                     document.querySelector(".before-ui").style.visibility = "visible";
                     document.querySelector(".powerup-menu").style.display = "block";

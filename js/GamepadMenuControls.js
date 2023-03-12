@@ -80,9 +80,6 @@ document.head.innerHTML += `
     document.head.innerHTML += `
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/css/index.css">
     `;
-    document.body.innerHTML += `
-    <div class="simple-keyboard"></div>
-    `;
     let currentInput;
     function openKeyboard(input) {
       currentInput = input;

@@ -825,9 +825,16 @@
         document.body.appendChild(reloadButton);
         document.body.appendChild(closeButton);
         window.Frame = function(url) {
+          document.body.appendChild(frame);
+          document.body.appendChild(reloadButton);
+          document.body.appendChild(closeButton);
           Notiflix.Loading.hourglass();
           frame.src = url;
+          console.log(frame)
           frame.onload = function() {
+            frame.style.display = "block";
+            reloadButton.style.display = "block";
+            closeButton.style.display = "block";
             if (navigator.getGamepads()[0] && cursorMode) {
               let cursorSync = setInterval(() => {
                 if (frame.contentWindow.document.querySelector(".gamepad-cursor") != null) {
@@ -838,9 +845,6 @@
                 }
               });
             }
-            frame.style.display = "block";
-            reloadButton.style.display = "block";
-            closeButton.style.display = "block";
           };
         };
       })();
@@ -941,7 +945,9 @@
               }
             });
             let oldRewards = userMan.get("metadata");
-            oldRewards.history.medals = rewards.medals;
+            rewards.medals.forEach(medal => {
+              oldRewards.history.medals.push(medal);
+            });
             oldRewards.points += rewards.points;
             oldRewards.history.kills += rewards.kills || 0;
             userMan.set("metadata", oldRewards, () => {});
@@ -1287,5 +1293,6 @@
       }
     </script>
     <div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div><div class="snowflake"></div>
+    <div class="simple-keyboard"></div>
   </body>
 </html>

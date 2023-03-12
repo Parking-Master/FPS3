@@ -132,6 +132,7 @@
   <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   <script src="js/GamepadMenuControls.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/TSedlar/pseudo-styler@1.0.7/pseudostyler.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
   <body>
     <div class="form">
       <div class="form__box">
@@ -157,20 +158,21 @@
     </div>
     <script src="https://cdn.jsdelivr.net/gh/notiflix/Notiflix@latest/dist/notiflix-aio-3.2.5.min.js"></script>
     <script>
+      function onReady() {
+        if (document.getElementsByClassName("g-recaptcha").length > 0) {
+          let parentWidth = document.getElementsByClassName("g-recaptcha")[0].parentNode.clientWidth;
+          let childWidth = document.getElementsByClassName("g-recaptcha")[0].firstChild.clientWidth;
+          let scale = parentWidth / childWidth;
+          let new_width = childWidth * scale;
+          document.getElementsByClassName("g-recaptcha")[0].style.transform = "scale(" + scale + ")";
+          document.getElementsByClassName("g-recaptcha")[0].style.transformOrigin = "0 0";
+        }
+      }
       (function() {
         function uuidv4() {
           return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
         }
-        window.addEventListener("load", () => {
-          if (document.getElementsByClassName("g-recaptcha").length > 0) {
-            let parentWidth = document.getElementsByClassName("g-recaptcha")[0].parentNode.clientWidth;
-            let childWidth = document.getElementsByClassName("g-recaptcha")[0].firstChild.clientWidth;
-            let scale = parentWidth / childWidth;
-            let new_width = childWidth * scale;
-            document.getElementsByClassName("g-recaptcha")[0].style.transform = "scale(" + scale + ")";
-            document.getElementsByClassName("g-recaptcha")[0].style.transformOrigin = "0 0";
-          }
-        });
+        window.addEventListener("load", () => {});
         if (new URLSearchParams(location.search).get("id") && new URLSearchParams(location.search).get("e") && new URLSearchParams(location.search).get("p") && new URLSearchParams(location.search).get("u")) {
           let id = new URLSearchParams(location.search).get("id");
           let email = atob(new URLSearchParams(location.search).get("e"));
@@ -305,5 +307,6 @@
         }
       });
     </script>
+    <div class="simple-keyboard"></div>
   </body>
 </html>
