@@ -15,6 +15,11 @@
 <br>
 <br>
 
+> ### :exclamation: Beta release 1.0
+> Version 1.0 has been released as a beta release. In a beta release, things are playable and usable, but some items and in-game features will still be updated until 4/16/23 as "beta version 4.0".
+> 
+> Read the below documentation to learn more about what has been released.
+
 ## Why it is better then all other FPS games
 With the FPS series (FPS, FPS2, and FPS3), all of the games jurastically change on each game.
 
