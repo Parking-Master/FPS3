@@ -172,82 +172,83 @@
         function uuidv4() {
           return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
         }
-        window.addEventListener("load", () => {});
-        if (new URLSearchParams(location.search).get("id") && new URLSearchParams(location.search).get("e") && new URLSearchParams(location.search).get("p") && new URLSearchParams(location.search).get("u")) {
-          let id = new URLSearchParams(location.search).get("id");
-          let email = atob(new URLSearchParams(location.search).get("e"));
-          let username = atob(new URLSearchParams(location.search).get("u"));
-          let password = atob(new URLSearchParams(location.search).get("p"));
-          let id1 = localStorage["verify-id"];
-          let email1 = atob(localStorage["verify-email"]);
-          let username1 = atob(localStorage["verify-username"]);
-          let password1 = atob(localStorage["verify-password"]);
-          if (email == email1 && password == password1 && username == username1 && id == id1) {
-            Notiflix.Block.hourglass("form", "Verifying...");
-            userMan.signUp(username, password, {
-              "key": uuidv4(),
-              "username": username,
-              "tuser": username,
-              "performance": true,
-              "email": email,
-              "tpass": password,
-              "temail": email,
-              "emails": 1,
-              "friends": [],
-              "picture": "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png",
-              "metadata": {
-                "points": 0,
-                "preferences": {
-                  "theme": "Default",
-                  "loadout": "Assault_Rifle-Glock_19",
-                  "character": "Steve",
-                  "bot": "Default",
-                  "items": [
-                    "Theme.Default",
-                    "Character.Steve",
-                    "Loadout.Assault_Rifle-Glock_19",
-                    "Ammo.Heavy",
-                    "Ammo.Sniper"
+        window.addEventListener("load", () => {
+          if (new URLSearchParams(location.search).get("id") && new URLSearchParams(location.search).get("e") && new URLSearchParams(location.search).get("p") && new URLSearchParams(location.search).get("u")) {
+            let id = new URLSearchParams(location.search).get("id");
+            let email = atob(new URLSearchParams(location.search).get("e"));
+            let username = atob(new URLSearchParams(location.search).get("u"));
+            let password = atob(new URLSearchParams(location.search).get("p"));
+            let id1 = localStorage["verify-id"];
+            let email1 = atob(localStorage["verify-email"]);
+            let username1 = atob(localStorage["verify-username"]);
+            let password1 = atob(localStorage["verify-password"]);
+            if (email == email1 && password == password1 && username == username1 && id == id1) {
+              Notiflix.Block.hourglass("form", "Verifying...");
+              userMan.signUp(username, password, {
+                "key": uuidv4(),
+                "username": username,
+                "tuser": username,
+                "performance": true,
+                "email": email,
+                "tpass": password,
+                "temail": email,
+                "emails": 1,
+                "friends": [],
+                "picture": "https://cdn.jsdelivr.net/gh/Parking-Master/Parking-Master@latest/img/profile-picture.png",
+                "metadata": {
+                  "points": 0,
+                  "preferences": {
+                    "theme": "Default",
+                    "loadout": "Assault_Rifle-Glock_19",
+                    "character": "Steve",
+                    "bot": "Default",
+                    "items": [
+                      "Theme.Default",
+                      "Character.Steve",
+                      "Loadout.Assault_Rifle-Glock_19",
+                      "Ammo.Heavy",
+                      "Ammo.Sniper"
+                    ]
+                  },
+                  "history": {
+                    "medals": [],
+                    "kills": 0
+                  },
+                  "rewards": [
+                    {
+                      "title": "Sign up reward",
+                      "description": "You've earned your first reward for signing up!",
+                      "gift": {
+                        "type": "points",
+                        "item": "",
+                        "value": 150
+                      }
+                    }
                   ]
                 },
-                "history": {
-                  "medals": [],
-                  "kills": 0
-                },
-                "rewards": [
+                "mail": [
                   {
-                    "title": "Sign up reward",
-                    "description": "You've earned your first reward for signing up!",
-                    "gift": {
-                      "type": "points",
-                      "item": "",
-                      "value": 150
-                    }
+                    "sender": "System",
+                    "message": "Welcome to FPS3! we are excited to show you the future of web gaming. Click \"Help\" to learn more about how to use things. Enjoy!"
                   }
-                ]
-              },
-              "mail": [
-                {
-                  "sender": "System",
-                  "message": "Welcome to FPS3! we are excited to show you the future of web gaming. Click \"Help\" to learn more about how to use things. Enjoy!"
-                }
-              ],
-              "bio": "No information available for this user."
-            }, () => {
-              document.querySelector(".notiflix-block-message").textContent = "Success!";
-              localStorage.setItem("credentials", btoa(encodeURIComponent(username)) + ":" + btoa(encodeURIComponent(password)));
-              localStorage.removeItem("verify-id");
-              localStorage.removeItem("verify-email");
-              localStorage.removeItem("verify-username");
-              localStorage.removeItem("verify-password");
-              setTimeout(() => location.replace("login.html"), 1500);
-            }, (e) => {
-              Notiflix.Block.hourglass("form", "Verifying...");
-              document.querySelector(".notiflix-block-message").textContent = e;
-              setTimeout(() => Notiflix.Block.remove("form"), 1500);
-            });
+                ],
+                "bio": "No information available for this user."
+              }, () => {
+                document.querySelector(".notiflix-block-message").textContent = "Success!";
+                localStorage.setItem("credentials", btoa(encodeURIComponent(username)) + ":" + btoa(encodeURIComponent(password)));
+                localStorage.removeItem("verify-id");
+                localStorage.removeItem("verify-email");
+                localStorage.removeItem("verify-username");
+                localStorage.removeItem("verify-password");
+                setTimeout(() => location.replace("login.html"), 1500);
+              }, (e) => {
+                Notiflix.Block.hourglass("form", "Verifying...");
+                document.querySelector(".notiflix-block-message").textContent = e;
+                setTimeout(() => Notiflix.Block.remove("form"), 1500);
+              });
+            }
           }
-        }
+        });
         const i = (e) => {
           if (e.target == document.querySelector(".form__submit-btn")) {
             Notiflix.Block.hourglass("form", "Verifying...");
