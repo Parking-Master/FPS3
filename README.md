@@ -50,7 +50,7 @@ Which literally means you can open your browser, click a link and start playing.
 
 *How do you do this though?*
 
-- Go to [FPS3.uk.to](https://www.fps3.ml)
+- Go to [FPS3.uk.to](https://www.fps3.uk.to)
 - To start a game, click <kbd>PLAY</kbd>
 - Select your game mode by using the arrows
 - Click <kbd>Start</kbd> and wait for players to join
@@ -64,7 +64,7 @@ If you didn't think it could get any better, you can also __sign up__ and keep t
 
 To sign up and keep your awesome progress saved,
 
-- Go to [FPS3.uk.to](https://www.fps3.ml)
+- Go to [FPS3.uk.to](https://www.fps3.uk.to)
 - Click <kbd>OPTIONS</kbd>
 - Click __LOG IN/SIGN UP__
 - Enter the following:
@@ -87,7 +87,7 @@ By buying items in the store, we mean with fake currency (points), FPS3 is a com
 Read [How to get points](#how-to-get-points) to learn how to get points to buy stuff in the store.
 
 To get new cool items,
-- Go to [FPS3.uk.to](https://www.fps3.ml)
+- Go to [FPS3.uk.to](https://www.fps3.uk.to)
 - Log in or sign up
 - Go back to the menu
 - Click <kbd>STORE</kbd>
@@ -97,7 +97,7 @@ But you can't use the stuff you buy, unless you change it in your preferences.
 
 #### Changing preferences
 To customize *everything*, all you need to do is
-- Go to [FPS3.uk.to](https://www.fps3.ml)
+- Go to [FPS3.uk.to](https://www.fps3.uk.to)
 - Log in or sign up
 - Go back to the menu
 - Click <kbd>OPTIONS</kbd>
