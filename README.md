@@ -20,7 +20,7 @@
 > 
 > Read the below documentation to learn more about what has been released.
 
-## Why it is better then all other FPS games
+## Why it is better than all other FPS games
 With the FPS series (FPS, FPS2, and FPS3), all of the games jurastically change on each game.
 
 With FPS, it was simple, but nothing special compared to other games.
